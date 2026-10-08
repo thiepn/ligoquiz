@@ -95,3 +95,36 @@
 
 .g3-tech-reset{display:block;margin-top:12px;background:none;border:0;border-bottom:1px solid currentColor;padding:4px 0;color:#5a646d;font-size:11px;cursor:pointer}
 .g3-tech-reset:disabled{opacity:.5;cursor:not-allowed}
+
+
+/* G4 Rundenquiz: operational workbench, not a SaaS dashboard. */
+.rq-host{margin:31px 0 20px;padding:25px;background:#fff;border:1px solid #d9d9d4;scroll-margin-top:24px}
+.rq-head{display:flex;justify-content:space-between;align-items:start;gap:18px;margin-bottom:22px}
+.rq-head h2{font-size:22px;margin:8px 0 6px;letter-spacing:-.6px}
+.rq-head p{font-size:12px;line-height:1.6;color:#707985;margin:0}
+.rq-setup{display:flex;flex-wrap:wrap;align-items:end;gap:14px}
+.rq-setup>label,.rq-teamfields label{display:grid;gap:6px;font-size:11px;color:#505962;font-weight:700}
+.rq-setup select,.rq-setup input,.rq-teamfields input{border:1px solid #c7cbc9;background:#fff;color:#1d2730;padding:10px;min-height:39px;font:inherit;min-width:115px}
+.rq-teamfields{width:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:9px;padding:12px 0}
+.rq-teamfields>div{padding:9px;border:1px solid #eee;background:#f8f8f5;min-width:0}
+.rq-teamfields button,.rq-live button:not(.g3-tech-primary){padding:9px 11px;border:1px solid #b7bdc0;background:#fefefe;color:#29333b;font-size:12px}
+.rq-live button:disabled{opacity:.52;cursor:not-allowed}
+.rq-utility{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:11px;color:#5f6770;margin-bottom:20px}
+.rq-utility .g3-tech-link{margin:0}
+.rq-status{background:#1c2128;color:#fff;padding:19px 21px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.rq-status strong{font-size:18px}
+.rq-status span{font-size:11px;color:#e4bd54}
+.rq-scoreboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;background:#e8e8e4;padding:9px}
+.rq-scoreboard>div{display:flex;flex-direction:column;gap:5px;padding:11px;background:#fff}
+.rq-scoreboard span{font-size:11px;color:#6f777e;overflow-wrap:anywhere}
+.rq-scoreboard strong{font-size:26px;line-height:1.15;font-variant-numeric:tabular-nums}
+.rq-control{padding:14px 0}.rq-question{border-bottom:1px solid #dbdeda;padding-bottom:16px}
+.rq-question small{color:#737a81;font-size:11px}
+.rq-question h3{font-size:clamp(16px,2.3vw,25px);line-height:1.35}
+.rq-private{padding:12px 14px;background:#f2f0e9;color:#4d4331;font-size:12px}
+.rq-clue-list{background:#eef2f2;padding:4px 14px;margin:12px 0}.rq-clue-list p{font-size:12px;line-height:1.5}
+.rq-actions{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:16px}.rq-actions>.rq-teamfields{flex-basis:100%}
+.rq-actions .g3-tech-primary{background:#191f25;color:#f3d46f}
+.rq-judge{display:flex;flex-wrap:wrap;align-items:center;gap:4px}.rq-judge>span{flex-basis:100%;font-size:11px}
+.rq-end{padding:24px;background:#f7f6f1}.rq-end h3{margin:0 0 13px;font-size:20px}.rq-end p{font-size:13px}
+@media(max-width:610px){.rq-host{padding:16px}.rq-head{flex-direction:column}.rq-status{flex-direction:column;align-items:start}}
