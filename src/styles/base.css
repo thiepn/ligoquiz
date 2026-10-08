@@ -234,3 +234,6 @@ html[data-ligo-motion=reduce] *, html[data-ligo-motion=reduce] *::before, html[d
 }
 @media(max-width:850px){.exp-demo-grid{grid-template-columns:1fr}.exp-summary{grid-template-columns:1fr 1fr}.exp-home-choices{grid-template-columns:1fr}}
 @media(max-width:600px){.exp-heading{flex-direction:column;gap:5px}.exp-roster,.exp-settings-grid,.exp-summary{grid-template-columns:1fr}.exp-steps>div{padding:12px 10px;gap:6px;font-size:11px}.exp-start,.exp-demo-action{min-height:60px}.exp-active,.exp-resume-note,.exp-session-row{flex-direction:column;align-items:stretch}.exp-score-table>div{grid-template-columns:28px 1fr;gap:6px}.exp-score-table>div strong,.exp-score-table>div small{text-align:left}.exp-program{flex-wrap:wrap}.exp-program>strong{margin-left:0}.exp-focused{padding:14px}.exp-host-header{flex-wrap:wrap}}
+
+.rq-recovery{padding:20px 22px;border:2px solid #9e8340;background:#f9f4e6;color:#333c43;margin:14px 0;display:grid;gap:9px}
+.rq-recovery strong{font-size:16px}.rq-recovery p{font-size:12px;line-height:1.6;max-width:760px;margin:0 0 7px}.rq-recovery button{justify-self:start}
