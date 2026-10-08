@@ -29,7 +29,7 @@ const errorMessage=(e:unknown)=>e instanceof Error?e.message:'Aktion fehlgeschla
 export function RundenquizHost(){
  const [identity,setIdentity]=useState<Identity|null>(savedIdentity);
  const [event,setEvent]=useState<EventRecord|null>(null);
- const [count,setCount]=useState(()=>readPreferences().defaultTeams);
+ const [count,setCount]=useState<number>(()=>readPreferences().defaultTeams);
  const [names,setNames]=useState(['Team 1','Team 2','Team 3','Team 4','Team 5']);
  const [profile,setProfile]=useState<Profile>(()=>readPreferences().defaultProfile);
  const [busy,setBusy]=useState(false);
