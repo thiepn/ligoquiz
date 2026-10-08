@@ -47,10 +47,18 @@ test('demo never persists history or a live session',async({page})=>{
  await page.goto('/#/verlauf');
  await expect(page.locator('.exp-empty')).toContainText('Noch kein abgeschlossener Quizabend');
  await page.evaluate(async()=>{
-   if('databases' in indexedDB){
-     const dbs=await indexedDB.databases();
-     if(dbs.some(x=>x.name==='ligoquiz.v2.sessions'))throw Error('Demo created a real session database');
-   }
+   const events=await new Promise((resolve,reject)=>{
+     const open=indexedDB.open('ligoquiz.v2.sessions');
+     open.onerror=()=>reject(open.error);
+     open.onsuccess=()=>{
+       const db=open.result;
+       const tx=db.transaction('events','readonly');
+       const req=tx.objectStore('events').getAll();
+       req.onsuccess=()=>{resolve(req.result);db.close();};
+       req.onerror=()=>reject(req.error);
+     };
+   });
+   if(events.length!==0)throw Error('Disposable demo created real event rows');
  });
 });
 
