@@ -141,6 +141,11 @@ export function transition(s:Session,c:Command):Session{
   case 'REVEAL_WALL_GROUP':
    requirePhase('wall-closed','wall-reveal');
    assert(task.puzzle.kind==='wall'&&s.revealedGroups<4,'PHASE','Alle Gruppen schon gezeigt');
+   if(s.revealedGroups>0){
+     const previous=task.puzzle.groups[s.revealedGroups-1]!;
+     assert(s.teams.every(t=>Boolean(s.wallMarks[t.id]?.[previous.id])),
+       'RESPONSE','Zuerst die aktuelle Gruppe für jedes Team werten');
+   }
    next={...s,revealedGroups:s.revealedGroups+1,phase:'wall-reveal'};break;
   case 'MARK_GROUP':
    requirePhase('wall-reveal');
