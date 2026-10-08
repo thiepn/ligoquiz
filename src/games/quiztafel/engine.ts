@@ -139,8 +139,8 @@ export function transition(s:Session,c:Command):Session{
     case 'REVEAL':phase('adjudicated');next={...s,phase:'revealed'};break;
     case 'ADJUST':
       phase('revealed');
-      requireRule(a.winner!=='selector'||s.primaryResult!==null,'RESULT','Erstversuch fehlt');
-      requireRule(a.winner!=='stealer'||s.stealResult!==null,'RESULT','Übernahme fehlt');
+      requireRule(a.winner!=='selector'||s.primaryResult==='correct'||s.primaryResult==='wrong','RESULT','Kein bewertbarer Erstversuch');
+      requireRule(a.winner!=='stealer'||s.stealResult==='correct'||s.stealResult==='wrong','RESULT','Kein bewertbarer Übernahmeversuch');
       next={...s,candidate:a.winner};break;
     case 'CONFIRM':{
       phase('revealed');
@@ -211,7 +211,7 @@ export function publicScene(s:Session):PublicScene{
   if(s.phase==='board'||s.phase==='prepared'){
     return {kind:'board',categories:s.categories,rows:DEPTH[s.profile],
       closedIds:s.usedTileIds,selectorName:selector(s).name,
-      turn:s.turn,total:s.tiles.length};
+      turn:s.turn+1,total:s.tiles.length};
   }
   const tile=selectedTile(s);requireRule(tile,'CORRUPT','Aktuelles Feld fehlt');
   const category=s.categories.find(c=>c.id===tile.categoryId);
