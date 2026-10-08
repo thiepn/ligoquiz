@@ -92,3 +92,6 @@
 .stage-scores{width:min(650px,86vw);display:grid;gap:14px;margin-top:24px}
 .stage-scores>div{display:flex;justify-content:space-between;gap:10px;font-size:clamp(18px,2.2vw,32px);padding:15px;border-bottom:1px solid #68727c}
 @media(max-width:570px){.g3-tech{padding:17px}.g3-tech-heading{flex-direction:column;gap:9px}.g3-tech-grid{grid-template-columns:1fr}.g3-tech-tag{align-self:flex-start}}
+
+.g3-tech-reset{display:block;margin-top:12px;background:none;border:0;border-bottom:1px solid currentColor;padding:4px 0;color:#5a646d;font-size:11px;cursor:pointer}
+.g3-tech-reset:disabled{opacity:.5;cursor:not-allowed}
