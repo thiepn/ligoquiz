@@ -50,6 +50,7 @@ export function StageView() {
       viewer = new StageViewer(eventId, new BrowserStagePort(eventId), setState);
       viewer.start();
     } catch {
+      viewer?.stop();
       setError('Diese Browser-Umgebung unterstützt die Beamer-Verbindung nicht.');
       return;
     }
@@ -66,10 +67,12 @@ export function StageView() {
     };
   }, [eventId]);
 
-  const scene = state.status === 'live' ? state.frame?.scene : null;
+  // Hash navigation can reuse this component before useEffect has reset its old state.
+  // Never paint an answer belonging to a previously selected event.
+  const scene = state.status === 'live' && state.frame?.eventId === eventId ? state.frame.scene : null;
   const status = !eventId ? 'Sitzungslink fehlt' : error
     ? 'Nicht unterstützt'
-    : state.status === 'live' ? 'Mit Spielleitung verbunden'
+    : scene ? 'Mit Spielleitung verbunden'
     : state.status === 'connecting' ? 'Verbindung wird aufgebaut'
     : state.status === 'conflict' ? 'Übertragung widersprüchlich'
     : 'Verbindung unterbrochen';
