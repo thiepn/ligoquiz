@@ -1,16 +1,17 @@
 # LiGoQuiz 2.0 — Modular Rebuild
 
-Work branch: `rebuild/v2`. The live GitHub Pages production site still runs legacy v1.14 on `main`.
+**Production:** main (legacy v1.14), unchanged. **Development:** rebuild/v2 and the feature/g4-rundenquiz integration branch.
 
-## Current implementation status
+## What is working in the rebuild
 
-- **G1:** Modular React + strict TypeScript + Vite foundation; three German navigation destinations.
-- **G2:** IndexedDB transactional host command engine, authoritative revisions, score ledger, recovery, and typed public DTOs.
-- **G3:** Separate host/projector BroadcastChannel handshake, public-only frames, ordering, disconnection blanking, recovery requests, acknowledgment, and a *technical rehearsal*.
+- G1: React, strict TypeScript, Vite, German navigation and game definitions.
+- G2: IndexedDB transactional event engine, host fencing, audit, checkpointing, score ledger, idempotency and recovery.
+- G3: Public-only same-origin projector transport, late join/ACK/reconnect and disconnect blanking.
+- G4: Rundenquiz trial with 3–5 teams, Kurz/Standard/Lang, Wissen/Hinweise/Schätzen/Finale, adjudication, deliberate reveal, score preview, corrections, end standings and host-fenced advisory timer.
 
-**The five real games are not playable yet.** The G3 demo is one synthetic question used to test the projector and transaction path, not a complete quiz.
+The other four games remain unimplemented. The 16 bundled Rundenquiz questions are **provisional test content**, not an audited replacement for the legacy question bank.
 
-## Local run
+## Run locally
 
 Node.js 22.12+ and npm 11:
 
@@ -21,29 +22,22 @@ npm run verify
 npm run build
 ```
 
-Navigate to **Spielen → G3 Techniktest → Techniktest anlegen**. Open **Beamer-Fenster öffnen** in a separate window on the same origin. Use the explicit host buttons to demonstrate public prompt, hint, and intentional answer reveal. Disconnect the host to verify safe viewer expiration. See [G3 operational specification](docs/G3_STATUS.md).
+Open Spielen → Rundenquiz to configure a trial evening and open Beamer in a separate browser window on an extended display. The G3 projector technical rehearsal remains a separate test surface.
 
-## Architecture
+## Safety and current limitations
 
-```text
-src/
-  app/                    React shell and routing
-  application/            Host controller (post-commit only)
-  domain/                 Pure event/scoring/projection contracts
-  features/host/          G3 rehearsal control surface
-  features/stage/         Public transport, presenter and stage UI
-  games/                  Future game-specific modules
-  infrastructure/db/      Atomic IndexedDB event store
-  styles/
-tests/                    Vitest domain, database and transport tests
-```
+- The host holds private answers; the projector receives only allowlisted public G3 frames.
+- Scoring and corrections commit atomically in the same G2 event transaction; RQ state is not stored in a second application database.
+- Refresh during an active Rundenquiz pauses it for explicit host review. The timer reopens stopped with its last saved remaining seconds and never reveals answers automatically.
+- No phone buzzers, cross-device session networking, accounts, AI API, production service worker or release deployment.
+- The old ligo.quiz.* localStorage remains untouched. Do not use the current production origin for a preview.
+- CI validates the technical implementation; human content review, physical projector qualification, accessible interaction testing and first-time host rehearsal remain release gates.
 
-- Projector windows receive only allowlisted public DTOs; they do not read the event database.
-- The host publisher validates its authority from committed storage before each retransmission.
-- `BroadcastChannel` is same-origin and same-storage-partition only, generally same device. It does **not** implement cross-device sync or authentication.
-- The original app's `ligo.quiz.*` localStorage remains untouched.
-- No v2.0 service worker or PWA installation has been deployed.
+## Development documentation
 
-## Next
+- docs/G1_STATUS.md — engineering foundation.
+- docs/G2_STATUS.md — transactional persistence.
+- docs/G3_STATUS.md — projector protocol.
+- docs/G4_STATUS.md — Rundenquiz functionality, rules and qualification checklist.
 
-G4 starts the first actual playable Rundenquiz and the host preparation flow. Additional games, content migration, offline qualification and production rollout remain separate gates. Never merge unfinished v2 code into `main`.
+Do **not** merge development into main until BP-06 release gates and migration/rollback acceptance have passed.

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { GAME_TYPES } from '../game/contracts';
+import { rqSessionSchema, rqActionSchema } from '../../games/rundenquiz/schema';
 
 const id = z.string().min(1).max(128);
 const nonnegative = z.number().int().min(0).safe();
@@ -35,6 +36,7 @@ export const eventSchema = z.strictObject({
   stageRevision: nonnegative,
   recoveryRequired: z.boolean(),
   createdAt: nonnegative, updatedAt: nonnegative,
+  rundenquiz: rqSessionSchema.optional(),
 }).superRefine((value, ctx) => {
   function unique(items: readonly { id: string }[], path: string) {
     if (new Set(items.map((item) => item.id)).size !== items.length) {
@@ -42,6 +44,18 @@ export const eventSchema = z.strictObject({
     }
   }
   unique(value.teams, 'teams');
+  if(value.rundenquiz) {
+    const rq=value.rundenquiz;
+    if(rq.id!==value.id || rq.ownerId!==value.hostId || rq.epoch!==value.hostEpoch)
+      ctx.addIssue({code:'custom',path:['rundenquiz'],message:'RQ owner/epoch/event mismatch'});
+    const matching=value.program.filter(g=>g.type==='rundenquiz');
+    if(matching.length!==1 || value.program.length!==1)
+      ctx.addIssue({code:'custom',path:['rundenquiz'],message:'G4 supports one Rundenquiz game only'});
+    if(rq.teams.length!==value.teams.length || rq.teams.some(t=>!value.teams.some(v=>v.id===t.id && v.name===t.name && v.order===t.order)))
+      ctx.addIssue({code:'custom',path:['rundenquiz'],message:'RQ team roster mismatch'});
+    if(rq.questions.length!==value.frozenTasks.length || rq.questions.some(q=>!value.frozenTasks.some(t=>t.taskId===q.id && t.gameType==='rundenquiz' && t.publicPrompt===q.prompt && t.privateAnswers[0]===q.answer)))
+      ctx.addIssue({code:'custom',path:['rundenquiz'],message:'RQ immutable task snapshot mismatch'});
+  }
   unique(value.program, 'program');
   if (new Set(value.frozenTasks.map((task) => task.taskId)).size !== value.frozenTasks.length) {
     ctx.addIssue({ code: 'custom', message: 'Duplicate frozen task ID', path: ['frozenTasks'] });
@@ -73,6 +87,7 @@ export type EventRecord = z.infer<typeof eventSchema>;
 
 const commandPayloadSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('EVENT_START') }),
+  z.strictObject({ type: z.literal('RQ_ACTION'), action: rqActionSchema }),
   z.strictObject({ type: z.literal('EVENT_PAUSE') }),
   z.strictObject({ type: z.literal('EVENT_RESUME') }),
   z.strictObject({ type: z.literal('TASK_PUBLISH'), taskId: id }),

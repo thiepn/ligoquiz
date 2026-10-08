@@ -3,6 +3,7 @@ import { parseRoute, routeHref, type Route } from './routes';
 import { GAME_MANIFESTS } from '../games/registry';
 import { StageView } from '../features/stage/StageView';
 import { ProjectorTechCheck } from '../features/host/ProjectorTechCheck';
+import { RundenquizHost } from '../features/host/RundenquizHost';
 
 const PAGES: readonly { route: Exclude<Route, 'stage'>; label: string; symbol: string }[] = [
   { route: 'spielen', label: 'Spielen', symbol: '▶' },
@@ -26,17 +27,17 @@ function PlaySurface() {
       <div className="surface-header">
         <div><div className="eyebrow">SPIELRAUM</div><h1>Quizabend</h1>
           <p>Ein Abend für eure Gruppe. Noch im technischen Neuaufbau.</p></div>
-        <span className="status-label">G1 / BASIS</span>
+        <span className="status-label">G4 / SPIELTEST</span>
       </div>
       <div className="start-layout">
         <div className="start-panel">
           <div className="eyebrow">NÄCHSTER SCHRITT</div>
           <h2>Bereitmachen</h2>
-          <p>Hier führt LiGoQuiz künftig vom Team-Setup bis zum ersten Spiel. Der Ablauf wird in G4 vollständig spielbar.</p>
-          <button disabled className="main-cta" title="Wird in späteren Phasen freigeschaltet">
-            Quizabend starten <span aria-hidden="true">↗</span>
-          </button>
-          <p className="small-note">Noch nicht freigeschaltet — keine Fake-Spielstände oder Testpunkte.</p>
+          <p>Mit dem Rundenquiz könnt ihr jetzt einen ersten Quizabend im Testbetrieb durchführen.</p>
+          <a href="#rundenquiz" className="main-cta">
+            Rundenquiz starten <span aria-hidden="true">↗</span>
+          </a>
+          <p className="small-note">Testversion mit vorläufigen Fragen. Die übrigen Spiele folgen später.</p>
         </div>
         <a className="projection-preview" href={routeHref('stage')} target="_blank" rel="noopener noreferrer">
           <span className="projection-icon" aria-hidden="true">▣</span>
@@ -45,6 +46,7 @@ function PlaySurface() {
           <span className="preview-arrow" aria-hidden="true">↗</span>
         </a>
       </div>
+      <div id="rundenquiz"><RundenquizHost /></div>
       <ProjectorTechCheck />
       <div className="section-heading"><h2>Spielauswahl</h2><span>5 SPIELFORMATE · IN AUFBAU</span></div>
       <div className="game-grid">
@@ -53,7 +55,7 @@ function PlaySurface() {
             <div className="game-topline"><span className="game-code">{game.code}</span>
               <span className="game-index">0{index + 1}</span></div>
             <div><h3>{game.nameDe}</h3><p>{game.taglineDe}</p></div>
-            <div className="game-footer">Spielmodul folgt</div>
+            <div className="game-footer">{game.ready ? 'Im Test spielbar' : 'Spielmodul folgt'}</div>
           </article>
         ))}
       </div>
@@ -115,7 +117,7 @@ export function App() {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="build-indicator"><span className="pulse-dot" aria-hidden="true"></span>Neuaufbau · G3</div>
+          <div className="build-indicator"><span className="pulse-dot" aria-hidden="true"></span>Neuaufbau · G4</div>
           <div className="version-info">VERSION 2.0 · ENTWICKLUNG</div>
         </div>
       </aside>

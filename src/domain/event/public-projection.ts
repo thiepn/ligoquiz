@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { EventRecord } from './schemas';
+import { publicScene as rqPublicScene } from '../../games/rundenquiz/engine';
 import { projectTaskForAudience, waitingScene, type PublicStageDto } from '../projection/public-stage';
 
 const publicSceneSchema = z.discriminatedUnion('kind', [
@@ -18,6 +19,34 @@ export const publicDtoSchema = z.strictObject({
 });
 
 export function derivePublicStage(session: EventRecord): PublicStageDto {
+  if(session.rundenquiz) {
+    const rq=rqPublicScene(session.rundenquiz), game=session.program[0];
+    const heading=(round:string)=>({wissen:'Wissen',hinweise:'Hinweise',schaetzen:'Schätzen',finale:'Finale'} as Record<string,string>)[round]??'Rundenquiz';
+    const scene=session.recoveryRequired ? waitingScene()
+      : session.lifecycle==='paused' ? {kind:'paused' as const,heading:'Pause' as const}
+      : rq.kind==='waiting' ? waitingScene()
+      : rq.kind==='paused' ? {kind:'paused' as const,heading:'Pause' as const}
+      : rq.kind==='question' ? {
+          kind:'question' as const,
+          heading:heading(rq.round)+' · '+rq.current+'/'+rq.total,
+          publicPrompt:rq.prompt,
+          visibleClues:[...(rq.choices??[]),...rq.clues],
+        }
+      : rq.kind==='answer' ? {
+          kind:'answer' as const,heading:heading(rq.round),
+          publicPrompt:rq.prompt,publishedSolution:rq.solution,
+        }
+      : rq.kind==='results' ? {
+          kind:'scores' as const,
+          heading:rq.final?'Endstand':'Zwischenstand',
+          visibleScores:rq.teams.map(t=>({name:t.name,value:rq.scores[t.id]??0}))
+            .sort((a,b)=>b.value-a.value),
+        } : waitingScene();
+    return publicDtoSchema.parse({
+      protocolVersion:1,eventId:session.id,gameId:game?.id??null,
+      hostEpoch:session.hostEpoch,stageRevision:session.stageRevision,scene,
+    });
+  }
   const current = session.frozenTasks.find((task) => task.taskId === session.currentTaskId);
   const game = current && session.program.find((entry) => entry.type === current.gameType);
   const scene = session.recoveryRequired
