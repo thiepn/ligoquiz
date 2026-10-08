@@ -57,14 +57,19 @@ export type HostCommand =
   | { readonly type: 'TASK_PUBLISH'; readonly taskId: TaskInstanceId }
   | { readonly type: 'HINT_PUBLISH'; readonly taskId: TaskInstanceId; readonly clueIndex: number }
   | { readonly type: 'SOLUTION_PUBLISH'; readonly taskId: TaskInstanceId }
-  | { readonly type: 'OUTCOME_COMMIT'; readonly outcomeId: OutcomeId }
-  | { readonly type: 'NEXT_TASK' };
+  | { readonly type: 'OUTCOME_COMMIT'; readonly outcomeId: OutcomeId; readonly taskId: TaskInstanceId; readonly teamId: TeamId; readonly points: number }
+  | { readonly type: 'OUTCOME_VOID'; readonly outcomeId: OutcomeId; readonly reason: string }
+  | { readonly type: 'OUTCOME_RESTORE'; readonly outcomeId: OutcomeId; readonly reason: string }
+  | { readonly type: 'NEXT_TASK' }
+  | { readonly type: 'EVENT_COMPLETE' }
+  | { readonly type: 'RECOVERY_CONFIRM' };
 export interface CommandEnvelope {
   readonly protocolVersion: 1;
   readonly commandId: CommandId;
   readonly eventId: EventId;
   readonly expectedRevision: number;
   readonly hostEpoch: number;
+  readonly hostId: string;
   readonly issuedAtEpochMs: number;
   readonly actor: 'host';
   readonly payload: HostCommand;
