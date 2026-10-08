@@ -113,7 +113,7 @@ export function applySessionCommand(
       note = 'Score voided: ' + payload.reason;
       break;
     case 'OUTCOME_RESTORE':
-      if (!existingOutcome) fail('UNKNOWN_OUTCOME', 'No such score outcome');
+      if (!existingOutcome) throw new DomainError('UNKNOWN_OUTCOME', 'No such score outcome');
       if (existingOutcome.status !== 'void') fail('OUTCOME_ALREADY_ACTIVE', 'Already active');
       outcome = { ...existingOutcome, status: 'active', updatedRevision: session.revision + 1 };
       note = 'Score restored: ' + payload.reason;
