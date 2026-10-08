@@ -4,7 +4,7 @@ import { EventRepository } from '../../infrastructure/db/event-repository';
 import { HostSessionController } from '../../application/host-controller/host-session';
 import { BrowserStagePort, stageUrl } from '../stage/protocol';
 import { HostStagePublisher } from '../stage/host-publisher';
-import { createSession, currentQuestion, scores, eveningHalfPoints,
+import { createSession, currentQuestion, taskAwards, scores, eveningHalfPoints,
  type Action, type Profile, type Session } from '../../games/rundenquiz/engine';
 import { parseEstimateInput } from '../../games/rundenquiz/decimal';
 import { timerScopeMatches, newTimerSnapshot } from '../../games/rundenquiz/timer';
@@ -182,6 +182,9 @@ export function RundenquizHost(){
  const rq:Session|undefined=event?.rundenquiz;
  const q=rq?currentQuestion(rq):null;
  const computed=rq?scores(rq):{};
+ const preview=rq?.phase==='revealed' ? (() => {
+   try { return taskAwards(rq); } catch { return null; }
+ })() : null;
  const isPaused=Boolean(event?.lifecycle==='paused'||rq?.paused);
  const disabled=busy||!sourceReady||!event||event.recoveryRequired;
  const title=(round:string)=>({wissen:'Wissen',hinweise:'Hinweise',schaetzen:'Schätzen',finale:'Finale'} as Record<string,string>)[round]??round;
@@ -267,8 +270,20 @@ export function RundenquizHost(){
            onClick={()=>void action({type:'JUDGE',teamId:t.id,value:v})}>{v}</button>)}
         </div>)}</div>}
         {q?.round==='schaetzen'&&<p>Schätzungen werden nach Abstand zur Zielzahl gewertet; exakte Gleichstände behalten denselben Rang.</p>}
-        <button className="g3-tech-primary" disabled={disabled}
-          onClick={()=>void action({type:'CONFIRM'})}>Bewertungen prüfen und Punkte bestätigen</button>
+        <div className="rq-preview" aria-label="Punktevorschau">
+          <h4>Punkte vor Bestätigung</h4>
+          {!preview?<p>Bitte zuerst alle Teamantworten bewerten bzw. Schätzungen erfassen.</p>
+          :<div>{preview.map(award=>{
+            const team=rq.teams.find(t=>t.id===award.teamId);
+            return <div key={award.teamId}>
+              <span>{team?.name??award.teamId}{q?.round==='schaetzen'?
+                ' · '+(rq.entries[award.teamId]?.estimate??'keine Antwort'):''}</span>
+              <strong>{award.points} Pkt.{award.rank?' · Platz '+award.rank:''}</strong>
+            </div>;
+          })}</div>}
+        </div>
+        <button className="g3-tech-primary" disabled={disabled||!preview}
+          onClick={()=>void action({type:'CONFIRM'})}>Punkte verbindlich bestätigen</button>
       </>}
       {rq.phase==='graded'&&<>
         <button className="g3-tech-primary" disabled={disabled}
