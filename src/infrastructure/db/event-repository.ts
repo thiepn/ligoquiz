@@ -182,7 +182,10 @@ export class EventRepository {
    */
   async dispatch(untrusted: unknown): Promise<DispatchResult> {
     const command = envelopeSchema.parse(untrusted);
-    const fingerprint = JSON.stringify(command);
+    const fingerprint = JSON.stringify({
+      eventId: command.eventId, commandId: command.commandId,
+      hostId: command.hostId, hostEpoch: command.hostEpoch, payload: command.payload,
+    });
     const db = await this.open();
     return new Promise<DispatchResult>((resolve, reject) => {
       const tx = db.transaction(STORES, 'readwrite');
