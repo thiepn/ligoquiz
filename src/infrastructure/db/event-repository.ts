@@ -304,7 +304,7 @@ export class EventRepository {
               throw new StoreError('STALE_HOST', 'Another host owns this session');
             }
             const outcomeId = 'outcomeId' in command.payload ? command.payload.outcomeId : null;
-            if(command.payload.type === 'RQ_ACTION' || command.payload.type === 'QT_ACTION') {
+            if(command.payload.type === 'RQ_ACTION' || command.payload.type === 'QT_ACTION' || command.payload.type === 'VB_ACTION') {
               const rqPrior = outcomes.index('byEvent').getAll(command.eventId);
               rqPrior.onsuccess = () => {
                 try {
@@ -364,6 +364,28 @@ export class EventRepository {
                 outcomes.add(outcomeSchema.parse({
                   eventId:session.id,outcomeId:'qt-award-'+next.event.revision+'-'+tileId,
                   taskId:tileId,teamId:current.winnerId??current.selectorId,points:current.points,
+                  status:'active',createdRevision:next.event.revision,updatedRevision:next.event.revision,
+                }));
+              }
+            }
+          }
+        }
+        if(command.payload.type==='VB_ACTION'&&session.verbindungen&&next.event.verbindungen){
+          const before=session.verbindungen,after=next.event.verbindungen;
+          const puzzleId=before.assignments[before.index]?.puzzleId;
+          if(puzzleId){
+            const previous=before.awards.filter(a=>a.puzzleId===puzzleId);
+            const current=after.awards.filter(a=>a.puzzleId===puzzleId);
+            if(JSON.stringify(previous)!==JSON.stringify(current)){
+              for(const saved of rqOutcomes){
+                if(saved.taskId===puzzleId&&saved.outcomeId.startsWith('vb-award-')&&saved.status==='active')
+                  outcomes.put(outcomeSchema.parse({...saved,status:'void',updatedRevision:next.event.revision}));
+              }
+              for(const a of current){
+                outcomes.add(outcomeSchema.parse({
+                  eventId:session.id,
+                  outcomeId:'vb-award-'+next.event.revision+'-'+a.teamId,
+                  taskId:puzzleId,teamId:a.teamId,points:a.points,
                   status:'active',createdRevision:next.event.revision,updatedRevision:next.event.revision,
                 }));
               }
@@ -455,6 +477,11 @@ export class EventRepository {
                   ...candidate.quiztafel,ownerId:input.newHostId,epoch,
                   paused:action==='RECOVERY_RESTORE' || candidate.lifecycle==='active' ||
                     candidate.lifecycle==='paused'||candidate.quiztafel.paused,
+                }}:{}),
+                ...(candidate.verbindungen?{verbindungen:{
+                  ...candidate.verbindungen,ownerId:input.newHostId,epoch,
+                  paused:action==='RECOVERY_RESTORE'||candidate.lifecycle==='active'||
+                    candidate.lifecycle==='paused'||candidate.verbindungen.paused,
                 }}:{}),
                 stageRevision: candidate.stageRevision + 1,
                 lifecycle: candidate.lifecycle === 'active' ? 'paused' : candidate.lifecycle,
