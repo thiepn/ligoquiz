@@ -103,6 +103,7 @@ describe('G2 real IndexedDB semantics in fake browser storage', () => {
     expect((await repo.getScores('e1'))['team-0']).toBe(0);
     expect((await repo.getOutcomes('e1'))[0]).toMatchObject({ points: 4, status: 'void', createdRevision: 4 });
     s = (await send(repo, s, { type: 'OUTCOME_RESTORE', outcomeId: 'o1', reason: 'Host correction' }, 'redo')).latest;
+    expect(s.revision).toBe(6);
     expect((await repo.getScores('e1'))['team-0']).toBe(4);
     expect((await repo.getAudit('e1')).map((a) => a.kind).slice(-3)).toEqual(['OUTCOME_COMMIT', 'OUTCOME_VOID', 'OUTCOME_RESTORE']);
   });
