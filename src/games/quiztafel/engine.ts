@@ -153,6 +153,7 @@ export function transition(s:Session,c:Command):Session{
     }
     case 'CORRECT':{
       phase('awarded');
+      requireRule(!s.annulled,'PHASE','Annullierte und unveröffentlichte Antworten dürfen nicht durch Korrektur offengelegt werden');
       const tile=selectedTile(s);requireRule(tile,'PHASE','Kein Feld für Korrektur');
       next={...s,phase:'revealed',usedTileIds:s.usedTileIds.filter(id=>id!==tile.id),
         outcomes:s.outcomes.filter(o=>o.tileId!==tile.id),annulled:false};break;
