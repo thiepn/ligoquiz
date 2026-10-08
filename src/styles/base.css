@@ -61,3 +61,34 @@
 @media(max-width:800px){.app-shell{grid-template-columns:1fr}.sidebar{height:auto;min-height:78px;position:static;padding:14px 18px 10px;flex-direction:row;flex-wrap:wrap;align-items:center;gap:16px}.brand{padding:0}.nav-group-title,.sidebar-bottom{display:none}.main-nav{display:flex;flex-wrap:wrap;margin-left:auto;gap:2px}.nav-item{padding:9px 10px;min-height:40px;gap:5px;font-size:12px}.nav-item.active{border-left:0;border-bottom:3px solid #f6c545;padding-left:10px}.nav-symbol{font-size:14px}.workspace{padding:28px 18px 60px}.start-layout{grid-template-columns:1fr}.projection-preview{min-height:178px}.game-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.brand-text small{display:none}.surface-header{flex-direction:column}.game-grid{grid-template-columns:1fr}.game-entry{min-height:155px}.section-heading{flex-direction:column;gap:5px}.stage-center h1{letter-spacing:-1px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+
+/* G3: operational tech check remains subordinate to the actual quiz-night UI */
+.g3-tech{margin-top:28px;padding:24px 25px;background:#fff;border:1px solid #dcdedb}
+.g3-tech-heading{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
+.g3-tech h2{margin:8px 0 5px;font-size:20px;letter-spacing:-.5px}
+.g3-tech-heading p{font-size:12px;line-height:1.65;color:#646b72;max-width:590px;margin:0}
+.g3-tech-tag{font-size:9px;color:#75683b;font-weight:750;letter-spacing:1px;background:#f0eacb;white-space:nowrap;padding:7px 9px}
+.g3-tech-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:19px}
+.g3-tech-state{padding:15px;border:1px solid #e5e6e3;display:grid;gap:5px;min-height:92px}
+.g3-tech-state>span{font-size:9px;letter-spacing:1.5px;color:#96918a;font-weight:750}
+.g3-tech-state>strong{font-size:15px;letter-spacing:-.25px}
+.g3-tech-state>small{font-size:11px;color:#757b82}
+.g3-tech-primary,.g3-tech-actions button,.g3-tech-link{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:9px 15px;font-size:12px;font-weight:750;border:1px solid #171b21}
+.g3-tech-primary{background:#171b21;color:#ffdf6d}.g3-tech-primary:disabled,.g3-tech-actions button:disabled{opacity:.5}
+.g3-tech-link{background:#f6c948;color:#171b21;border:1px solid #f6c948;margin-top:14px}
+.g3-tech-line{margin:14px 0 9px;font-size:11px;color:#5b646f;font-variant-numeric:tabular-nums}
+.g3-tech-actions{display:flex;gap:8px;flex-wrap:wrap}
+.g3-tech-actions button:not(.g3-tech-primary){background:#fff;color:#171b21}
+.g3-tech-footnote{margin:14px 0 0;color:#81878e;font-size:10px;line-height:1.7}
+.g3-tech-error{color:#942b35;border-left:3px solid #b73b48;padding:9px 11px;background:#fbeef0;font-size:12px}
+.stage-live-question{width:min(1300px,92vw);display:flex;flex-direction:column;align-items:center;text-align:center}
+.stage-live-question h1{font-size:clamp(32px,5.8vw,98px);letter-spacing:-.04em;line-height:1.13;overflow-wrap:anywhere;hyphens:auto}
+.stage-clues{margin-top:12px;display:flex;justify-content:center;flex-wrap:wrap;gap:12px}
+.stage-clues p{background:#2d3540;border:1px solid #596575;color:#fff;font-size:clamp(15px,2vw,30px);padding:18px 24px;margin:0;max-width:min(500px,88vw)}
+.stage-reveal{margin-top:22px;border-top:3px solid #e9c249;padding:25px 25px;display:grid;gap:8px;width:min(750px,90vw)}
+.stage-reveal>span{font-size:clamp(11px,1vw,16px);letter-spacing:.16em;color:#eac251;font-weight:750}
+.stage-reveal strong{font-size:clamp(30px,4.8vw,72px)}
+.stage-scores{width:min(650px,86vw);display:grid;gap:14px;margin-top:24px}
+.stage-scores>div{display:flex;justify-content:space-between;gap:10px;font-size:clamp(18px,2.2vw,32px);padding:15px;border-bottom:1px solid #68727c}
+@media(max-width:570px){.g3-tech{padding:17px}.g3-tech-heading{flex-direction:column;gap:9px}.g3-tech-grid{grid-template-columns:1fr}.g3-tech-tag{align-self:flex-start}}
