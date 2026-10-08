@@ -1,6 +1,7 @@
 import { eventSchema, outcomeSchema, type CommandEnvelopeV2, type EventRecord, type OutcomeRecord } from './schemas';
 import { transition as rqTransition } from '../../games/rundenquiz/engine';
 import { transition as qtTransition } from '../../games/quiztafel/engine';
+import { transition as vbTransition } from '../../games/verbindungen/engine';
 
 export type Change = {
   event: EventRecord;
@@ -35,6 +36,24 @@ export function applySessionCommand(
     if (session.lifecycle !== 'active') fail('INVALID_PHASE', 'Game is not active');
   };
   switch (payload.type) {
+    case 'VB_ACTION': {
+      const vb=session.verbindungen;
+      if(!vb)throw new DomainError('INVALID_PHASE','Verbindungen not configured');
+      if(session.lifecycle==='complete')throw new DomainError('INVALID_PHASE','Event finished');
+      if(session.lifecycle==='paused'&&payload.action.type!=='RESUME')
+        throw new DomainError('INVALID_PHASE','Game paused');
+      const state=vbTransition(vb,{
+        id:command.commandId,ownerId:command.hostId,epoch:command.hostEpoch,
+        expectedRevision:vb.revision,at:command.issuedAtEpochMs,action:payload.action,
+      });
+      next={...session,verbindungen:state,
+        lifecycle:state.phase==='complete'?'complete':
+          state.paused?'paused':state.phase==='setup'?'draft':'active'};
+      stageChanged=['START','PUBLISH','NEXT_CLUE','CLOSE_WALL','REVEAL_WALL_GROUP',
+        'REVEAL','CONFIRM','CORRECT','ANNUL','NEXT','PAUSE','RESUME'].includes(payload.action.type);
+      note='Verbindungen '+payload.action.type;
+      break;
+    }
     case 'QT_ACTION': {
       const qt=session.quiztafel;
       if(!qt)throw new DomainError('INVALID_PHASE','Quiztafel not configured');
@@ -186,6 +205,7 @@ export function createEvent(seed: {
   frozenTasks: EventRecord['frozenTasks'];
   rundenquiz?: EventRecord['rundenquiz'];
   quiztafel?: EventRecord['quiztafel'];
+  verbindungen?: EventRecord['verbindungen'];
   at: number;
 }): EventRecord {
   return eventSchema.parse({
@@ -197,5 +217,6 @@ export function createEvent(seed: {
     createdAt: seed.at, updatedAt: seed.at,
     ...(seed.rundenquiz ? {rundenquiz:seed.rundenquiz} : {}),
     ...(seed.quiztafel ? {quiztafel:seed.quiztafel} : {}),
+    ...(seed.verbindungen ? {verbindungen:seed.verbindungen} : {}),
   });
 }
