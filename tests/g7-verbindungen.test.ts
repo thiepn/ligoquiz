@@ -131,6 +131,7 @@ describe('G7 fair profiles',()=>{
   s=step(s,{type:'CLOSE_WALL'});
   expect(JSON.stringify(publicScene(s))).not.toContain('Himmelsrichtungen');
   s=step(s,{type:'REVEAL_WALL_GROUP'});
+  expect(()=>step(s,{type:'REVEAL_WALL_GROUP'})).toThrow();
   expect(JSON.stringify(publicScene(s))).toContain('Evangelien');
   expect(JSON.stringify(publicScene(s))).not.toContain('Himmelsrichtungen');
  });
