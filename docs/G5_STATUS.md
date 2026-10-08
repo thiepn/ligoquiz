@@ -24,6 +24,8 @@ Production `main` is unchanged. This is not an externally released app.
 - Organizer lists all valid local sessions, separates incomplete/draft from completed and reports damaged records rather than resetting them.
 - Explicit takeover requires a browser confirmation and uses G2's transactional new host epoch, fencing old host commands.
 - RundenquizHost loads its G2 session on host entry and conservatively pauses interrupted play.
+- An already checkpoint-recovered session with `recoveryRequired=true` displays a dedicated review panel. Explicit operator approval runs G2 `RECOVERY_CONFIRM`; the game remains paused, with no auto-reveal or resume.
+- A host route with no valid selected session cannot bypass the organizer readiness wizard; it links back to saved sessions.
 - No event automatically resumes, reveals a hidden answer, or opens a question.
 
 ### Demo isolation
@@ -42,6 +44,7 @@ Production `main` is unchanged. This is not an externally released app.
 ## Tests
 - `tests/g5-experience.test.ts`: preference/draft validation, event-route parsing, read-only session indexing and corrupt-record count, host takeover fencing, result-only report privacy/ties.
 - `e2e/g5-organizer.spec.mjs`: Chromium guided setup/reload, host handoff, disposable demo isolation, preference application.
+- Legacy G4 browser cases now traverse the G5 setup wizard to enter the private host workspace.
 - Existing G4 real-browser projector/host tests adapted to the isolated `#/host` route.
 - CI must pass strict TS, lint, unit tests, Vite build and separate Chromium workflows before merge.
 
