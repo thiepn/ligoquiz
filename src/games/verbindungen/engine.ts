@@ -2,7 +2,7 @@
 export type Profile='kurz'|'standard'|'lang';
 export type Team={id:string;name:string;order:number};
 export type Clue={id:string;kind:'clues';target:string;clues:readonly [string,string,string,string];reference:string};
-export type Sequence={id:string;kind:'sequence';items:readonly [string,string,string];answer:string;explanation:string;reference:string};
+export type Sequence={id:string;kind:'sequence';prompt:string;items:readonly [string,string,string];answer:string;explanation:string;reference:string};
 export type WallGroup={id:string;tileIds:readonly [string,string,string,string];link:string;acceptedLinks:readonly string[]};
 export type Wall={id:string;kind:'wall';tiles:readonly {id:string;label:string}[];groups:readonly WallGroup[];reference:string};
 export type Puzzle=Clue|Sequence|Wall;
@@ -55,7 +55,7 @@ export function validateContent(teams:readonly Team[],profile:Profile,puzzles:re
   if(p.kind==='clues'){
    assert(p.target.trim()&&p.clues.length===4&&p.clues.every(x=>x.trim()),'CONTENT','Vier eindeutig benannte Hinweise nötig');
   } else if(p.kind==='sequence'){
-   assert(p.items.length===3&&p.items.every(x=>x.trim())&&p.answer.trim()&&p.explanation.trim(),'CONTENT','Dreierfolge mit eindeutiger Regel fehlt');
+   assert(p.prompt.trim()&&p.items.length===3&&p.items.every(x=>x.trim())&&p.answer.trim()&&p.explanation.trim(),'CONTENT','Dreierfolge mit eindeutiger Regel fehlt');
   } else {
    assert(p.tiles.length===16&&p.groups.length===4,'WALL','Wand erfordert 16 Felder und 4 Gruppen');
    assert(p.tiles.every(t=>t.id.trim()&&t.label.trim()),'WALL','Unvollständiges Wandfeld');
@@ -130,10 +130,11 @@ export function transition(s:Session,c:Command):Session{
     clueIndex:task.puzzle.kind==='clues'?1:0};
    break;
   case 'NEXT_CLUE':
-   requirePhase('clue-open');assert(s.clueIndex<4,'PHASE','Alle Hinweise gezeigt');
+   requirePhase('clue-open');assert(!s.judgement,'LOCK','Ein finaler Versuch wurde bereits abgegeben');assert(s.clueIndex<4,'PHASE','Alle Hinweise gezeigt');
    next={...s,clueIndex:s.clueIndex+1};break;
   case 'JUDGE':
    requirePhase('clue-open','sequence-open');
+   assert(!s.judgement,'LOCK','Ein finaler Versuch wurde bereits abgegeben');
    next={...s,judgement:a.value};break;
   case 'CLOSE_WALL':
    requirePhase('wall-open');next={...s,phase:'wall-closed'};break;
@@ -198,7 +199,7 @@ export function transition(s:Session,c:Command):Session{
 export type PublicScene=
  |{kind:'waiting'|'paused'}
  |{kind:'clues';activeTeam:string;clues:readonly string[];number:number}
- |{kind:'sequence';activeTeam:string;items:readonly string[]}
+ |{kind:'sequence';activeTeam:string;prompt:string;items:readonly string[]}
  |{kind:'wall';tiles:readonly {id:string;label:string}[];revealed:readonly {id:string;tileIds:readonly string[];link:string}[]}
  |{kind:'answer';prompt:string;answer:string}
  |{kind:'scores';teams:readonly {id:string;name:string;points:number}[];final:boolean};
@@ -215,7 +216,7 @@ export function publicScene(s:Session):PublicScene{
  }
  if(puzzle.kind==='sequence'){
   if(s.phase==='revealed')return {kind:'answer',prompt:'Folge ergänzen',answer:puzzle.answer+' — '+puzzle.explanation};
-  return {kind:'sequence',activeTeam:s.teams.find(t=>t.id===assignment.teamId)?.name??'',items:puzzle.items};
+  return {kind:'sequence',activeTeam:s.teams.find(t=>t.id===assignment.teamId)?.name??'',prompt:puzzle.prompt,items:puzzle.items};
  }
  return {kind:'wall',tiles:puzzle.tiles,
   revealed:puzzle.groups.slice(0,s.revealedGroups).map(g=>({id:g.id,tileIds:g.tileIds,link:g.link}))};
