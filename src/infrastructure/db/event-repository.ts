@@ -1,6 +1,6 @@
 import {
   eventSchema, envelopeSchema, outcomeSchema, receiptSchema, checkpointSchema, auditSchema,
-  type EventRecord, type CommandEnvelopeV2, type OutcomeRecord, type CommandReceipt,
+  type EventRecord, type OutcomeRecord, type CommandReceipt,
   type CheckpointRecord, type AuditRecord,
 } from '../../domain/event/schemas';
 import { applySessionCommand } from '../../domain/event/transition';
@@ -74,7 +74,7 @@ export class EventRepository {
 
   private open(): Promise<IDBDatabase> {
     if (this.dbPromise) return this.dbPromise;
-    this.dbPromise = new Promise((resolve, reject) => {
+    this.dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
       if (!this.factory) {
         reject(new StoreError('IDB_UNAVAILABLE', 'IndexedDB is required for saved sessions'));
         return;
