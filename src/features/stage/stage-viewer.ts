@@ -96,9 +96,18 @@ export class StageViewer {
     if (this.view.status === 'live' &&
         JSON.stringify(this.view.frame) === JSON.stringify(frame)) {
       this.view = { status: 'live', frame, lastReceivedAt: now };
+      this.acknowledge(frame);
       return;
     }
     this.emit({ status: 'live', frame, lastReceivedAt: now });
+    this.acknowledge(frame);
+  }
+  private acknowledge(frame: PublicStageDto): void {
+    this.port.send({
+      protocolVersion: 1, kind: 'ACK', eventId: this.eventId,
+      viewerId: this.viewerId, hostEpoch: frame.hostEpoch,
+      stageRevision: frame.stageRevision,
+    });
   }
   stop(): void {
     this.unsubscribe?.();
