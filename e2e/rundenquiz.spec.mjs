@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 async function prepare(host, numberOfTeams = 4) {
-  await host.goto('/#/spielen');
+  await host.goto('/#/host');
   const workbench = host.locator('.rq-host');
   if (numberOfTeams !== 4) {
     await workbench.getByLabel('Teams', { exact: true }).selectOption(String(numberOfTeams));
