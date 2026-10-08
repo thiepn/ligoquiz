@@ -36,12 +36,12 @@ export function derivePublicStage(session: EventRecord): PublicStageDto {
           kind:'answer' as const,heading:heading(rq.round),
           publicPrompt:rq.prompt,publishedSolution:rq.solution,
         }
-      : {
+      : rq.kind==='results' ? {
           kind:'scores' as const,
           heading:rq.final?'Endstand':'Zwischenstand',
           visibleScores:rq.teams.map(t=>({name:t.name,value:rq.scores[t.id]??0}))
             .sort((a,b)=>b.value-a.value),
-        };
+        } : waitingScene();
     return publicDtoSchema.parse({
       protocolVersion:1,eventId:session.id,gameId:game?.id??null,
       hostEpoch:session.hostEpoch,stageRevision:session.stageRevision,scene,
