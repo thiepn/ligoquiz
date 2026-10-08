@@ -169,6 +169,14 @@ export function ProjectorTechCheck() {
           </button>
         </div>
       </>}
+      <button className="g3-tech-reset" disabled={busy} onClick={() => {
+        sessionStorage.removeItem(STORAGE_KEY);
+        setIdentity(null);
+        setEvent(null);
+        setPublisherStatus('off');
+        setAudienceCount(0);
+        setError(null);
+      }}>Anderen Techniktest beginnen</button>
       <p className="g3-tech-footnote">Die Technikdemo ist ausschließlich für die Übertragungsprüfung bestimmt. Für neue Tests kann eine neue Sitzung angelegt werden; es werden keine v1-Daten gelesen.</p>
     </>}
     {error && <p className="g3-tech-error" role="alert">{error}</p>}
