@@ -1,12 +1,16 @@
 import { test, expect } from '@playwright/test';
 
 async function prepare(host, numberOfTeams = 4) {
-  await host.goto('/#/host');
-  const workbench = host.locator('.rq-host');
+  await host.goto('/#/setup');
   if (numberOfTeams !== 4) {
-    await workbench.locator('.rq-setup select').nth(1).selectOption(String(numberOfTeams));
+    await host.getByRole('combobox', { name: 'Anzahl der Teams' }).selectOption(String(numberOfTeams));
   }
-  await workbench.getByRole('button', { name: 'Quizabend vorbereiten' }).click();
+  await host.getByRole('button', { name: 'Weiter' }).click();
+  await host.getByRole('button', { name: 'Weiter' }).click();
+  await host.getByRole('checkbox').check();
+  await host.getByRole('button', { name: 'Spielleitung öffnen' }).click();
+  await expect(host).toHaveURL(/#\/host$/);
+  const workbench = host.locator('.rq-host');
   await expect(workbench.getByRole('button', { name: 'Teams bestätigen' })).toBeEnabled();
   return workbench;
 }
