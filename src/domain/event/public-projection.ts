@@ -1,11 +1,21 @@
 import { z } from 'zod';
 import type { EventRecord } from './schemas';
 import { publicScene as rqPublicScene } from '../../games/rundenquiz/engine';
+import { publicScene as qtPublicScene } from '../../games/quiztafel/engine';
 import { projectTaskForAudience, waitingScene, type PublicStageDto } from '../projection/public-stage';
 
 const publicSceneSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('waiting'), heading: z.string() }),
   z.strictObject({ kind: z.literal('paused'), heading: z.literal('Pause') }),
+  z.strictObject({kind:z.literal('qt-board'),heading:z.string(),
+    categories:z.array(z.strictObject({id:z.string(),name:z.string()})).min(3).max(5),
+    rows:z.number().int().min(3).max(6),closedIds:z.array(z.string()),
+    selectorName:z.string(),turn:z.number().int().nonnegative(),total:z.number().int().positive()}),
+  z.strictObject({kind:z.literal('qt-question'),heading:z.string(),category:z.string(),
+    points:z.number().int().min(100).max(600),publicPrompt:z.string(),
+    selectorName:z.string(),respondingName:z.string(),steal:z.boolean()}),
+  z.strictObject({kind:z.literal('qt-answer'),heading:z.string(),category:z.string(),
+    points:z.number().int().min(100).max(600),publicPrompt:z.string(),publishedSolution:z.string()}),
   z.strictObject({ kind: z.literal('question'), heading: z.string(), publicPrompt: z.string(), visibleClues: z.array(z.string()) }),
   z.strictObject({ kind: z.literal('answer'), heading: z.string(), publicPrompt: z.string(), publishedSolution: z.string() }),
   z.strictObject({ kind: z.literal('scores'), heading: z.string(), visibleScores: z.array(z.strictObject({ name: z.string(), value: z.number() })) }),
@@ -19,6 +29,33 @@ export const publicDtoSchema = z.strictObject({
 });
 
 export function derivePublicStage(session: EventRecord): PublicStageDto {
+  if(session.quiztafel){
+    const qt=qtPublicScene(session.quiztafel),game=session.program[0];
+    const scene=session.recoveryRequired?waitingScene():
+      session.lifecycle==='paused'?{kind:'paused' as const,heading:'Pause' as const}:
+      qt.kind==='waiting'?waitingScene():
+      qt.kind==='paused'?{kind:'paused' as const,heading:'Pause' as const}:
+      qt.kind==='board'?{
+        kind:'qt-board' as const,heading:'Quiztafel',
+        categories:qt.categories,rows:qt.rows,closedIds:qt.closedIds,
+        selectorName:qt.selectorName,turn:qt.turn,total:qt.total,
+      }:qt.kind==='question'?{
+        kind:'qt-question' as const,heading:'Quiztafel · '+qt.category+' / '+qt.points,
+        category:qt.category,points:qt.points,publicPrompt:qt.prompt,
+        selectorName:qt.selectorName,respondingName:qt.respondingName,steal:qt.steal,
+      }:qt.kind==='answer'?{
+        kind:'qt-answer' as const,heading:'Quiztafel · '+qt.category+' / '+qt.points,
+        category:qt.category,points:qt.points,publicPrompt:qt.prompt,
+        publishedSolution:qt.answer,
+      }:{
+        kind:'scores' as const,heading:'Quiztafel · Endstand',
+        visibleScores:qt.teams.map(t=>({name:t.name,value:t.points})),
+      };
+    return publicDtoSchema.parse({
+      protocolVersion:1,eventId:session.id,gameId:game?.id??null,
+      stageRevision:session.stageRevision,hostEpoch:session.hostEpoch,scene,
+    });
+  }
   if(session.rundenquiz) {
     const rq=rqPublicScene(session.rundenquiz), game=session.program[0];
     const heading=(round:string)=>({wissen:'Wissen',hinweise:'Hinweise',schaetzen:'Schätzen',finale:'Finale'} as Record<string,string>)[round]??'Rundenquiz';
