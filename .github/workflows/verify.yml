@@ -9,40 +9,22 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # one-time lockfile bootstrap only on isolated rebuild branch
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Upgrade npm resolver (npm 10.9 has a known Arborist regression)
+          cache: npm
+      - name: Upgrade npm resolver (avoid npm 10 Arborist regression)
         run: npm install --global npm@11
-      - name: Install dependencies
-        run: |
-          if test -f package-lock.json; then
-            npm ci --no-audit --no-fund
-          else
-            npm install --no-audit --no-fund
-          fi
-      - name: Verify strict types, lint and tests
+      - name: Install pinned dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Verify types, lint and unit tests
         run: npm run verify
       - name: Build static production bundle
         run: npm run build
-      - name: Commit npm lockfile on first successful rebuild branch run
-        if: github.event_name == 'push' && github.ref == 'refs/heads/rebuild/v2'
-        run: |
-          if test -f package-lock.json && ! git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add package-lock.json
-            git commit -m "chore(g1): lock verified dependencies"
-            git push origin HEAD:rebuild/v2
-          fi
       - uses: actions/upload-artifact@v4
         with:
           name: g1-static-bundle
-          path: |
-            dist/
-            package-lock.json
+          path: dist/
           if-no-files-found: error

@@ -1,33 +1,41 @@
-# LiGoQuiz 2.0 — G1 engineering foundation
+# LiGoQuiz 2.0 — G1 Engineering Foundation
 
-Branch: rebuild/v2. Production GitHub Pages remains on main (legacy v1.14).
+**Working branch:** rebuild/v2. **Production:** main (legacy v1.14), unchanged.
 
-G1 is deliberately **not playable**. It provides:
-- React + strict TypeScript + Vite static app shell, German navigation and projector preview.
-- Separate domain contracts and five game registry entries (all not ready).
-- Exact BP-03 event-placement scoring including ties.
-- A strict public stage-data projection with privacy tests.
-- Vitest regression suite and GitHub Actions check/build.
-- No PWA, gameplay, account system, backend, migration or deployment.
+G1 is a **non-playable foundation**, not a v2.0 release:
+- React 19 + TypeScript strict + Vite static shell with German navigation.
+- Typed domain contracts, five game manifests (all marked not ready).
+- Pure BP-03 rank/tie scoring with exact integer half-points.
+- Explicit audience data allowlist and regression tests against answer leakage.
+- CI with TypeScript checks, linting, unit tests and a static bundle build.
+- No accounts, backend, PWA registration, legacy migration or published preview.
 
-## Local development
-Node.js 22.12+ and npm required.
+## Local setup
+
+Node.js 22.12+ and npm 11 required.
 
     npm ci
     npm run dev
     npm run verify
     npm run build
 
-The first successful rebuild-branch CI run will commit a dependency lockfile.
-After that, npm ci is required.
+The committed package-lock.json is the dependency source of truth.
 
-Routes: #/spielen, #/inhalte, #/verlauf and #/stage.
-The Beamer route is a waiting preview, not real synchronization.
+## Routes
 
-Do not deploy this branch to the production Pages site. The G1 work
-does not read or write legacy browser keys. A separate URL path is NOT
-a separate browser origin; use a different origin for future previews.
+- #/spielen — preview of game selection.
+- #/inhalte — empty future content studio.
+- #/verlauf — empty future event history.
+- #/stage — public waiting screen (not synchronized).
 
-G2: transactional engine, indexed storage, fencing and recovery.
-G3: host/projector protocol.
-BP-03 game rules and BP-04 visual concepts still need owner approval.
+No live gameplay or saved sessions exist on this branch yet.
+
+## Safety
+
+Do not deploy to production GitHub Pages from this branch. G1 does not read or
+write any legacy localStorage keys. Use a distinct origin, not merely a path,
+if hosting a future preview to avoid shared browser storage and service-worker
+scope with the legacy application.
+
+Next: G2 state engine and crash-safe persistence; G3 projector protocol;
+G4–G9 games; G10 migration; G11 PWA and qualification.
