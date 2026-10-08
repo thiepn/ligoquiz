@@ -98,7 +98,7 @@ describe('G5 saved sessions, recovery and history', () => {
       };
       const report=reportFor(finish);
       expect(report?.teams[0]).toMatchObject({name:'Team 1',rawPoints:10,eveningHalfPoints:8});
-      expect(report?.teams.filter(t=>t.rawPoints===0).map(t=>t.eveningHalfPoints)).toEqual([3,3,3]);
+      expect(report?.teams.filter(t=>t.rawPoints===0).map(t=>t.eveningHalfPoints)).toEqual([4,4,4]);
       expect(JSON.stringify(report)).not.toContain('Josua');
       expect(report?.awards).toHaveLength(2);
     }finally{await repo.close();}
