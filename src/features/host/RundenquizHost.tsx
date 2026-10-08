@@ -4,7 +4,7 @@ import { EventRepository } from '../../infrastructure/db/event-repository';
 import { HostSessionController } from '../../application/host-controller/host-session';
 import { BrowserStagePort, stageUrl } from '../stage/protocol';
 import { HostStagePublisher } from '../stage/host-publisher';
-import { createSession, currentQuestion, taskAwards, scores, eveningHalfPoints,
+import { createSession, currentQuestion, scores, eveningHalfPoints,
  type Action, type Profile, type Session } from '../../games/rundenquiz/engine';
 import { parseEstimateInput } from '../../games/rundenquiz/decimal';
 import { RQ_TRIAL_BANK } from '../../games/rundenquiz/trial-bank';
@@ -195,7 +195,7 @@ export function RundenquizHost(){
             onChange={e=>setEstimateInput(v=>({...v,[t.id]:e.target.value}))} placeholder="z. B. 1,8 km"/></label>
           <button disabled={disabled} onClick={()=>submitEstimate(t.id,q.unit??'')}>Übernehmen</button>
           <button disabled={disabled} onClick={()=>void action({type:'ESTIMATE',teamId:t.id,value:null})}>Keine Antwort</button>
-          <span>{rq.entries[t.id]&&'estimate' in rq.entries[t.id] ? ' Erfasst' : ' Offen'}</span>
+          <span>{Object.hasOwn(rq.entries[t.id]??{},'estimate') ? ' Erfasst' : ' Offen'}</span>
          </div>)}</div>}
         <button className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'CLOSE'})}>Antwortphase schließen</button>
       </>}
