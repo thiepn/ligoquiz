@@ -1,7 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {indexedDB as fakeIndexedDB} from 'fake-indexeddb';
 import {
- createSession,transition,active,publicScene,scores,wallAwards,eveningHalfPoints,NEEDS,
+ createSession,transition,active,publicScene,wallAwards,eveningHalfPoints,NEEDS,
  type Session,type Profile,type Action,
 } from '../src/games/verbindungen/engine';
 import {trialVerbindungen} from '../src/games/verbindungen/trial-bank';
