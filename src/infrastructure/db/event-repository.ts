@@ -150,17 +150,42 @@ export class EventRepository {
     const records: unknown[] = await requestResult(tx.objectStore('outcomes').index('byEvent').getAll(eventId));
     return records.map((record) => outcomeSchema.parse(record));
   }
+  /**
+   * Derive scores and corresponding revision from ONE readonly transaction.
+   * Two separate reads could otherwise mix different committed revisions.
+   */
+  async getScoreSnapshot(eventId: string): Promise<{ revision: number; scores: Record<string, number> }> {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(['events', 'outcomes'], 'readonly');
+      const eventRequest = tx.objectStore('events').get(eventId);
+      const outcomeRequest = tx.objectStore('outcomes').index('byEvent').getAll(eventId);
+      tx.oncomplete = () => {
+        try {
+          const raw: unknown = eventRequest.result;
+          if (!raw) throw new StoreError('NOT_FOUND', 'No such session');
+          const parsed = eventSchema.safeParse(raw);
+          if (!parsed.success) throw new StoreError('CORRUPT_SESSION', 'Stored session is invalid');
+          const event = parsed.data;
+          const scores = new Map<string, number>(event.teams.map((team) => [team.id, 0]));
+          for (const rawOutcome of outcomeRequest.result as unknown[]) {
+            const outcome = outcomeSchema.parse(rawOutcome);
+            if (outcome.status !== 'active') continue;
+            const existing = scores.get(outcome.teamId);
+            if (existing === undefined) throw new StoreError('CORRUPT_SESSION', 'Outcome references unknown team');
+            const total = existing + outcome.points;
+            if (!Number.isSafeInteger(total)) throw new StoreError('CORRUPT_SESSION', 'Score exceeds safe integer range');
+            scores.set(outcome.teamId, total);
+          }
+          resolve({ revision: event.revision, scores: Object.fromEntries(scores) });
+        } catch (error) { reject(error); }
+      };
+      tx.onabort = () => reject(tx.error ?? newError('Score read aborted'));
+      tx.onerror = () => { /* onabort handles transaction errors */ };
+    });
+  }
   async getScores(eventId: string): Promise<Record<string, number>> {
-    const event = await this.get(eventId);
-    if (!event) throw new StoreError('NOT_FOUND', 'No such session');
-    const scores: Record<string, number> = Object.fromEntries(event.teams.map((team) => [team.id, 0]));
-    for (const outcome of await this.getOutcomes(eventId)) {
-      if (outcome.status === 'active') {
-        if (!(outcome.teamId in scores)) throw new StoreError('CORRUPT_SESSION', 'Outcome references removed team');
-        scores[outcome.teamId] = (scores[outcome.teamId] ?? 0) + outcome.points;
-      }
-    }
-    return scores;
+    return (await this.getScoreSnapshot(eventId)).scores;
   }
   async getAudit(eventId: string): Promise<AuditRecord[]> {
     const db = await this.open();
