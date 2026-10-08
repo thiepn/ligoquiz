@@ -1,6 +1,6 @@
 import { indexedDB as fakeIndexedDB } from 'fake-indexeddb';
 import { afterEach, describe, expect, it } from 'vitest';
-import { EventRepository, StoreError } from '../src/infrastructure/db/event-repository';
+import { EventRepository } from '../src/infrastructure/db/event-repository';
 import { createEvent } from '../src/domain/event/transition';
 import { derivePublicStage } from '../src/domain/event/public-projection';
 import type { EventRecord, SessionCommand } from '../src/domain/event/schemas';
