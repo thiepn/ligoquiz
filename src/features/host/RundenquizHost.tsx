@@ -1,0 +1,230 @@
+import { useEffect, useRef, useState } from 'react';
+import { createEvent } from '../../domain/event/transition';
+import { EventRepository } from '../../infrastructure/db/event-repository';
+import { HostSessionController } from '../../application/host-controller/host-session';
+import { BrowserStagePort, stageUrl } from '../stage/protocol';
+import { HostStagePublisher } from '../stage/host-publisher';
+import { createSession, currentQuestion, taskAwards, scores, eveningHalfPoints,
+ type Action, type Profile, type Session } from '../../games/rundenquiz/engine';
+import { parseEstimateInput } from '../../games/rundenquiz/decimal';
+import { RQ_TRIAL_BANK } from '../../games/rundenquiz/trial-bank';
+import type { EventRecord } from '../../domain/event/schemas';
+
+const IDENTITY_KEY='ligoquiz.v2.g4.rundenquiz.host';
+type Identity={eventId:string;hostId:string};
+function savedIdentity():Identity|null{
+ try{
+  const parsed:unknown=JSON.parse(sessionStorage.getItem(IDENTITY_KEY)??'null');
+  if(parsed && typeof parsed==='object' && 'eventId' in parsed && 'hostId' in parsed &&
+   typeof parsed.eventId==='string' && typeof parsed.hostId==='string' &&
+   /^[a-zA-Z0-9_-]{8,128}$/.test(parsed.eventId) && /^[a-zA-Z0-9_-]{8,128}$/.test(parsed.hostId))
+   return {eventId:parsed.eventId,hostId:parsed.hostId};
+ }catch{/* blocked or invalid sessionStorage */}
+ return null;
+}
+const errorMessage=(e:unknown)=>e instanceof Error?e.message:'Aktion fehlgeschlagen';
+
+export function RundenquizHost(){
+ const [identity,setIdentity]=useState<Identity|null>(savedIdentity);
+ const [event,setEvent]=useState<EventRecord|null>(null);
+ const [count,setCount]=useState(4);
+ const [names,setNames]=useState(['Team 1','Team 2','Team 3','Team 4','Team 5']);
+ const [profile,setProfile]=useState<Profile>('kurz');
+ const [busy,setBusy]=useState(false);
+ const [error,setError]=useState<string|null>(null);
+ const [viewers,setViewers]=useState(0);
+ const [estimateInput,setEstimateInput]=useState<Record<string,string>>({});
+ const [sourceReady,setSourceReady]=useState(false);
+ const controllerRef=useRef<HostSessionController|null>(null);
+ useEffect(()=>{
+  if(!identity)return;
+  let disposed=false;
+  const repo=new EventRepository();
+  const onStatus=(status:string)=>{
+   if(!disposed && status==='revoked'){
+    setSourceReady(false);
+    setError('Eine andere Spielleitung hat übernommen. Dieses Fenster darf nicht mehr steuern.');
+   }
+  };
+  let publisher:HostStagePublisher;
+  try{
+   publisher=new HostStagePublisher(identity.eventId,identity.hostId,repo,
+    new BrowserStagePort(identity.eventId),onStatus,
+    n=>{if(!disposed)setViewers(n);});
+   publisher.start();
+  }catch(e){setError(errorMessage(e));void repo.close();return;}
+  const controller=new HostSessionController(repo,identity.eventId,identity.hostId,
+   ()=>{void publisher.refresh();});
+  controllerRef.current=controller;
+  void controller.load().then(async loaded=>{
+   if(disposed)return;
+   if(!loaded.rundenquiz || loaded.hostId!==identity.hostId){
+    setError('Die gespeicherte Sitzung kann von diesem Fenster nicht übernommen werden.');
+    return;
+   }
+   // A refreshed live host is conservatively paused; no timer or answer advances.
+   if(loaded.lifecycle==='active' && !loaded.rundenquiz.paused){
+    loaded=await controller.submit({type:'RQ_ACTION',action:{type:'PAUSE'}},loaded,crypto.randomUUID());
+   }
+   if(!disposed){setEvent(loaded);setSourceReady(true);}
+  }).catch(e=>{if(!disposed)setError(errorMessage(e));});
+  const heartbeat=window.setInterval(()=>{void publisher.refresh();},1600);
+  return ()=>{
+   disposed=true;controllerRef.current=null;
+   window.clearInterval(heartbeat);publisher.stop();void repo.close();
+  };
+ },[identity]);
+
+ async function prepare(){
+  if(busy)return;
+  setBusy(true);setError(null);
+  const next:Identity={eventId:crypto.randomUUID(),hostId:crypto.randomUUID()};
+  const teams=names.slice(0,count).map((name,i)=>({
+   id:'rq-team-'+(i+1),name:name.trim(),order:i,colorToken:'team-'+(i+1),
+  }));
+  const repo=new EventRepository();
+  try{
+   const rq=createSession({
+    id:next.eventId,ownerId:next.hostId,profile,
+    teams:teams.map(({id,name,order})=>({id,name,order})),
+    bank:RQ_TRIAL_BANK,
+   });
+   const seed=createEvent({
+    id:next.eventId,hostId:next.hostId,at:Date.now(),
+    teams,program:[{id:'rq-game-1',type:'rundenquiz',profile,order:0,rulesVersion:'rq-trial-1'}],
+    frozenTasks:rq.questions.map(q=>({
+     taskId:q.id,gameType:'rundenquiz',publicPrompt:q.prompt,
+     publicClues:[...(q.clues??[])],privateAnswers:[q.answer],
+     moderatorNotes:'Nur redaktionell unbestätigtes G4-Testmaterial. Quelle: '+q.reference,
+     sourceContentId:q.id,sourceHash:'g4-trial-v1',
+    })),rundenquiz:rq,
+   });
+   await repo.create(seed);
+   sessionStorage.setItem(IDENTITY_KEY,JSON.stringify(next));
+   setEvent(seed);setIdentity(next);
+   setSourceReady(false);
+  }catch(e){setError(errorMessage(e));}finally{await repo.close();setBusy(false);}
+ }
+ async function action(nextAction:Action){
+  if(busy||!event||!sourceReady)return;
+  const controller=controllerRef.current;if(!controller)return;
+  setBusy(true);setError(null);
+  try{
+   const updated=await controller.submit({type:'RQ_ACTION',action:nextAction},event,crypto.randomUUID());
+   setEvent(updated);
+  }catch(e){
+   setError(errorMessage(e));
+   try{setEvent(await controller.load());}catch{/* Preserve original error */}
+  }finally{setBusy(false);}
+ }
+ function submitEstimate(teamId:string,unit:string){
+  try{
+   const parsed=parseEstimateInput(estimateInput[teamId]??'',unit);
+   if(parsed.converted && !window.confirm('Umrechnung übernehmen? '+parsed.original+' → '+parsed.value+' '+parsed.canonicalUnit))return;
+   void action({type:'ESTIMATE',teamId,value:parsed.value});
+  }catch(e){setError(errorMessage(e));}
+ }
+ function newEvent(){
+  if(!window.confirm('Neuen Quizabend vorbereiten? Die bisherige Sitzung bleibt in der lokalen Datenbank archiviert.'))return;
+  try{sessionStorage.removeItem(IDENTITY_KEY);}catch{/* Can use temporary state only */}
+  setIdentity(null);setEvent(null);setSourceReady(false);setViewers(0);setError(null);
+ }
+ const rq:Session|undefined=event?.rundenquiz;
+ const q=rq?currentQuestion(rq):null;
+ const computed=rq?scores(rq):{};
+ const isPaused=Boolean(event?.lifecycle==='paused'||rq?.paused);
+ const disabled=busy||!sourceReady||!event||event.recoveryRequired;
+ const title=(round:string)=>({wissen:'Wissen',hinweise:'Hinweise',schaetzen:'Schätzen',finale:'Finale'} as Record<string,string>)[round]??round;
+
+ return <section className="rq-host" aria-label="Rundenquiz Spielleitung">
+  <div className="rq-head"><div><div className="eyebrow">G4 · SPIELMODUS IM TEST</div>
+   <h2>Rundenquiz</h2><p>Quizabend mit Teams, vier Runden und separater Beameransicht.</p></div>
+   <span className="g3-tech-tag">PROBEINHALTE</span>
+  </div>
+  {!identity?<div className="rq-setup">
+   <label>Spielumfang <select value={profile} onChange={e=>setProfile(e.target.value as Profile)}>
+    <option value="kurz">Kurz · 7 Aufgaben</option><option value="standard">Standard · 11 Aufgaben</option>
+    <option value="lang">Lang · 16 Aufgaben</option>
+   </select></label>
+   <label>Teams <select value={count} onChange={e=>setCount(Number(e.target.value))}>
+    {[3,4,5].map(n=><option key={n} value={n}>{n} Teams</option>)}
+   </select></label>
+   <div className="rq-teamfields">{names.slice(0,count).map((name,i)=><label key={i}>
+    Team {i+1} <input value={name} maxLength={40} onChange={e=>setNames(prev=>prev.map((v,j)=>i===j?e.target.value:v))}/>
+   </label>)}</div>
+   <button className="g3-tech-primary" disabled={busy} onClick={()=>void prepare()}>Quizabend vorbereiten</button>
+   <p className="g3-tech-footnote">G4 verwendet vorläufige Übungsfragen; diese sind nicht als redaktionell freigegebener Fragenkatalog gekennzeichnet.</p>
+  </div>:<div className="rq-live">
+   <div className="rq-utility">
+    <span>Revision {event?.revision??0} · {profile} · {viewers} Beamer verbunden</span>
+    <a href={stageUrl(identity.eventId)} target="_blank" rel="noopener noreferrer" className="g3-tech-link">Beamer öffnen ↗</a>
+    <button onClick={newEvent}>Neuer Quizabend</button>
+   </div>
+   {rq&&<div className="rq-status">
+    <strong>{rq.phase==='complete'?'Quizabend beendet':q?title(q.round)+' · Aufgabe '+(rq.index+1)+'/'+rq.questions.length:'Vorbereitung'}</strong>
+    <span>{isPaused?'Pausiert':rq.phase} · {rq.profile}</span>
+   </div>}
+   {rq && !sourceReady && <p role="status">Sitzung wird geladen bzw. überprüft …</p>}
+   {rq && <div className="rq-scoreboard" aria-label="Punktestand">
+    {rq.teams.map(t=><div key={t.id}><span>{t.name}</span><strong>{computed[t.id]??0}</strong></div>)}
+   </div>}
+   {rq && rq.phase==='complete'&&<div className="rq-end">
+    <h3>Endstand</h3>{rq.teams.map(t=><p key={t.id}>{t.name}: {computed[t.id]??0} Punkte · Abendpunkte {(eveningHalfPoints(rq)[t.id]??0)/2}</p>)}
+   </div>}
+   {rq && rq.phase!=='complete'&&<div className="rq-control">
+    {q&&<div className="rq-question">
+     <small>{title(q.round)} · {q.durationSeconds} Sekunden empfohlene Zeit</small>
+     <h3>{q.prompt}</h3>
+     <div className="rq-private">Private Lösung: <strong>{q.answer}</strong> · Quelle: {q.reference}</div>
+     {q.round==='hinweise'&&rq.phase!=='ready'&&<div className="rq-clue-list">
+      {(q.clues??[]).slice(0,rq.clueCount).map((clue,i)=><p key={i}><b>{i+1}.</b> {clue}</p>)}
+     </div>}
+    </div>}
+    {isPaused ? <button className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'RESUME'})}>Spiel fortsetzen</button>
+    :<div className="rq-actions">
+      {rq.phase==='setup' && <button className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'START'})}>Teams bestätigen</button>}
+      {rq.phase==='ready' && <button className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'PUBLISH'})}>Frage auf Beamer zeigen</button>}
+      {rq.phase==='open' && <>
+        {q?.round==='hinweise'&&<>
+         <div className="rq-teamfields">{rq.teams.map(t=><button key={t.id} disabled={disabled||Boolean(rq.entries[t.id])}
+           onClick={()=>void action({type:'LOCK_HINT',teamId:t.id})}>{t.name}: {rq.entries[t.id]?'Abgegeben':'Antwort abgegeben'}</button>)}</div>
+         {rq.clueCount<4&&<button disabled={disabled} onClick={()=>void action({type:'NEXT_CLUE'})}>Nächsten Hinweis zeigen</button>}
+        </>}
+        {q?.round==='schaetzen'&&<div className="rq-teamfields">{rq.teams.map(t=><div key={t.id}>
+          <label>{t.name} ({q.unit}) <input value={estimateInput[t.id]??''}
+            onChange={e=>setEstimateInput(v=>({...v,[t.id]:e.target.value}))} placeholder="z. B. 1,8 km"/></label>
+          <button disabled={disabled} onClick={()=>submitEstimate(t.id,q.unit??'')}>Übernehmen</button>
+          <button disabled={disabled} onClick={()=>void action({type:'ESTIMATE',teamId:t.id,value:null})}>Keine Antwort</button>
+          <span>{rq.entries[t.id]&&'estimate' in rq.entries[t.id] ? ' Erfasst' : ' Offen'}</span>
+         </div>)}</div>}
+        <button className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'CLOSE'})}>Antwortphase schließen</button>
+      </>}
+      {rq.phase==='closed' && <button className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'REVEAL'})}>Lösung auf Beamer zeigen</button>}
+      {rq.phase==='revealed' && <>
+        {q?.round!=='schaetzen'&&<div className="rq-teamfields">{rq.teams.map(t=><div key={t.id} className="rq-judge">
+         <span>{t.name}{rq.entries[t.id]?.judgement?' · '+rq.entries[t.id]?.judgement:''}</span>
+         {(['richtig','falsch','keine'] as const).map(v=><button key={v} disabled={disabled||v==='richtig'&&q?.round==='hinweise'&&!rq.entries[t.id]?.lockLevel}
+           onClick={()=>void action({type:'JUDGE',teamId:t.id,value:v})}>{v}</button>)}
+        </div>)}</div>}
+        {q?.round==='schaetzen'&&<p>Schätzungen werden nach Abstand zur Zielzahl gewertet; exakte Gleichstände behalten denselben Rang.</p>}
+        <button className="g3-tech-primary" disabled={disabled}
+          onClick={()=>void action({type:'CONFIRM'})}>Bewertungen prüfen und Punkte bestätigen</button>
+      </>}
+      {rq.phase==='graded'&&<>
+        <button className="g3-tech-primary" disabled={disabled}
+          onClick={()=>void action(rq.index===rq.questions.length-1?{type:'FINISH'}:{type:'NEXT'})}>
+            {rq.index===rq.questions.length-1?'Endstand zeigen':'Nächste Aufgabe'}
+        </button>
+        <button disabled={disabled} onClick={()=>void action({type:'CORRECT'})}>Letzte Wertung korrigieren</button>
+      </>}
+      {(rq.phase==='open'||rq.phase==='closed'||rq.phase==='revealed'||rq.phase==='graded')&&
+        <button disabled={disabled} onClick={()=>{
+         if(window.confirm('Diese Frage für alle Teams mit 0 Punkten annullieren?'))void action({type:'ANNUL'});
+        }}>Frage annullieren</button>}
+      {rq.phase!=='setup'&&<button disabled={disabled} onClick={()=>void action({type:'PAUSE'})}>Pausieren</button>}
+    </div>}
+   </div>}
+  </div>}
+  {error&&<p role="alert" className="g3-tech-error">{error}</p>}
+ </section>;
+}
