@@ -1,4 +1,5 @@
 import { eventSchema, outcomeSchema, type CommandEnvelopeV2, type EventRecord, type OutcomeRecord } from './schemas';
+import { transition as rqTransition } from '../../games/rundenquiz/engine';
 
 export type Change = {
   event: EventRecord;
@@ -33,6 +34,21 @@ export function applySessionCommand(
     if (session.lifecycle !== 'active') fail('INVALID_PHASE', 'Game is not active');
   };
   switch (payload.type) {
+    case 'RQ_ACTION': {
+      if (!session.rundenquiz) fail('INVALID_PHASE','Rundenquiz not configured');
+      if (session.lifecycle==='complete') fail('INVALID_PHASE','Event finished');
+      if (session.lifecycle==='paused' && payload.action.type!=='RESUME') fail('INVALID_PHASE','Event paused');
+      const state=rqTransition(session.rundenquiz,{
+        id:command.commandId,ownerId:command.hostId,epoch:command.hostEpoch,
+        expectedRevision:session.rundenquiz.revision,at:command.issuedAtEpochMs,
+        action:payload.action,
+      });
+      next={...session,rundenquiz:state,
+        lifecycle:state.phase==='complete'?'complete':state.paused?'paused':state.phase==='setup'?'draft':'active'};
+      stageChanged=['START','PUBLISH','NEXT_CLUE','CLOSE','REVEAL','CONFIRM','CORRECT','ANNUL','NEXT','FINISH','PAUSE','RESUME'].includes(payload.action.type);
+      note='Rundenquiz '+payload.action.type;
+      break;
+    }
     case 'EVENT_START':
       if (!['draft', 'ready'].includes(session.lifecycle)) fail('INVALID_PHASE', 'Event already started');
       next = { ...next, lifecycle: 'active' };
@@ -148,6 +164,7 @@ export function createEvent(seed: {
   teams: EventRecord['teams'];
   program: EventRecord['program'];
   frozenTasks: EventRecord['frozenTasks'];
+  rundenquiz?: EventRecord['rundenquiz'];
   at: number;
 }): EventRecord {
   return eventSchema.parse({
@@ -157,5 +174,6 @@ export function createEvent(seed: {
     currentTaskId: null, publishedClueCount: 0, solutionPublished: false,
     stageRevision: 0, recoveryRequired: false,
     createdAt: seed.at, updatedAt: seed.at,
+    ...(seed.rundenquiz ? {rundenquiz:seed.rundenquiz} : {}),
   });
 }
