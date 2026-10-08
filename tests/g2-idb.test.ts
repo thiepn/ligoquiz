@@ -62,7 +62,7 @@ describe('G2 real IndexedDB semantics in fake browser storage', () => {
     expect((await b.dispatch({ ...command, expectedRevision: 0, issuedAtEpochMs: 999 })).effect).toBe('already-committed');
     await expect(b.dispatch({ ...command, payload: { ...command.payload, points: 99 } }))
       .rejects.toMatchObject({ code: 'COMMAND_ID_COLLISION' });
-    expect(await b.dispatch({ ...command, commandId: 'new-id', expectedRevision: 4 }))
+    await expect(b.dispatch({ ...command, commandId: 'new-id', expectedRevision: 4 }))
       .rejects.toMatchObject({ code: 'DUPLICATE_OUTCOME' });
     expect((await a.getCheckpoints('e1')).map((c) => c.revision)).toEqual([0, 1, 2, 3, 4]);
     expect((await a.getAudit('e1')).map((x) => x.kind)).toContain('OUTCOME_COMMIT');
