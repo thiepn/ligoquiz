@@ -9,7 +9,7 @@ export interface GameManifest {
 }
 export const GAME_MANIFESTS: readonly GameManifest[] = [
   { id: 'rundenquiz', nameDe: 'Rundenquiz', taglineDe: 'Ein Abend, mehrere Runden', code: 'RQ', ready: true },
-  { id: 'quiztafel', nameDe: 'Quiztafel', taglineDe: 'Kategorien wählen, Wissen zeigen', code: 'QT', ready: false },
+  { id: 'quiztafel', nameDe: 'Quiztafel', taglineDe: 'Kategorien wählen, Wissen zeigen', code: 'QT', ready: true },
   { id: 'verbindungen', nameDe: 'Verbindungen', taglineDe: 'Hinweise und Zusammenhänge', code: 'VB', ready: false },
   { id: 'logikleiter', nameDe: 'Logikleiter', taglineDe: 'Gemeinsam weiterdenken', code: 'LL', ready: false },
   { id: 'umfrageduell', nameDe: 'Umfrageduell', taglineDe: 'Was würden andere antworten?', code: 'UD', ready: false },
