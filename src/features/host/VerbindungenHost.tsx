@@ -94,6 +94,8 @@ export function VerbindungenHost(){
  const disabled=!ready||busy||vb?.paused||event?.recoveryRequired;
  const wall=task?.puzzle.kind==='wall'?task.puzzle:null;
  const group=wall?.groups[vb?.revealedGroups?Math.max(0,vb.revealedGroups-1):0];
+ const canRevealNext=!vb||!wall||vb.revealedGroups===0||
+   teams.every(t=>Boolean(vb.wallMarks[t.id]?.[wall.groups[vb.revealedGroups-1]?.id??'']));
  const canConfirmWall=vb&&wall&&vb.revealedGroups===4&&(()=>{
   try{wallAwards(vb);return true;}catch{return false;}
  })();
@@ -192,7 +194,7 @@ export function VerbindungenHost(){
      </>}
      {vb.phase==='wall-open'&&<button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'CLOSE_WALL'})}>Alle Antworten schließen</button>}
      {(vb.phase==='wall-closed'||vb.phase==='wall-reveal')&&vb.revealedGroups<4&&
-       <button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'REVEAL_WALL_GROUP'})}>
+       <button className="g3-tech-primary" disabled={disabled||!canRevealNext} onClick={()=>void send({type:'REVEAL_WALL_GROUP'})}>
         Gruppe {vb.revealedGroups+1} bewusst auflösen
        </button>}
      {vb.phase==='revealed'&&<><p>Antwort: {task.puzzle.kind==='clues'?task.puzzle.target:task.puzzle.kind==='sequence'?task.puzzle.answer:''}</p>
