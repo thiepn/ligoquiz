@@ -168,6 +168,22 @@ export class EventRepository {
     }
   }
 
+  /** Local organizer index. Damaged events are counted, not silently reset or overwritten. */
+  async listSessions(): Promise<{ items: EventRecord[]; invalidCount: number }> {
+    const db = await this.open();
+    const tx = db.transaction('events', 'readonly');
+    const raw: unknown[] = await requestResult(tx.objectStore('events').getAll());
+    const items: EventRecord[] = [];
+    let invalidCount = 0;
+    for (const value of raw) {
+      const validated = eventSchema.safeParse(value);
+      if (validated.success) items.push(validated.data);
+      else invalidCount++;
+    }
+    items.sort((a,b) => b.updatedAt - a.updatedAt || b.revision - a.revision || a.id.localeCompare(b.id));
+    return { items, invalidCount };
+  }
+
   async get(eventId: string): Promise<EventRecord | null> {
     const db = await this.open();
     const tx = db.transaction('events', 'readonly');
