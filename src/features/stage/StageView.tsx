@@ -15,9 +15,10 @@ function Scene({ scene }: { scene: PublicStageScene }) {
         {scene.categories.map(c=><div className="qt-stage-column" key={c.id} style={{gridTemplateRows:"auto repeat("+scene.rows+",minmax(0,1fr))"}}>
           <h2>{c.name}</h2>
           {Array.from({length:scene.rows},(_,i)=>{
-            const tileId='qt-'+c.id+'-'+(i+1),closed=scene.closedIds.includes(tileId);
-            return <div key={tileId} className={'qt-stage-cell'+(closed?' closed':'')}>
-              {closed?'—':(i+1)*100}
+            const cell=scene.cells.find(t=>t.categoryId===c.id&&t.row===i+1);
+            if(!cell)return null;
+            return <div key={cell.id} className={'qt-stage-cell'+(cell.closed?' closed':'')}>
+              {cell.closed?'—':cell.value}
             </div>;
           })}
         </div>)}
