@@ -1,129 +1,88 @@
 import { useEffect, useState } from 'react';
-import { parseRoute, routeHref, type Route } from './routes';
-import { GAME_MANIFESTS } from '../games/registry';
+import { parseRoute, routeHref, currentEventId, type Route } from './routes';
 import { StageView } from '../features/stage/StageView';
 import { ProjectorTechCheck } from '../features/host/ProjectorTechCheck';
 import { RundenquizHost } from '../features/host/RundenquizHost';
+import { OrganizerHome, SessionHistory } from '../features/experience/Sessions';
+import { SetupWizard } from '../features/experience/SetupWizard';
+import { DisposableDemo } from '../features/experience/DisposableDemo';
+import { ExperienceSettings } from '../features/experience/ExperienceSettings';
+import { applyMotionPreference, readPreferences } from '../features/experience/model';
 
-const PAGES: readonly { route: Exclude<Route, 'stage'>; label: string; symbol: string }[] = [
-  { route: 'spielen', label: 'Spielen', symbol: '▶' },
-  { route: 'inhalte', label: 'Inhalte', symbol: '▤' },
-  { route: 'verlauf', label: 'Verlauf', symbol: '◷' },
+const NAV: readonly {id:Route; label:string; symbol:string}[] = [
+  {id:'spielen',label:'Spielen',symbol:'▶'},
+  {id:'inhalte',label:'Inhalte',symbol:'▤'},
+  {id:'verlauf',label:'Verlauf',symbol:'◷'},
 ];
-
-function useHashRoute(): Route {
-  const [route, setRoute] = useState<Route>(() => parseRoute(window.location.hash));
-  useEffect(() => {
-    const sync = () => setRoute(parseRoute(window.location.hash));
-    window.addEventListener('hashchange', sync);
-    return () => window.removeEventListener('hashchange', sync);
-  }, []);
+function useRoute(){
+  const [route,setRoute]=useState<Route>(()=>parseRoute(window.location.hash));
+  useEffect(()=>{
+    const handler=()=>setRoute(parseRoute(window.location.hash));
+    window.addEventListener('hashchange',handler);
+    return ()=>window.removeEventListener('hashchange',handler);
+  },[]);
   return route;
 }
-
-function PlaySurface() {
-  return (
-    <section className="surface-play" aria-label="Quizabend">
-      <div className="surface-header">
-        <div><div className="eyebrow">SPIELRAUM</div><h1>Quizabend</h1>
-          <p>Ein Abend für eure Gruppe. Noch im technischen Neuaufbau.</p></div>
-        <span className="status-label">G4 / SPIELTEST</span>
-      </div>
-      <div className="start-layout">
-        <div className="start-panel">
-          <div className="eyebrow">NÄCHSTER SCHRITT</div>
-          <h2>Bereitmachen</h2>
-          <p>Mit dem Rundenquiz könnt ihr jetzt einen ersten Quizabend im Testbetrieb durchführen.</p>
-          <button type="button" onClick={() => document.getElementById('rundenquiz')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="main-cta">
-            Rundenquiz starten <span aria-hidden="true">↗</span>
-          </button>
-          <p className="small-note">Testversion mit vorläufigen Fragen. Die übrigen Spiele folgen später.</p>
-        </div>
-        <div className="projection-preview" aria-label="Beamer-Hinweis">
-          <span className="projection-icon" aria-hidden="true">▣</span>
-          <span className="projection-title">Beamer-Vorschau</span>
-          <span className="projection-copy">Die Beamer-Ansicht wird beim Start eines Quizabends mit der Spielleitung verknüpft.</span>
-          <span className="preview-arrow" aria-hidden="true">▣</span>
-        </div>
-      </div>
-      <div id="rundenquiz"><RundenquizHost /></div>
-      <ProjectorTechCheck />
-      <div className="section-heading"><h2>Spielauswahl</h2><span>5 SPIELFORMATE · IN AUFBAU</span></div>
-      <div className="game-grid">
-        {GAME_MANIFESTS.map((game, index) => (
-          <article className="game-entry" key={game.id}>
-            <div className="game-topline"><span className="game-code">{game.code}</span>
-              <span className="game-index">0{index + 1}</span></div>
-            <div><h3>{game.nameDe}</h3><p>{game.taglineDe}</p></div>
-            <div className="game-footer">{game.ready ? 'Im Test spielbar' : 'Spielmodul folgt'}</div>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
+function ContentPlaceholder(){
+ return <section className="exp-page">
+   <div className="exp-heading"><div><p className="eyebrow">INHALTE</p><h1>Inhaltsbibliothek</h1>
+     <p>Die redaktionelle Inhaltsverwaltung und der geprüfte Import folgen in G10.</p></div></div>
+   <div className="exp-empty">
+     <h2>Fragenbibliothek im Aufbau</h2>
+     <p>Vorläufige Rundenquizfragen liegen ausschließlich im Probeprogramm. Die bisherigen Fragen von v1.14 bleiben unverändert.</p>
+     <a href="#/spielen" className="exp-secondary">Zurück zu Spielen</a>
+   </div>
+ </section>;
 }
-
-function ContentSurface() {
-  return (
-    <section className="surface-secondary" aria-label="Inhaltsbibliothek">
-      <div className="eyebrow">INHALTSSTUDIO</div><h1>Inhalte</h1>
-      <p>Fragen, Medien und vorbereitete Programme werden unabhängig vom Spielbetrieb verwaltet.</p>
-      <div className="empty-workspace">
-        <span className="workspace-emblem" aria-hidden="true">▤</span>
-        <h2>Inhaltsbibliothek wird aufgebaut</h2>
-        <p>Die v1.14-Fragen bleiben bis zur geprüften Migration unangetastet. Hier sind noch keine Inhalte geladen.</p>
-        <span className="workspace-status">INHALTSIMPORT · G10</span>
-      </div>
-    </section>
-  );
+function HostSurface(){
+ return <section className="exp-host-wrapper" aria-label="Spielleitung">
+   <div className="exp-host-header"><a href="#/spielen">← Spielen</a>
+     <div><strong>Spielleitung</strong><small>GESPEICHERTER SPIELSTAND · NUR HOST</small></div>
+     <a href="#/technik">Technikcheck</a></div>
+   <RundenquizHost/>
+ </section>;
 }
-
-function HistorySurface() {
-  return (
-    <section className="surface-secondary" aria-label="Spielverlauf">
-      <div className="eyebrow">VERLAUF</div><h1>Vergangene Abende</h1>
-      <p>Abgeschlossene Spiele, Ergebnisse und Berichte erscheinen nach dem ersten tatsächlich gespielten Abend.</p>
-      <div className="empty-workspace">
-        <span className="workspace-emblem" aria-hidden="true">◷</span>
-        <h2>Noch keine Spielabende</h2>
-        <p>Dieser Neubau hat noch keine Sitzungsdaten. Alte Spielstände erhalten später einen sicheren Import.</p>
-        <span className="workspace-status">SITZUNGSVERLAUF · G4+</span>
-      </div>
-    </section>
-  );
-}
-
-export function App() {
-  const route = useHashRoute();
-  useEffect(() => {
-    document.title = route === 'stage' ? 'LiGoQuiz — Beamer' : 'LiGoQuiz — Neuaufbau';
-  }, [route]);
-  if (route === 'stage') return <StageView />;
-  return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <a href={routeHref('spielen')} className="brand" aria-label="LiGoQuiz Startseite">
-          <span className="brand-symbol" aria-hidden="true">L<span>.</span></span>
-          <span className="brand-text">LiGo<span>Quiz</span><small>GAME NIGHT SYSTEM</small></span>
-        </a>
-        <div className="nav-group-title">NAVIGATION</div>
-        <nav className="main-nav" aria-label="Hauptnavigation">
-          {PAGES.map((page) => (
-            <a href={routeHref(page.route)} key={page.route}
-              className={route === page.route ? 'nav-item active' : 'nav-item'}
-              aria-current={route === page.route ? 'page' : undefined}>
-              <span className="nav-symbol" aria-hidden="true">{page.symbol}</span>{page.label}
-            </a>
-          ))}
-        </nav>
-        <div className="sidebar-bottom">
-          <div className="build-indicator"><span className="pulse-dot" aria-hidden="true"></span>Neuaufbau · G4</div>
-          <div className="version-info">VERSION 2.0 · ENTWICKLUNG</div>
-        </div>
-      </aside>
-      <main className="workspace" id="main-content">
-        {route === 'spielen' ? <PlaySurface /> : route === 'inhalte' ? <ContentSurface /> : <HistorySurface />}
-      </main>
-    </div>
-  );
+export function App(){
+ const route=useRoute();
+ useEffect(()=>{applyMotionPreference(readPreferences().motion);},[]);
+ useEffect(()=>{document.title=route==='stage'?'LiGoQuiz — Beamer':
+  route==='host'?'LiGoQuiz — Spielleitung':'LiGoQuiz — '+(route==='spielen'?'Spielen':route);},[route]);
+ if(route==='stage')return <StageView/>;
+ if(route==='host')return <HostSurface/>;
+ if(route==='demo')return <div className="exp-focused"><DisposableDemo/></div>;
+ return <div className="app-shell">
+   <aside className="sidebar">
+     <a href={routeHref('spielen')} className="brand" aria-label="LiGoQuiz Startseite">
+       <span className="brand-symbol" aria-hidden="true">L<span>.</span></span>
+       <span className="brand-text">LiGo<span>Quiz</span><small>GAME NIGHT SYSTEM</small></span>
+     </a>
+     <div className="nav-group-title">NAVIGATION</div>
+     <nav className="main-nav" aria-label="Hauptnavigation">
+       {NAV.map(item=><a key={item.id} href={routeHref(item.id)}
+         className={'nav-item'+(route===item.id||(route==='setup'&&item.id==='spielen')||(route==='bericht'&&item.id==='verlauf')?' active':'')}
+         aria-current={route===item.id?'page':undefined}>
+         <span className="nav-symbol" aria-hidden="true">{item.symbol}</span>{item.label}
+       </a>)}
+     </nav>
+     <div className="sidebar-bottom">
+       <a className="exp-sidebar-link" href="#/technik">Beamer / Technikcheck</a>
+       <a className="exp-sidebar-link" href="#/einstellungen">Einstellungen</a>
+       <div className="version-info">VERSION 2.0 · G5 ENTWICKLUNG</div>
+     </div>
+   </aside>
+   <main className="workspace" id="main-content">
+     {route==='spielen'&&<OrganizerHome/>}
+     {route==='setup'&&<SetupWizard/>}
+     {route==='inhalte'&&<ContentPlaceholder/>}
+     {route==='verlauf'&&<SessionHistory eventId={null}/>}
+     {route==='bericht'&&<SessionHistory eventId={currentEventId(window.location.hash)}/>}
+     {route==='einstellungen'&&<ExperienceSettings/>}
+     {route==='technik'&&<section className="exp-page">
+       <div className="exp-heading"><div><p className="eyebrow">GERÄTE</p><h1>Technikcheck</h1>
+       <p>Hostfenster auf dem Laptop, öffentliche Beameransicht auf dem erweiterten Bildschirm.</p></div></div>
+       <ProjectorTechCheck/>
+       <p className="exp-footnote">Für einen echten Quizabend verbinde den Beamer über die Spielleitung des aktiven Spiels.</p>
+     </section>}
+   </main>
+ </div>;
 }
