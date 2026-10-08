@@ -8,11 +8,16 @@ const helloSchema = z.strictObject({
   eventId: eventIdSchema, viewerId: z.string().min(1).max(128),
   requestId: z.string().min(1).max(128),
 });
+const ackSchema = z.strictObject({
+  protocolVersion: z.literal(1), kind: z.literal('ACK'),
+  eventId: eventIdSchema, viewerId: z.string().min(1).max(128),
+  hostEpoch: z.number().int().positive(), stageRevision: z.number().int().min(0),
+});
 const frameSchema = z.strictObject({
   protocolVersion: z.literal(1), kind: z.literal('FRAME'),
   eventId: eventIdSchema, frame: publicDtoSchema,
 });
-export const stageMessageSchema = z.discriminatedUnion('kind', [helloSchema, frameSchema]);
+export const stageMessageSchema = z.discriminatedUnion('kind', [helloSchema, frameSchema, ackSchema]);
 export type StageMessage = z.infer<typeof stageMessageSchema>;
 
 export interface StagePort {
