@@ -12,7 +12,7 @@ function Scene({ scene }: { scene: PublicStageScene }) {
       <h1>Quiztafel</h1>
       <p className="qt-stage-selector">Wahlrecht: <strong>{scene.selectorName}</strong></p>
       <div className="qt-stage-grid" style={{gridTemplateColumns:`repeat(${scene.categories.length},minmax(0,1fr))`}}>
-        {scene.categories.map(c=><div className="qt-stage-column" key={c.id}>
+        {scene.categories.map(c=><div className="qt-stage-column" key={c.id} style={{gridTemplateRows:"auto repeat("+scene.rows+",minmax(0,1fr))"}}>
           <h2>{c.name}</h2>
           {Array.from({length:scene.rows},(_,i)=>{
             const tileId='qt-'+c.id+'-'+(i+1),closed=scene.closedIds.includes(tileId);
