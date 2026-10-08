@@ -54,7 +54,7 @@ function ResumeButton({event,onError}:{event:EventRecord;onError:(s:string)=>voi
         });
         writeHostIdentity({eventId:event.id,hostId:newHostId});
       } finally {await repo.close();}
-    } else {
+    } else if(existing) {
       writeHostIdentity(existing);
     }
     window.location.hash='#/host';
