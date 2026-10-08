@@ -6,7 +6,7 @@ import {HostStagePublisher} from '../stage/host-publisher';
 import type {EventRecord} from '../../domain/event/schemas';
 import {
  active,teamsInOrder,wallAwards,scores,eveningHalfPoints,NEEDS,
- type Action,type Session
+ type Action
 } from '../../games/verbindungen/engine';
 import {readHostIdentity} from '../experience/model';
 
