@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { parseRoute, routeHref, type Route } from './routes';
 import { GAME_MANIFESTS } from '../games/registry';
+import { StageView } from '../features/stage/StageView';
+import { ProjectorTechCheck } from '../features/host/ProjectorTechCheck';
 
 const PAGES: readonly { route: Exclude<Route, 'stage'>; label: string; symbol: string }[] = [
   { route: 'spielen', label: 'Spielen', symbol: '▶' },
@@ -43,6 +45,7 @@ function PlaySurface() {
           <span className="preview-arrow" aria-hidden="true">↗</span>
         </a>
       </div>
+      <ProjectorTechCheck />
       <div className="section-heading"><h2>Spielauswahl</h2><span>5 SPIELFORMATE · IN AUFBAU</span></div>
       <div className="game-grid">
         {GAME_MANIFESTS.map((game, index) => (
@@ -88,29 +91,12 @@ function HistorySurface() {
   );
 }
 
-function StagePreview() {
-  return (
-    <main className="stage-preview" aria-label="Beamer-Vorschau">
-      <div className="stage-topline"><span>LiGo<span className="stage-yellow">Quiz</span></span>
-        <span>VORSCHAU · G1</span></div>
-      <div className="stage-center">
-        <div className="stage-mark" aria-hidden="true"><span></span><span></span><span></span></div>
-        <p className="stage-kicker">DER QUIZABEND</p>
-        <h1>Warte auf die<br /><span>Spielleitung</span></h1>
-        <p>Die Live-Projektion wird mit dem Host-System verbunden, sobald G3 verfügbar ist.</p>
-      </div>
-      <div className="stage-bottom"><span>Keine Verbindung · keine privaten Spieldaten</span>
-        <span>LiGoQuiz 2.0</span></div>
-    </main>
-  );
-}
-
 export function App() {
   const route = useHashRoute();
   useEffect(() => {
     document.title = route === 'stage' ? 'LiGoQuiz — Beamer' : 'LiGoQuiz — Neuaufbau';
   }, [route]);
-  if (route === 'stage') return <StagePreview />;
+  if (route === 'stage') return <StageView />;
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -129,7 +115,7 @@ export function App() {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="build-indicator"><span className="pulse-dot" aria-hidden="true"></span>Neuaufbau · G1</div>
+          <div className="build-indicator"><span className="pulse-dot" aria-hidden="true"></span>Neuaufbau · G3</div>
           <div className="version-info">VERSION 2.0 · ENTWICKLUNG</div>
         </div>
       </aside>
