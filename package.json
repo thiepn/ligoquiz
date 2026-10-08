@@ -1,0 +1,36 @@
+{
+  "name": "ligoquiz",
+  "private": true,
+  "version": "2.0.0-g1",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "verify": "npm run typecheck && npm run lint && npm run test"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.1.0",
+    "eslint": "^9.0.0",
+    "globals": "^16.0.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.0.0",
+    "vite": "^8.0.0",
+    "vitest": "^4.0.0"
+  }
+}
