@@ -22,7 +22,7 @@ test('saved setup survives reload and transfers to the authoritative host',async
  await expect(page.getByRole('button',{name:'Teams bestätigen'})).toBeEnabled();
  await page.locator('.exp-host-header').getByRole('link',{name:'Spielen'}).click();
  await expect(page).toHaveURL(/#\/spielen$/);
- await expect(page.getByRole('button',{name:'Vorbereitung fortsetzen'})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Vorbereitung fortsetzen'})).toBeVisible();
  await expect(page.locator('.exp-active')).toContainText('Vorbereitung');
 });
 
