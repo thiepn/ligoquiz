@@ -34,17 +34,17 @@ function PlaySurface() {
           <div className="eyebrow">NÄCHSTER SCHRITT</div>
           <h2>Bereitmachen</h2>
           <p>Mit dem Rundenquiz könnt ihr jetzt einen ersten Quizabend im Testbetrieb durchführen.</p>
-          <a href="#rundenquiz" className="main-cta">
+          <button type="button" onClick={() => document.getElementById('rundenquiz')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="main-cta">
             Rundenquiz starten <span aria-hidden="true">↗</span>
-          </a>
+          </button>
           <p className="small-note">Testversion mit vorläufigen Fragen. Die übrigen Spiele folgen später.</p>
         </div>
-        <a className="projection-preview" href={routeHref('stage')} target="_blank" rel="noopener noreferrer">
+        <div className="projection-preview" aria-label="Beamer-Hinweis">
           <span className="projection-icon" aria-hidden="true">▣</span>
           <span className="projection-title">Beamer-Vorschau</span>
-          <span className="projection-copy">Getrennte Anzeige ohne private Lösungen. Aktuell nur Wartezustand.</span>
-          <span className="preview-arrow" aria-hidden="true">↗</span>
-        </a>
+          <span className="projection-copy">Die Beamer-Ansicht wird beim Start eines Quizabends mit der Spielleitung verknüpft.</span>
+          <span className="preview-arrow" aria-hidden="true">▣</span>
+        </div>
       </div>
       <div id="rundenquiz"><RundenquizHost /></div>
       <ProjectorTechCheck />
