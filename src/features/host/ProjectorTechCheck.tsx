@@ -43,6 +43,7 @@ export function ProjectorTechCheck() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [publisherStatus, setPublisherStatus] = useState<PublisherStatus | 'off'>('off');
+  const [audienceCount, setAudienceCount] = useState(0);
   const controllerRef = useRef<HostSessionController | null>(null);
 
   useEffect(() => {
@@ -53,7 +54,8 @@ export function ProjectorTechCheck() {
     try {
       publisher = new HostStagePublisher(identity.eventId, identity.hostId, repo,
         new BrowserStagePort(identity.eventId),
-        (status) => { if (!disposed) setPublisherStatus(status); });
+        (status) => { if (!disposed) setPublisherStatus(status); },
+        (count) => { if (!disposed) setAudienceCount(count); });
       publisher.start();
     } catch (failure) {
       setError(errorText(failure));
@@ -144,13 +146,13 @@ export function ProjectorTechCheck() {
         <div className="g3-tech-state">
           <span>HOST</span>
           <strong>{event ? 'Test bereit' : 'Lade Sitzung'}</strong>
-          <small>{publisherStatus === 'ready' ? 'Sendet öffentliche Daten · Empfang nicht bestätigt'
+          <small>{publisherStatus === 'ready' ? 'Sendet freigegebene Daten'
             : publisherStatus === 'revoked' ? 'Host-Berechtigung entzogen'
             : publisherStatus === 'invalid' ? 'Sitzungsdaten ungültig' : 'Verbindungsaufbau'}</small>
         </div>
         <div className="g3-tech-state">
           <span>BEAMER</span>
-          <strong>Eigenes Fenster</strong>
+          <strong>{audienceCount > 0 ? audienceCount + ' Ansicht(en) verbunden' : 'Warte auf Empfang'}</strong>
           <small>Gleicher Browser-Ursprung · keine Fernverbindung</small>
         </div>
       </div>
