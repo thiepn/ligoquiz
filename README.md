@@ -24,6 +24,19 @@ npm run build
 
 Open Spielen → Rundenquiz to configure a trial evening and open Beamer in a separate browser window on an extended display. The G3 projector technical rehearsal remains a separate test surface.
 
+## G5 organizer experience (development)
+
+- `#/spielen`: organizer dashboard, quick start, genuine demo, saved sessions and explicit recovery.
+- `#/setup`: three-step setup (teams, program and projector readiness), draft saved locally until confirmation.
+- `#/host`: separated private Rundenquiz host workbench; direct access without a selected host session is blocked.
+- `#/demo`: one-question **in-memory** trial without IndexedDB scores, history or host session.
+- `#/verlauf` / `#/bericht?event=...`: completed local events and result-only JSON export, including exact half-point tie results.
+- `#/einstellungen`: default teams, game length and reduced-motion settings.
+- `#/technik`: separate G3 rehearsal.
+- `#/inhalte`: clearly marked placeholder pending G10, no fake question editor.
+
+G5 builds on the still-unreleased G4 browser-qualification work. Both the standard CI and real Chromium host/projector workflows must pass before merging or announcing the shared experience as verified.
+
 ## Safety and current limitations
 
 - The host holds private answers; the projector receives only allowlisted public G3 frames.
