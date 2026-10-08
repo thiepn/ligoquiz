@@ -55,7 +55,7 @@ function PlaySurface() {
             <div className="game-topline"><span className="game-code">{game.code}</span>
               <span className="game-index">0{index + 1}</span></div>
             <div><h3>{game.nameDe}</h3><p>{game.taglineDe}</p></div>
-            <div className="game-footer">Spielmodul folgt</div>
+            <div className="game-footer">{game.ready ? 'Im Test spielbar' : 'Spielmodul folgt'}</div>
           </article>
         ))}
       </div>
