@@ -9,36 +9,22 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # temporary G2 dependency lock refresh; removed after completion
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-      - name: Upgrade npm resolver (avoid npm 10 Arborist regression)
+      - name: Upgrade npm resolver
         run: npm install --global npm@11
-      - name: Refresh lock for G2 test dependency
-        run: npm install --package-lock-only --no-audit --no-fund
-      - name: Install pinned dependencies
+      - name: Install exact locked dependencies
         run: npm ci --no-audit --no-fund
-      - name: Verify types, lint and unit tests
+      - name: Check types, lint and unit tests
         run: npm run verify
-      - name: Build static production bundle
+      - name: Build static bundle
         run: npm run build
-      - name: Commit refreshed lockfile after successful checks
-        if: github.event_name == 'push' && github.ref == 'refs/heads/rebuild/v2'
-        run: |
-          if ! git diff --quiet -- package-lock.json; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add package-lock.json
-            git commit -m "chore(g2): lock IndexedDB test dependency"
-            git push origin HEAD:rebuild/v2
-          fi
       - uses: actions/upload-artifact@v4
         with:
-          name: g1-static-bundle
+          name: v2-static-bundle
           path: dist/
           if-no-files-found: error

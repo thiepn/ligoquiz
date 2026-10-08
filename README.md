@@ -1,41 +1,36 @@
-# LiGoQuiz 2.0 — G1 Engineering Foundation
+# LiGoQuiz 2.0 — Modular Rebuild (G2)
 
-**Working branch:** rebuild/v2. **Production:** main (legacy v1.14), unchanged.
+Working branch: rebuild/v2. Production main remains the legacy v1.14 app.
 
-G1 is a **non-playable foundation**, not a v2.0 release:
-- React 19 + TypeScript strict + Vite static shell with German navigation.
-- Typed domain contracts, five game manifests (all marked not ready).
-- Pure BP-03 rank/tie scoring with exact integer half-points.
-- Explicit audience data allowlist and regression tests against answer leakage.
-- CI with TypeScript checks, linting, unit tests and a static bundle build.
-- No accounts, backend, PWA registration, legacy migration or published preview.
+## Status
 
-## Local setup
+G1 foundation and G2 transactional session engine exist. **No game is playable yet.**
+The German preview UI has Spielen, Inhalte, Verlauf and a static Beamer waiting screen.
 
-Node.js 22.12+ and npm 11 required.
+## Architecture
+
+- React 19, TypeScript strict, Vite.
+- Pure typed domain reducers and five game type registrations.
+- Native IndexedDB storage (versioned v2 namespace), validated command envelopes, immutable receipts and audit ledger.
+- Scores derived from score outcome records, including explicit audited void/restore.
+- Persistent host epoch, revision guard, explicit takeover and safe checkpoint recovery.
+- Public-only stage DTO generated after commit; live synchronization will be built in G3.
+
+## Run locally
+
+Node.js 22.12+ and npm 11:
 
     npm ci
     npm run dev
     npm run verify
     npm run build
 
-The committed package-lock.json is the dependency source of truth.
-
-## Routes
-
-- #/spielen — preview of game selection.
-- #/inhalte — empty future content studio.
-- #/verlauf — empty future event history.
-- #/stage — public waiting screen (not synchronized).
-
-No live gameplay or saved sessions exist on this branch yet.
+CI runs exact locked dependencies, strict typing, lint, tests and build.
 
 ## Safety
 
-Do not deploy to production GitHub Pages from this branch. G1 does not read or
-write any legacy localStorage keys. Use a distinct origin, not merely a path,
-if hosting a future preview to avoid shared browser storage and service-worker
-scope with the legacy application.
+Do not merge rebuild/v2 into main or use the production GitHub Pages domain for previews.
+Do not read or modify browser storage from the old app (ligo.quiz.*).
+No PWA/service worker, backend, accounts, AI API or production migration is installed in G2.
 
-Next: G2 state engine and crash-safe persistence; G3 projector protocol;
-G4–G9 games; G10 migration; G11 PWA and qualification.
+Next: G3 host/projector transport and connection-state recovery.
