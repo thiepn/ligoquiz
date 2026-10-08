@@ -164,7 +164,7 @@ export function ProjectorTechCheck() {
         <div className="g3-tech-actions">
           <button className="g3-tech-primary" disabled={!next || busy || publisherStatus === 'revoked'}
             onClick={() => { if (next) void submit(next.command); }}>{next?.label ?? 'Kein Schritt verfügbar'}</button>
-          <button disabled={event.lifecycle !== 'active' || busy} onClick={() => void submit({ type: 'EVENT_PAUSE' })}>
+          <button disabled={event.lifecycle !== 'active' || busy || publisherStatus === 'revoked'} onClick={() => void submit({ type: 'EVENT_PAUSE' })}>
             Pausieren
           </button>
         </div>
