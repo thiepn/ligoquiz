@@ -255,7 +255,15 @@ export class EventRepository {
               throw new StoreError('STALE_HOST', 'Another host owns this session');
             }
             const outcomeId = 'outcomeId' in command.payload ? command.payload.outcomeId : null;
-            if (outcomeId) {
+            if(command.payload.type === 'RQ_ACTION') {
+              const rqPrior = outcomes.index('byEvent').getAll(command.eventId);
+              rqPrior.onsuccess = () => {
+                try {
+                  const list=(rqPrior.result as unknown[]).map(raw=>outcomeSchema.parse(raw));
+                  commit(session,undefined,list);
+                } catch(error){rejectAndAbort(error);}
+              };
+            } else if (outcomeId) {
               const readOutcome = outcomes.get([command.eventId, outcomeId]);
               readOutcome.onsuccess = () => {
                 try {
@@ -269,8 +277,29 @@ export class EventRepository {
           } catch (error) { rejectAndAbort(error); }
         };
       };
-      const commit = (session: EventRecord, prior: OutcomeRecord | undefined) => {
+      const commit = (session: EventRecord, prior: OutcomeRecord | undefined, rqOutcomes: OutcomeRecord[] = []) => {
         const next = applySessionCommand(session, command, prior);
+        if(command.payload.type==='RQ_ACTION' && session.rundenquiz && next.event.rundenquiz) {
+          const previous=session.rundenquiz, changed=next.event.rundenquiz;
+          const question=previous.questions[previous.index];
+          if(!question)throw new StoreError('CORRUPT_SESSION','Rundenquiz task unavailable');
+          const before=previous.awards.filter(a=>a.questionId===question.id);
+          const after=changed.awards.filter(a=>a.questionId===question.id);
+          if(JSON.stringify(before)!==JSON.stringify(after)) {
+            for(const existing of rqOutcomes) {
+              if(existing.taskId===question.id && existing.outcomeId.startsWith('rq-award-') && existing.status==='active')
+                outcomes.put(outcomeSchema.parse({...existing,status:'void',updatedRevision:next.event.revision}));
+            }
+            for(const awarded of after) {
+              outcomes.add(outcomeSchema.parse({
+                eventId:session.id,
+                outcomeId:'rq-award-'+next.event.revision+'-'+awarded.teamId,
+                taskId:question.id,teamId:awarded.teamId,points:awarded.points,
+                status:'active',createdRevision:next.event.revision,updatedRevision:next.event.revision,
+              }));
+            }
+          }
+        }
         if (next.outcome) outcomes.put(outcomeSchema.parse(next.outcome));
         events.put(eventSchema.parse(next.event));
         tx.objectStore('checkpoints').add(checkpointOf(next.event));
@@ -347,6 +376,11 @@ export class EventRepository {
             const finish = (candidate: EventRecord) => {
               const updated = eventSchema.parse({
                 ...candidate, revision, hostEpoch: epoch, hostId: input.newHostId,
+                ...(candidate.rundenquiz ? {rundenquiz:{
+                  ...candidate.rundenquiz,ownerId:input.newHostId,epoch,
+                  paused:action==='RECOVERY_RESTORE' || candidate.lifecycle==='active' ||
+                    candidate.lifecycle==='paused' || candidate.rundenquiz.paused,
+                }} : {}),
                 stageRevision: candidate.stageRevision + 1,
                 lifecycle: candidate.lifecycle === 'active' ? 'paused' : candidate.lifecycle,
                 recoveryRequired: action === 'RECOVERY_RESTORE' ? true : candidate.recoveryRequired,
