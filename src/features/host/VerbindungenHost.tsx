@@ -93,7 +93,6 @@ export function VerbindungenHost(){
  const teams=vb?teamsInOrder(vb):[],totals=vb?scores(vb):{};
  const disabled=!ready||busy||vb?.paused||event?.recoveryRequired;
  const wall=task?.puzzle.kind==='wall'?task.puzzle:null;
- const group=wall?.groups[vb?.revealedGroups?Math.max(0,vb.revealedGroups-1):0];
  const canRevealNext=!vb||!wall||vb.revealedGroups===0||
    teams.every(t=>Boolean(vb.wallMarks[t.id]?.[wall.groups[vb.revealedGroups-1]?.id??'']));
  const canConfirmWall=vb&&wall&&vb.revealedGroups===4&&(()=>{
@@ -149,26 +148,28 @@ export function VerbindungenHost(){
       return <div key={tile.id} className={solved?'solved':''}><strong>{tile.label}</strong>
        {solved&&<small>{solved.link}</small>}</div>;
      })}</div>
-     {vb.phase==='wall-reveal'&&vb.revealedGroups>0&&group&&<div className="vb-marking">
-      <h4>Gruppe {vb.revealedGroups}: {group.link}</h4>
-      <p>{group.tileIds.map(id=>wall.tiles.find(t=>t.id===id)?.label??id).join(' · ')}</p>
-      {teams.map(t=>{
-       const mark=vb.wallMarks[t.id]?.[group.id];
-       return <div className="vb-mark-row" key={t.id}>
-        <strong>{t.name}</strong>
-        <button disabled={disabled} aria-pressed={mark?.group===true}
-         onClick={()=>void send({type:'MARK_GROUP',teamId:t.id,groupId:group.id,correct:true})}>Vierergruppe richtig</button>
-        <button disabled={disabled} aria-pressed={mark?.group===false}
-         onClick={()=>void send({type:'MARK_GROUP',teamId:t.id,groupId:group.id,correct:false})}>Nicht richtig</button>
-        {mark?.group&&<>
-          <button disabled={disabled} aria-pressed={mark.link}
-           onClick={()=>void send({type:'MARK_LINK',teamId:t.id,groupId:group.id,correct:true})}>Verbindung richtig</button>
-          <button disabled={disabled} aria-pressed={!mark.link}
-           onClick={()=>void send({type:'MARK_LINK',teamId:t.id,groupId:group.id,correct:false})}>Verbindung nicht richtig</button>
-        </>}
-       </div>;
-      })}
-     </div>}
+     {vb.phase==='wall-reveal'&&vb.revealedGroups>0&&wall.groups.slice(0,vb.revealedGroups).map((group,groupIndex)=>
+      <div className="vb-marking" key={group.id}>
+       <h4>Gruppe {groupIndex+1}: {group.link}</h4>
+       <p>{group.tileIds.map(id=>wall.tiles.find(t=>t.id===id)?.label??id).join(' · ')}</p>
+       {teams.map(t=>{
+        const mark=vb.wallMarks[t.id]?.[group.id];
+        return <div className="vb-mark-row" key={t.id}>
+         <strong>{t.name}</strong>
+         <button disabled={disabled} aria-pressed={mark?.group===true}
+          onClick={()=>void send({type:'MARK_GROUP',teamId:t.id,groupId:group.id,correct:true})}>Vierergruppe richtig</button>
+         <button disabled={disabled} aria-pressed={mark?.group===false}
+          onClick={()=>void send({type:'MARK_GROUP',teamId:t.id,groupId:group.id,correct:false})}>Nicht richtig</button>
+         {mark?.group&&<>
+           <button disabled={disabled} aria-pressed={mark.link}
+            onClick={()=>void send({type:'MARK_LINK',teamId:t.id,groupId:group.id,correct:true})}>Verbindung richtig</button>
+           <button disabled={disabled} aria-pressed={!mark.link}
+            onClick={()=>void send({type:'MARK_LINK',teamId:t.id,groupId:group.id,correct:false})}>Verbindung nicht richtig</button>
+         </>}
+        </div>;
+       })}
+      </div>
+     )}
     </>}
     {(vb.phase==='clue-open'||vb.phase==='sequence-open'||vb.phase==='wall-open')&&<div className="vb-timer">
      <div><small>OPTIONALER TIMER</small><strong>{seconds} s</strong>
