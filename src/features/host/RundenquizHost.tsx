@@ -87,6 +87,7 @@ export function RundenquizHost(){
   if(!identity)return;
   let disposed=false;
   const repo=new EventRepository();
+  repoRef.current=repo;
   const onStatus=(status:string)=>{
    if(!disposed && status==='revoked'){
     setSourceReady(false);
@@ -117,7 +118,7 @@ export function RundenquizHost(){
   }).catch(e=>{if(!disposed)setError(errorMessage(e));});
   const heartbeat=window.setInterval(()=>{void publisher.refresh();},1600);
   return ()=>{
-   disposed=true;controllerRef.current=null;
+   disposed=true;controllerRef.current=null;repoRef.current=null;
    window.clearInterval(heartbeat);publisher.stop();void repo.close();
   };
  },[identity]);
