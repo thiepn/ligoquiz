@@ -81,6 +81,7 @@ describe('G3 host/projector integration with independent channel ports', () => {
     expect(newViewer.state.frame?.scene.kind).toBe('question');
     expect(publisher.connectedViewers).toBe(2);
     s = await controller.submit({ type: 'SOLUTION_PUBLISH', taskId: 'question-one' }, s, 'command-reveal');
+    expect(s.solutionPublished).toBe(true);
     await publisher.refresh();
     expect(viewer.state.frame?.scene.kind).toBe('answer');
     expect(JSON.stringify(viewer.state.frame)).toContain('PRIVAT-JOSUA');
