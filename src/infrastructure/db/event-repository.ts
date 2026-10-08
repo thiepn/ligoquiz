@@ -4,9 +4,10 @@ import {
   type CheckpointRecord, type AuditRecord,
 } from '../../domain/event/schemas';
 import { applySessionCommand } from '../../domain/event/transition';
+import { timerSnapshotSchema, timerScopeMatches, type TimerSnapshot } from '../../games/rundenquiz/timer';
 
 export const G2_DATABASE_NAME = 'ligoquiz.v2.sessions';
-const VERSION = 1;
+const VERSION = 2;
 const STORES = ['events', 'commands', 'outcomes', 'checkpoints', 'audit'] as const;
 const newError = (message: string) => new Error(message);
 
@@ -83,6 +84,7 @@ export class EventRepository {
       req.onupgradeneeded = () => {
         const db = req.result;
         if (!db.objectStoreNames.contains('events')) db.createObjectStore('events', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('timers')) db.createObjectStore('timers', { keyPath: 'eventId' });
         if (!db.objectStoreNames.contains('commands')) db.createObjectStore('commands', { keyPath: ['eventId', 'commandId'] });
         if (!db.objectStoreNames.contains('outcomes')) {
           const store = db.createObjectStore('outcomes', { keyPath: ['eventId', 'outcomeId'] });
@@ -112,6 +114,37 @@ export class EventRepository {
     this.dbPromise = null;
     if (pending) (await pending).close();
   }
+  /**
+   * Advisory timer snapshots live in the G2 database but are not score authority.
+   * Save is fenced by host ownership, epoch, task and open phase in ONE transaction.
+   */
+  async getTimer(eventId:string):Promise<TimerSnapshot|null>{
+    const db=await this.open();
+    const tx=db.transaction('timers','readonly');
+    const value:unknown=await requestResult(tx.objectStore('timers').get(eventId));
+    const result=timerSnapshotSchema.safeParse(value);
+    return result.success?result.data:null;
+  }
+  async saveTimer(snapshot:TimerSnapshot):Promise<void>{
+    const candidate=timerSnapshotSchema.parse(snapshot);
+    const db=await this.open();
+    return new Promise<void>((resolve,reject)=>{
+      const tx=db.transaction(['events','timers'],'readwrite');
+      let error:unknown;
+      tx.oncomplete=()=>resolve();
+      tx.onabort=()=>reject(error??tx.error??newError('Timer transaction failed'));
+      const request=tx.objectStore('events').get(candidate.eventId);
+      request.onsuccess=()=>{
+        try{
+          const record=eventSchema.parse(request.result);
+          if(!record.rundenquiz||!timerScopeMatches(record.rundenquiz,candidate))
+            throw new StoreError('STALE_HOST','Timer does not belong to the active host and task');
+          tx.objectStore('timers').put(candidate);
+        }catch(caught){error=caught;abortTransaction(tx,caught);}
+      };
+    });
+  }
+
   async create(seed: EventRecord): Promise<EventRecord> {
     const event = eventSchema.parse(seed);
     if (event.revision !== 0 || event.hostEpoch !== 1 || event.stageRevision !== 0 || event.lifecycle !== 'draft') {
