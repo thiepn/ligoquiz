@@ -185,7 +185,8 @@ export function transition(s:Session,c:Command):Session{
 }
 export type PublicBoard={
   kind:'board';categories:readonly Category[];rows:number;
-  closedIds:readonly string[];selectorName:string;turn:number;total:number;
+  cells:readonly {id:string;categoryId:string;row:number;value:number;closed:boolean}[];
+  selectorName:string;turn:number;total:number;
 };
 export type PublicQuestion={
   kind:'question';category:string;points:number;prompt:string;selectorName:string;
@@ -205,12 +206,14 @@ export function publicScene(s:Session):PublicScene{
     if(s.phase==='complete')return {kind:'results',final:true,teams:
       orderedTeams(s).map(t=>({id:t.id,name:t.name,points:scores(s)[t.id]??0}))};
     return {kind:'board',categories:s.categories,rows:DEPTH[s.profile],
-      closedIds:s.usedTileIds,selectorName:eligibleStealer(s).name,
+      cells:s.tiles.map(t=>({id:t.id,categoryId:t.categoryId,row:t.row,value:t.value,closed:s.usedTileIds.includes(t.id)})),
+      selectorName:eligibleStealer(s).name,
       turn:s.turn+1,total:s.tiles.length};
   }
   if(s.phase==='board'||s.phase==='prepared'){
     return {kind:'board',categories:s.categories,rows:DEPTH[s.profile],
-      closedIds:s.usedTileIds,selectorName:selector(s).name,
+      cells:s.tiles.map(t=>({id:t.id,categoryId:t.categoryId,row:t.row,value:t.value,closed:s.usedTileIds.includes(t.id)})),
+      selectorName:selector(s).name,
       turn:s.turn+1,total:s.tiles.length};
   }
   const tile=selectedTile(s);requireRule(tile,'CORRUPT','Aktuelles Feld fehlt');
