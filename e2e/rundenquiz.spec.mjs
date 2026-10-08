@@ -4,7 +4,7 @@ async function prepare(host, numberOfTeams = 4) {
   await host.goto('/#/spielen');
   const workbench = host.locator('.rq-host');
   if (numberOfTeams !== 4) {
-    await workbench.getByLabel('Teams', { exact: true }).selectOption(String(numberOfTeams));
+    await workbench.locator('.rq-setup select').nth(1).selectOption(String(numberOfTeams));
   }
   await workbench.getByRole('button', { name: 'Quizabend vorbereiten' }).click();
   await expect(workbench.getByRole('button', { name: 'Teams bestätigen' })).toBeEnabled();
