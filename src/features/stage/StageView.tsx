@@ -80,14 +80,14 @@ export function StageView() {
   return <main className="stage-preview" aria-label="Beamer-Ansicht">
     <div className="stage-topline">
       <span>LiGo<span className="stage-yellow">Quiz</span></span>
-      <span>G3 · BEAMER</span>
+      <span>LIGOQUIZ · BEAMER</span>
     </div>
     <div className="stage-center" aria-live="polite" aria-atomic="true">
       {scene ? <Scene scene={scene}/> : <>
         <div className="stage-mark" aria-hidden="true"><span/><span/><span/></div>
         <p className="stage-kicker">{state.status === 'stale' || state.status === 'conflict' ? 'VERBINDUNG UNTERBROCHEN' : 'BEREIT FÜR DEN QUIZABEND'}</p>
         <h1>Warte auf die<br/><span>Spielleitung</span></h1>
-        <p>{!eventId ? 'Öffne diesen Bildschirm über den Techniktest der Spielleitung.'
+        <p>{!eventId ? 'Öffne diesen Bildschirm über die Spielleitung.'
           : error ?? (state.status === 'conflict'
             ? 'Widersprüchliche Projektionsdaten. Die Anzeige bleibt sicher ausgeblendet.'
             : 'Sobald eine Verbindung besteht, wird nur der freigegebene Spielinhalt angezeigt.')}</p>
@@ -95,7 +95,7 @@ export function StageView() {
     </div>
     <div className="stage-bottom">
       <span aria-live="polite">{status}</span>
-      <span>Techniktest · Noch kein vollständiges Quiz</span>
+      <span>Nur freigegebene Spielinhalte</span>
     </div>
   </main>;
 }

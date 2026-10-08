@@ -1,0 +1,42 @@
+name: G4 Browser Qualification
+on:
+  pull_request:
+    branches: ['rebuild/v2']
+  push:
+    branches: ['rebuild/v2']
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  browser:
+    name: Host and projector (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Use consistent npm resolver
+        run: npm install --global npm@11
+      - name: Install locked application
+        run: npm ci --no-audit --no-fund
+      - name: Install pinned browser-test runner without modifying project lockfile
+        run: npm install --no-save --package-lock=false --no-audit --no-fund @playwright/test@1.56.1
+      - name: Install Chromium and system libraries
+        run: npx playwright install --with-deps chromium
+      - name: Exercise Rundenquiz browser flows
+        run: npx playwright test --config e2e/playwright.config.mjs
+      - name: Preserve browser diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g4-browser-diagnostics
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
