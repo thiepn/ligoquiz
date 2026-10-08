@@ -7,6 +7,7 @@ import { HostStagePublisher } from '../stage/host-publisher';
 import { createSession, currentQuestion, scores, eveningHalfPoints,
  type Action, type Profile, type Session } from '../../games/rundenquiz/engine';
 import { parseEstimateInput } from '../../games/rundenquiz/decimal';
+import { timerScopeMatches, newTimerSnapshot } from '../../games/rundenquiz/timer';
 import { RQ_TRIAL_BANK } from '../../games/rundenquiz/trial-bank';
 import type { EventRecord } from '../../domain/event/schemas';
 
@@ -36,6 +37,52 @@ export function RundenquizHost(){
  const [estimateInput,setEstimateInput]=useState<Record<string,string>>({});
  const [sourceReady,setSourceReady]=useState(false);
  const controllerRef=useRef<HostSessionController|null>(null);
+ const repoRef=useRef<EventRepository|null>(null);
+ const [timerRemaining,setTimerRemaining]=useState<number|null>(null);
+ const [timerRunning,setTimerRunning]=useState(false);
+ const timerLastTick=useRef<number>(Date.now());
+ const currentTimerQuestion=event?.rundenquiz?.phase==='open'
+   ? currentQuestion(event.rundenquiz)?.id ?? null : null;
+ useEffect(()=>{
+   setTimerRunning(false);
+   if(!identity||!event?.rundenquiz||!currentTimerQuestion){setTimerRemaining(null);return;}
+   let cancelled=false;
+   const repo=repoRef.current;
+   if(!repo)return;
+   void repo.getTimer(identity.eventId).then(snapshot=>{
+     if(cancelled)return;
+     const rq=event.rundenquiz;
+     if(rq && snapshot && timerScopeMatches(rq,snapshot))
+       setTimerRemaining(snapshot.remainingSeconds);
+     else setTimerRemaining(currentQuestion(rq!)?.durationSeconds??30);
+   }).catch(e=>{if(!cancelled)setError(errorMessage(e));});
+   return ()=>{cancelled=true;};
+ },[identity?.eventId,currentTimerQuestion,event?.hostEpoch,event?.rundenquiz?.paused]);
+ function persistTimer(seconds:number){
+   const rq=event?.rundenquiz,repo=repoRef.current;
+   if(!rq||!repo||rq.phase!=='open')return;
+   try{
+     const snap=newTimerSnapshot(rq,seconds);
+     void repo.saveTimer(snap).catch(e=>setError('Timer konnte nicht gesichert werden: '+errorMessage(e)));
+   }catch(e){setError(errorMessage(e));}
+ }
+ useEffect(()=>{
+   if(!timerRunning||timerRemaining===null||!currentTimerQuestion||event?.rundenquiz?.paused)return;
+   timerLastTick.current=Date.now();
+   const tick=window.setInterval(()=>{
+     const now=Date.now(),elapsed=Math.floor((now-timerLastTick.current)/1000);
+     if(elapsed<1)return;
+     timerLastTick.current+=elapsed*1000;
+     setTimerRemaining(prev=>{
+       if(prev===null)return null;
+       const next=Math.max(0,prev-elapsed);
+       if(next!==prev)persistTimer(next);
+       return next;
+     });
+   },250);
+   return ()=>window.clearInterval(tick);
+ },[timerRunning,currentTimerQuestion,event?.rundenquiz?.paused]);
+ useEffect(()=>{if(timerRemaining===0)setTimerRunning(false);},[timerRemaining]);
  useEffect(()=>{
   if(!identity)return;
   let disposed=false;
@@ -107,6 +154,8 @@ export function RundenquizHost(){
  }
  async function action(nextAction:Action){
   if(busy||!event||!sourceReady)return;
+  if(['CLOSE','REVEAL','NEXT','FINISH','PAUSE'].includes(nextAction.type))
+    setTimerRunning(false);
   const controller=controllerRef.current;if(!controller)return;
   setBusy(true);setError(null);
   try{
@@ -180,6 +229,16 @@ export function RundenquizHost(){
       {(q.clues??[]).slice(0,rq.clueCount).map((clue,i)=><p key={i}><b>{i+1}.</b> {clue}</p>)}
      </div>}
     </div>}
+    {rq.phase==='open'&&<div className="rq-timer" aria-label="Optionale Uhr">
+      <div><span>OPTIONALER TIMER</span><strong>{timerRemaining===null?'–':String(timerRemaining)+' s'}</strong></div>
+      <button disabled={disabled||isPaused||timerRemaining===null||timerRunning||timerRemaining===0}
+        onClick={()=>{timerLastTick.current=Date.now();setTimerRunning(true);}}>Start</button>
+      <button disabled={disabled||!timerRunning} onClick={()=>{setTimerRunning(false);if(timerRemaining!==null)persistTimer(timerRemaining);}}>Stopp</button>
+      <button disabled={disabled||isPaused||timerRemaining===null} onClick={()=>{
+        const next=Math.min(300,(timerRemaining??0)+15);setTimerRemaining(next);persistTimer(next);
+      }}>+15 s</button>
+      <small>Nach Neuladen pausiert. Keine automatische Enthüllung.</small>
+     </div>}
     {isPaused ? <button className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'RESUME'})}>Spiel fortsetzen</button>
     :<div className="rq-actions">
       {rq.phase==='setup' && <button className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'START'})}>Teams bestätigen</button>}
