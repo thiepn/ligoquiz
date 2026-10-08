@@ -154,6 +154,19 @@ export function RundenquizHost(){
    setSourceReady(false);
   }catch(e){setError(errorMessage(e));}finally{await repo.close();setBusy(false);}
  }
+ async function confirmRecovery(){
+  if(!event?.recoveryRequired||busy||!sourceReady)return;
+  const controller=controllerRef.current;if(!controller)return;
+  if(!window.confirm('Wiederhergestellten Spielstand bestätigen? Bitte zuerst die Punktetabelle, aktuelle Aufgabe und den Beamer prüfen. Der Abend bleibt danach pausiert.'))return;
+  setBusy(true);setError(null);setTimerRunning(false);
+  try{
+    const next=await controller.submit({type:'RECOVERY_CONFIRM'},event,crypto.randomUUID());
+    setEvent(next);
+  }catch(failure){
+    setError(errorMessage(failure));
+    try{setEvent(await controller.load());}catch{/* Keep the actionable error visible */}
+  }finally{setBusy(false);}
+ }
  async function action(nextAction:Action){
   if(busy||!event||!sourceReady)return;
   if(['CLOSE','REVEAL','NEXT','FINISH','PAUSE'].includes(nextAction.type))
@@ -220,6 +233,13 @@ export function RundenquizHost(){
     <span>{isPaused?'Pausiert':rq.phase} · {rq.profile}</span>
    </div>}
    {rq && !sourceReady && <p role="status">Sitzung wird geladen bzw. überprüft …</p>}
+   {event?.recoveryRequired && <div className="rq-recovery" role="alert">
+      <strong>Wiederherstellung prüfen</strong>
+      <p>Die Sitzung wurde aus einem gesicherten Stand wiederhergestellt. Die Beameransicht bleibt ausgeblendet. Kontrolliere Teamnamen, Punktestand und aktuelle Frage, bevor du die Wiederherstellung bestätigst.</p>
+      <button className="g3-tech-primary" disabled={busy||!sourceReady} onClick={()=>void confirmRecovery()}>
+        Spielstand geprüft — weiterhin pausiert übernehmen
+      </button>
+   </div>}
    {rq && <div className="rq-scoreboard" aria-label="Punktestand">
     {rq.teams.map(t=><div key={t.id}><span>{t.name}</span><strong>{computed[t.id]??0}</strong></div>)}
    </div>}
