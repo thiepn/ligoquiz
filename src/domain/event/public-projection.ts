@@ -9,7 +9,8 @@ const publicSceneSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('paused'), heading: z.literal('Pause') }),
   z.strictObject({kind:z.literal('qt-board'),heading:z.string(),
     categories:z.array(z.strictObject({id:z.string(),name:z.string()})).min(3).max(5),
-    rows:z.number().int().min(3).max(6),closedIds:z.array(z.string()),
+    rows:z.number().int().min(3).max(6),
+    cells:z.array(z.strictObject({id:z.string(),categoryId:z.string(),row:z.number().int(),value:z.number().int(),closed:z.boolean()})),
     selectorName:z.string(),turn:z.number().int().nonnegative(),total:z.number().int().positive()}),
   z.strictObject({kind:z.literal('qt-question'),heading:z.string(),category:z.string(),
     points:z.number().int().min(100).max(600),publicPrompt:z.string(),
@@ -37,7 +38,7 @@ export function derivePublicStage(session: EventRecord): PublicStageDto {
       qt.kind==='paused'?{kind:'paused' as const,heading:'Pause' as const}:
       qt.kind==='board'?{
         kind:'qt-board' as const,heading:'Quiztafel',
-        categories:qt.categories,rows:qt.rows,closedIds:qt.closedIds,
+        categories:qt.categories,rows:qt.rows,cells:qt.cells,
         selectorName:qt.selectorName,turn:qt.turn,total:qt.total,
       }:qt.kind==='question'?{
         kind:'qt-question' as const,heading:'Quiztafel · '+qt.category+' / '+qt.points,
