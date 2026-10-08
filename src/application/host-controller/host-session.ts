@@ -34,7 +34,14 @@ export class HostSessionController {
     if (!current) throw new StoreError('NOT_FOUND', 'Committed event not found');
     // A newer revision may have committed since receipt; publish only the
     // latest validated projection, never the proposed pre-commit state.
-    if (receipt.effect === 'committed') this.afterCommit?.(current, derivePublicStage(current));
+    if (receipt.effect === 'committed' && this.afterCommit) {
+      try {
+        this.afterCommit(current, derivePublicStage(current));
+      } catch (error) {
+        // A presentation subscriber must not turn an already-saved commit into an apparent failure.
+        console.error('Committed session, but stage notification failed', error);
+      }
+    }
     return current;
   }
   async load(): Promise<EventRecord> {
