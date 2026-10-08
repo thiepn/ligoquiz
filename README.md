@@ -1,32 +1,33 @@
-# LiGo Quizabend — Version 1.0
+# LiGoQuiz 2.0 — G1 engineering foundation
 
-Statische, lokal lauffähige Quizabend-Webanwendung für LiGo / UBF Köln.
+Branch: rebuild/v2. Production GitHub Pages remains on main (legacy v1.14).
 
-## Start
+G1 is deliberately **not playable**. It provides:
+- React + strict TypeScript + Vite static app shell, German navigation and projector preview.
+- Separate domain contracts and five game registry entries (all not ready).
+- Exact BP-03 event-placement scoring including ties.
+- A strict public stage-data projection with privacy tests.
+- Vitest regression suite and GitHub Actions check/build.
+- No PWA, gameplay, account system, backend, migration or deployment.
 
-`index.html` auf GitHub Pages hochladen oder lokal in einem Browser öffnen.
+## Local development
+Node.js 22.12+ and npm required.
 
-## Enthalten
+    npm ci
+    npm run dev
+    npm run verify
+    npm run build
 
-- Rundenquiz
-- Quiztafel
-- Verbindungen
-- Logikleiter
-- Umfrageduell
-- Inhaltsbibliothek und Editor
-- Quizabend-Planer für 1–5 Spiele
-- Host- und Beameransicht
-- Timer, Punkte, Rückgängig, Autospeicherung und Wiederherstellung
-- Technikcheck mit Beamer-Testbild und Testton
-- Sicherung/Import eigener Inhalte
-- Sicherung/Import eines laufenden Spielstands
+The first successful rebuild-branch CI run will commit a dependency lockfile.
+After that, npm ci is required.
 
-## Vor einem echten Abend
+Routes: #/spielen, #/inhalte, #/verlauf and #/stage.
+The Beamer route is a waiting preview, not real synchronization.
 
-1. Technikcheck auf der Startseite ausführen.
-2. Beamer-Testbild prüfen.
-3. Beameransicht öffnen und am Projektor Vollbild aktivieren.
-4. Falls eigene Inhalte wichtig sind, eine Inhaltssicherung exportieren.
-5. Bei einem vorbereiteten/laufenden Abend optional den Spielstand exportieren.
+Do not deploy this branch to the production Pages site. The G1 work
+does not read or write legacy browser keys. A separate URL path is NOT
+a separate browser origin; use a different origin for future previews.
 
-Alle Kernfunktionen laufen ohne erforderliche externe Netzwerkressourcen. Spielstände und eigene Inhalte liegen standardmäßig im lokalen Browserspeicher.
+G2: transactional engine, indexed storage, fencing and recovery.
+G3: host/projector protocol.
+BP-03 game rules and BP-04 visual concepts still need owner approval.
