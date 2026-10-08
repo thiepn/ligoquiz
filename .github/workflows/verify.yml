@@ -16,6 +16,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Upgrade npm resolver (npm 10.9 has a known Arborist regression)
+        run: npm install --global npm@11
       - name: Install dependencies
         run: |
           if test -f package-lock.json; then
