@@ -2,7 +2,7 @@ import type {Category,Tile,Profile,Team} from './engine';
 import { DEPTH } from './engine';
 
 /** Editorially UNREVIEWED local sample bank. No verified legacy import. */
-const material={
+const material: Record<'bibel'|'natur'|'geschichte'|'geografie'|'allgemein',readonly (readonly [string,string,string])[]> = {
   bibel:[
     ['Wer baute nach dem Alten Testament die Arche?','Noah','Genesis 6,14'],
     ['Wie heißt der Bruder von Mose?','Aaron','Exodus 4,14'],
@@ -43,7 +43,7 @@ const material={
     ['Welche römische Zahl steht für 50?','L','Römisches Zahlensystem'],
     ['Welcher Wissenschaftler formulierte die drei Bewegungsgesetze der klassischen Mechanik?','Isaac Newton','Newton: Principia Mathematica (1687)'],
   ],
-} as const;
+};
 const labels:Record<keyof typeof material,string>={
   bibel:'Bibel',natur:'Natur & Technik',geschichte:'Geschichte',
   geografie:'Geografie',allgemein:'Allgemeinwissen',
