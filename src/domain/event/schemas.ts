@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { GAME_TYPES } from '../game/contracts';
 import { rqSessionSchema, rqActionSchema } from '../../games/rundenquiz/schema';
+import { qtSessionSchema, qtActionSchema } from '../../games/quiztafel/schema';
 
 const id = z.string().min(1).max(128);
 const nonnegative = z.number().int().min(0).safe();
@@ -37,6 +38,7 @@ export const eventSchema = z.strictObject({
   recoveryRequired: z.boolean(),
   createdAt: nonnegative, updatedAt: nonnegative,
   rundenquiz: rqSessionSchema.optional(),
+  quiztafel: qtSessionSchema.optional(),
 }).superRefine((value, ctx) => {
   function unique(items: readonly { id: string }[], path: string) {
     if (new Set(items.map((item) => item.id)).size !== items.length) {
@@ -44,6 +46,24 @@ export const eventSchema = z.strictObject({
     }
   }
   unique(value.teams, 'teams');
+  if(value.rundenquiz && value.quiztafel)
+    ctx.addIssue({code:'custom',path:['quiztafel'],message:'Only one game engine per event in G6'});
+  if(value.quiztafel){
+    const qt=value.quiztafel;
+    if(qt.id!==value.id || qt.ownerId!==value.hostId || qt.epoch!==value.hostEpoch)
+      ctx.addIssue({code:'custom',path:['quiztafel'],message:'Quiztafel identity/epoch mismatch'});
+    if(value.program.length!==1 || value.program[0]?.type!=='quiztafel' ||
+       value.program[0]?.profile!==qt.profile)
+      ctx.addIssue({code:'custom',path:['quiztafel'],message:'Quiztafel requires one matching game'});
+    if(qt.teams.length!==value.teams.length ||
+      qt.teams.some(t=>!value.teams.some(v=>v.id===t.id&&v.name===t.name&&v.order===t.order)))
+      ctx.addIssue({code:'custom',path:['quiztafel'],message:'Quiztafel teams mismatch'});
+    if(qt.tiles.length!==value.frozenTasks.length ||
+      qt.tiles.some(tile=>!value.frozenTasks.some(task=>
+        task.taskId===tile.id&&task.gameType==='quiztafel'&&
+        task.publicPrompt===tile.prompt&&task.privateAnswers[0]===tile.answer)))
+      ctx.addIssue({code:'custom',path:['quiztafel'],message:'Frozen tile/content mismatch'});
+  }
   if(value.rundenquiz) {
     const rq=value.rundenquiz;
     if(rq.id!==value.id || rq.ownerId!==value.hostId || rq.epoch!==value.hostEpoch)
@@ -88,6 +108,7 @@ export type EventRecord = z.infer<typeof eventSchema>;
 const commandPayloadSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('EVENT_START') }),
   z.strictObject({ type: z.literal('RQ_ACTION'), action: rqActionSchema }),
+  z.strictObject({ type: z.literal('QT_ACTION'), action: qtActionSchema }),
   z.strictObject({ type: z.literal('EVENT_PAUSE') }),
   z.strictObject({ type: z.literal('EVENT_RESUME') }),
   z.strictObject({ type: z.literal('TASK_PUBLISH'), taskId: id }),
