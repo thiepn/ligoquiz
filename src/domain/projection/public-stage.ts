@@ -10,7 +10,7 @@ export type PublicStageScene =
       readonly heading: string;
       readonly categories: readonly { id: string; name: string }[];
       readonly rows: number;
-      readonly closedIds: readonly string[];
+      readonly cells: readonly {id:string;categoryId:string;row:number;value:number;closed:boolean}[];
       readonly selectorName: string;
       readonly turn: number;
       readonly total: number;
