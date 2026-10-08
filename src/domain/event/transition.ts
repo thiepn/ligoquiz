@@ -51,7 +51,7 @@ export function applySessionCommand(
     case 'TASK_PUBLISH': {
       active();
       const task = session.frozenTasks.find((item) => item.taskId === payload.taskId);
-      if (!task) fail('UNKNOWN_TASK', 'Question is not part of frozen session');
+      if (!task) throw new DomainError('UNKNOWN_TASK', 'Question is not part of frozen session');
       if (session.currentTaskId !== null) fail('INVALID_PHASE', 'Previous question must be advanced');
       next = {
         ...next, currentTaskId: task.taskId, publishedClueCount: 0,
@@ -63,7 +63,7 @@ export function applySessionCommand(
     case 'HINT_PUBLISH': {
       active();
       const task = session.frozenTasks.find((item) => item.taskId === payload.taskId);
-      if (!task || task.taskId !== session.currentTaskId) fail('UNKNOWN_TASK', 'Not the active question');
+      if (!task || task.taskId !== session.currentTaskId) throw new DomainError('UNKNOWN_TASK', 'Not the active question');
       if (session.solutionPublished) fail('INVALID_PHASE', 'Answer already published');
       if (payload.clueIndex !== session.publishedClueCount ||
         payload.clueIndex >= task.publicClues.length) {
@@ -107,7 +107,7 @@ export function applySessionCommand(
       note = 'Score committed';
       break;
     case 'OUTCOME_VOID':
-      if (!existingOutcome) fail('UNKNOWN_OUTCOME', 'No such score outcome');
+      if (!existingOutcome) throw new DomainError('UNKNOWN_OUTCOME', 'No such score outcome');
       if (existingOutcome.status !== 'active') fail('OUTCOME_ALREADY_VOID', 'Already voided');
       outcome = { ...existingOutcome, status: 'void', updatedRevision: session.revision + 1 };
       note = 'Score voided: ' + payload.reason;
