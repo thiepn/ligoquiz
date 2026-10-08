@@ -35,12 +35,13 @@ export function applySessionCommand(
   };
   switch (payload.type) {
     case 'RQ_ACTION': {
-      if (!session.rundenquiz) fail('INVALID_PHASE','Rundenquiz not configured');
+      const rq=session.rundenquiz;
+      if (!rq) throw new DomainError('INVALID_PHASE','Rundenquiz not configured');
       if (session.lifecycle==='complete') fail('INVALID_PHASE','Event finished');
       if (session.lifecycle==='paused' && payload.action.type!=='RESUME') fail('INVALID_PHASE','Event paused');
-      const state=rqTransition(session.rundenquiz,{
+      const state=rqTransition(rq,{
         id:command.commandId,ownerId:command.hostId,epoch:command.hostEpoch,
-        expectedRevision:session.rundenquiz.revision,at:command.issuedAtEpochMs,
+        expectedRevision:rq.revision,at:command.issuedAtEpochMs,
         action:payload.action,
       });
       next={...session,rundenquiz:state,
