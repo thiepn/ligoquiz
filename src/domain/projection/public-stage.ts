@@ -5,6 +5,11 @@
 export type PublicStageScene =
   | { readonly kind: 'waiting'; readonly heading: string }
   | { readonly kind: 'paused'; readonly heading: 'Pause' }
+  | { readonly kind:'vb-sequence'; readonly heading:string; readonly activeTeam:string; readonly prompt:string; readonly items:readonly string[] }
+  | { readonly kind:'vb-wall'; readonly heading:string;
+      readonly tiles:readonly {id:string;label:string}[];
+      readonly revealed:readonly {id:string;tileIds:readonly string[];link:string}[];
+    }
   | {
       readonly kind: 'qt-board';
       readonly heading: string;
