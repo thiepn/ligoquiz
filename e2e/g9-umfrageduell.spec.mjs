@@ -70,8 +70,11 @@ test('Standard Top 3 maps rank positions and duplicate-category guesses accurate
  for(let i=0;i<5;i++){
   await host.getByRole('button',{name:'Aufgabe veröffentlichen'}).click();
   await host.getByRole('button',{name:'Alle Antworten schließen'}).click();
-  for(const team of await host.locator('.ud-team').all())
+  for(const team of await host.locator('.ud-team').all()){
    await team.getByRole('button',{name:'Antwort erfassen'}).click();
+   await expect(team).toContainText('Erfasst: 0 Punkte');
+  }
+  await expect(host.getByRole('button',{name:'Kategorien und Rangfolge veröffentlichen'})).toBeEnabled();
   await host.getByRole('button',{name:'Kategorien und Rangfolge veröffentlichen'}).click();
   await host.getByRole('button',{name:'Teamwertungen verbindlich bestätigen'}).click();
   await host.getByRole('button',{name:'Nächste Aufgabe'}).click();
