@@ -3,6 +3,7 @@ import { transition as rqTransition } from '../../games/rundenquiz/engine';
 import { transition as qtTransition } from '../../games/quiztafel/engine';
 import { transition as vbTransition } from '../../games/verbindungen/engine';
 import { transition as llTransition } from '../../games/logikleiter/engine';
+import {transition as udTransition} from '../../games/umfrageduell/engine';
 
 export type Change = {
   event: EventRecord;
@@ -37,6 +38,26 @@ export function applySessionCommand(
     if (session.lifecycle !== 'active') fail('INVALID_PHASE', 'Game is not active');
   };
   switch (payload.type) {
+    case 'UD_ACTION': {
+      const ud=session.umfrageduell;
+      if(!ud)throw new DomainError('INVALID_PHASE','Umfrageduell not configured');
+      if(session.lifecycle==='complete')throw new DomainError('INVALID_PHASE','Event finished');
+      if(session.lifecycle==='paused'&&payload.action.type!=='RESUME')
+        throw new DomainError('INVALID_PHASE','Game paused');
+      const state=udTransition(ud,{
+        id:command.commandId,ownerId:command.hostId,epoch:command.hostEpoch,
+        expectedRevision:ud.revision,at:command.issuedAtEpochMs,action:payload.action,
+      });
+      next={...session,umfrageduell:state,
+        lifecycle:state.phase==='complete'?'complete':
+          state.paused?'paused':state.phase==='setup'?'draft':'active'};
+      stageChanged=['START','PUBLISH','CLOSE','REVEAL','CONFIRM','CORRECT',
+        'ANNUL','NEXT','PAUSE','RESUME'].includes(payload.action.type);
+      note='Umfrageduell '+payload.action.type+
+        ('reason' in payload.action?' · '+payload.action.reason:
+         'teamId' in payload.action?' · '+payload.action.teamId:'');
+      break;
+    }
     case 'LL_ACTION': {
       const ll=session.logikleiter;
       if(!ll)throw new DomainError('INVALID_PHASE','Logikleiter not configured');
@@ -229,6 +250,7 @@ export function createEvent(seed: {
   quiztafel?: EventRecord['quiztafel'];
   verbindungen?: EventRecord['verbindungen'];
   logikleiter?: EventRecord['logikleiter'];
+  umfrageduell?: EventRecord['umfrageduell'];
   at: number;
 }): EventRecord {
   return eventSchema.parse({
@@ -242,5 +264,6 @@ export function createEvent(seed: {
     ...(seed.quiztafel ? {quiztafel:seed.quiztafel} : {}),
     ...(seed.verbindungen ? {verbindungen:seed.verbindungen} : {}),
     ...(seed.logikleiter ? {logikleiter:seed.logikleiter} : {}),
+    ...(seed.umfrageduell ? {umfrageduell:seed.umfrageduell} : {}),
   });
 }
