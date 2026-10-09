@@ -6,7 +6,7 @@ import { HostStagePublisher } from '../stage/host-publisher';
 import type { EventRecord } from '../../domain/event/schemas';
 import {
   DEPTH, orderedTeams, selector, eligibleStealer, selectedTile, scores,
-  eveningHalfPoints, type Action, type Session,
+  eveningHalfPoints, type Action,
 } from '../../games/quiztafel/engine';
 import { readHostIdentity } from '../experience/model';
 
