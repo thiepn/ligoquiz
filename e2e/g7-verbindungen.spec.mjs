@@ -60,9 +60,9 @@ test('shared wall reveals one grouping at a time with group+link per team',async
  for(let i=0;i<4;i++){
   await host.getByRole('button',{name:/Gruppe \d+ bewusst auflösen/}).click();
   await expect(projector.locator('.vb-stage-links span')).toHaveCount(i+1);
-  await host.locator('.vb-mark-row').nth(0).getByRole('button',{name:'Vierergruppe richtig'}).click();
-  await host.locator('.vb-mark-row').nth(0).getByRole('button',{name:'Verbindung richtig'}).click();
-  for(let j=1;j<3;j++)await host.locator('.vb-mark-row').nth(j).getByRole('button',{name:'Nicht richtig'}).click();
+  await host.locator('.vb-marking').last().locator('.vb-mark-row').nth(0).getByRole('button',{name:'Vierergruppe richtig'}).click();
+  await host.locator('.vb-marking').last().locator('.vb-mark-row').nth(0).getByRole('button',{name:'Verbindung richtig'}).click();
+  for(let j=1;j<3;j++)await host.locator('.vb-marking').last().locator('.vb-mark-row').nth(j).getByRole('button',{name:'Nicht richtig'}).click();
  }
  await expect(host.getByRole('button',{name:'Alle Gruppenwertungen bestätigen'})).toBeEnabled();
  await host.getByRole('button',{name:'Alle Gruppenwertungen bestätigen'}).click();
