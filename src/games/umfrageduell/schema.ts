@@ -12,10 +12,11 @@ const source=z.discriminatedUnion('kind',[
   population:z.string().min(3),method:z.string().min(3),collectedOn:z.string().min(10),
   limitations:z.string().min(3),reviewed:z.literal(true)}),
 ]);
+const category=z.strictObject({
+ label:z.string().min(1).max(100),synonyms:z.array(z.string().min(1).max(100)).max(15),
+});
 const survey=z.strictObject({id,format:z.enum(['popular','top3']),prompt:z.string().trim().min(1).max(3000),
- categories:z.tuple(Array.from({length:5},()=>z.strictObject({
-  label:z.string().min(1).max(100),synonyms:z.array(z.string().min(1).max(100)).max(15),
- })) as [z.ZodTypeAny,z.ZodTypeAny,z.ZodTypeAny,z.ZodTypeAny,z.ZodTypeAny]),
+ categories:z.tuple([category,category,category,category,category]),
  source});
 const state=z.strictObject({
  id,ownerId:id,epoch:z.number().int().positive(),revision:ix,
