@@ -4,6 +4,7 @@ import { rqSessionSchema, rqActionSchema } from '../../games/rundenquiz/schema';
 import { qtSessionSchema, qtActionSchema } from '../../games/quiztafel/schema';
 import { vbSessionSchema, vbActionSchema } from '../../games/verbindungen/schema';
 import { llSessionSchema,llActionSchema } from '../../games/logikleiter/schema';
+import {udSessionSchema,udActionSchema} from '../../games/umfrageduell/schema';
 
 const id = z.string().min(1).max(128);
 const nonnegative = z.number().int().min(0).safe();
@@ -43,6 +44,7 @@ export const eventSchema = z.strictObject({
   quiztafel: qtSessionSchema.optional(),
   verbindungen: vbSessionSchema.optional(),
   logikleiter: llSessionSchema.optional(),
+  umfrageduell: udSessionSchema.optional(),
 }).superRefine((value, ctx) => {
   function unique(items: readonly { id: string }[], path: string) {
     if (new Set(items.map((item) => item.id)).size !== items.length) {
@@ -50,8 +52,22 @@ export const eventSchema = z.strictObject({
     }
   }
   unique(value.teams, 'teams');
-  if([value.rundenquiz,value.quiztafel,value.verbindungen,value.logikleiter].filter(Boolean).length>1)
+  if([value.rundenquiz,value.quiztafel,value.verbindungen,value.logikleiter,value.umfrageduell].filter(Boolean).length>1)
     ctx.addIssue({code:'custom',path:['program'],message:'G7 allows one game engine per event'});
+  if(value.umfrageduell){
+    const ud=value.umfrageduell;
+    if(ud.id!==value.id||ud.ownerId!==value.hostId||ud.epoch!==value.hostEpoch)
+      ctx.addIssue({code:'custom',path:['umfrageduell'],message:'UD identity/epoch mismatch'});
+    if(value.program.length!==1||value.program[0]?.type!=='umfrageduell'||value.program[0]?.profile!==ud.profile)
+      ctx.addIssue({code:'custom',path:['umfrageduell'],message:'UD program mismatch'});
+    if(ud.teams.length!==value.teams.length||
+       ud.teams.some(t=>!value.teams.some(v=>v.id===t.id&&v.name===t.name&&v.order===t.order)))
+      ctx.addIssue({code:'custom',path:['umfrageduell'],message:'UD team roster mismatch'});
+    if(ud.surveys.length!==value.frozenTasks.length||
+       ud.surveys.some(t=>!value.frozenTasks.some(f=>f.taskId===t.id&&
+         f.gameType==='umfrageduell'&&f.publicPrompt===t.prompt&&f.privateAnswers[0]===t.categories[0].label)))
+      ctx.addIssue({code:'custom',path:['umfrageduell'],message:'UD frozen content mismatch'});
+  }
   if(value.logikleiter){
     const ll=value.logikleiter;
     if(ll.id!==value.id||ll.ownerId!==value.hostId||ll.epoch!==value.hostEpoch)
@@ -144,6 +160,7 @@ const commandPayloadSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('QT_ACTION'), action: qtActionSchema }),
   z.strictObject({type:z.literal('VB_ACTION'),action:vbActionSchema}),
   z.strictObject({type:z.literal('LL_ACTION'),action:llActionSchema}),
+  z.strictObject({type:z.literal('UD_ACTION'),action:udActionSchema}),
   z.strictObject({ type: z.literal('EVENT_PAUSE') }),
   z.strictObject({ type: z.literal('EVENT_RESUME') }),
   z.strictObject({ type: z.literal('TASK_PUBLISH'), taskId: id }),
