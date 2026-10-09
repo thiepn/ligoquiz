@@ -38,6 +38,7 @@ async function connectStage(page, host) {
   const stage = await page.context().newPage();
   await stage.goto('http://127.0.0.1:4178/' + href);
   await expect(stage.getByRole('main', { name: 'Beamer-Ansicht' })).toBeVisible();
+  await expect(host).toContainText(/1 Beamer (verbunden|bestätigt)/);
   return { stage, eventId: href.split('event=')[1] };
 }
 
@@ -182,6 +183,5 @@ test('G12 same-ID restore fails closed without altering saved game', async ({ pa
   await page.locator('.g11-preview input[type=checkbox]').check();
   await page.getByRole('button', { name: 'Wiederherstellung ausdrücklich bestätigen' }).click();
   await expect(page.getByRole('alert')).toContainText('derselben Kennung');
-  await page.goto('/#/verlauf');
-  await expect(page.locator('.exp-empty')).not.toContainText('Noch kein abgeschlossener Quizabend').catch(() => {});
+  await expect(page.locator('.g11-row select option:not([value=""])')).toHaveCount(1);
 });
