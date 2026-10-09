@@ -355,11 +355,11 @@ export class EventRepository {
               };
               return;
             }
-            if (command.expectedRevision !== session.revision) {
-              throw new StoreError('STALE_REVISION', 'Session has changed; refresh before retrying');
-            }
             if (command.hostEpoch !== session.hostEpoch || command.hostId !== session.hostId) {
               throw new StoreError('STALE_HOST', 'Another host owns this session');
+            }
+            if (command.expectedRevision !== session.revision) {
+              throw new StoreError('STALE_REVISION', 'Session has changed; refresh before retrying');
             }
             const outcomeId = 'outcomeId' in command.payload ? command.payload.outcomeId : null;
             if(command.payload.type === 'RQ_ACTION' || command.payload.type === 'QT_ACTION' || command.payload.type === 'VB_ACTION' || command.payload.type === 'LL_ACTION' || command.payload.type === 'UD_ACTION') {
