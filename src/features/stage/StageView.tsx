@@ -6,6 +6,14 @@ import type { PublicStageScene } from '../../domain/projection/public-stage';
 const WAIT: ViewerState = { status: 'connecting', frame: null, lastReceivedAt: null };
 
 function Scene({ scene }: { scene: PublicStageScene }) {
+  if(scene.kind==='ud-prompt'||scene.kind==='ud-reveal')return <section className="ud-stage" aria-label="Umfrageduell">
+    <p className="stage-kicker">UMFRAGEDUELL · {scene.step} / {scene.total} · {scene.format==='popular'?'BELIEBTESTE ANTWORT':'TOP 3'}</p>
+    <p className="ud-provenance">{scene.provenance}</p>
+    <h1>{scene.prompt}</h1>
+    {scene.kind==='ud-prompt'?<p className="ud-stage-instruction">{scene.format==='popular'?'Gebt eine Vermutung ab.':'Nennt drei Vermutungen in der Reihenfolge Platz 1 bis 3.'}</p>:
+      <ol className="ud-stage-results">{scene.categories.map((label,i)=><li key={label}><span>{i+1}</span><strong>{label}</strong><small>{scene.format==='popular'?[20,15,10,5,2][i]+' PUNKTE':'PLATZ '+(i+1)}</small></li>)}</ol>}
+    {scene.sourceContext&&<p className="ud-stage-source">{scene.sourceContext}</p>}
+  </section>;
   if(scene.kind==='ll-ladder')return <section className="ll-stage-ladder" aria-label="Logikleiter">
     <p className="stage-kicker">LOGIKLEITER · STUFE {scene.step} / {scene.total}</p>
     <div className="ll-rung-bar" aria-hidden="true">{Array.from({length:scene.total},(_,i)=><span key={i} className={i<scene.step?'reached':''}>{i+1}</span>)}</div>
