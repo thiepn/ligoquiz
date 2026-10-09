@@ -304,7 +304,7 @@ export class EventRepository {
               throw new StoreError('STALE_HOST', 'Another host owns this session');
             }
             const outcomeId = 'outcomeId' in command.payload ? command.payload.outcomeId : null;
-            if(command.payload.type === 'RQ_ACTION' || command.payload.type === 'QT_ACTION' || command.payload.type === 'VB_ACTION') {
+            if(command.payload.type === 'RQ_ACTION' || command.payload.type === 'QT_ACTION' || command.payload.type === 'VB_ACTION' || command.payload.type === 'LL_ACTION') {
               const rqPrior = outcomes.index('byEvent').getAll(command.eventId);
               rqPrior.onsuccess = () => {
                 try {
@@ -386,6 +386,27 @@ export class EventRepository {
                   eventId:session.id,
                   outcomeId:'vb-award-'+next.event.revision+'-'+a.teamId,
                   taskId:puzzleId,teamId:a.teamId,points:a.points,
+                  status:'active',createdRevision:next.event.revision,updatedRevision:next.event.revision,
+                }));
+              }
+            }
+          }
+        }
+        if(command.payload.type==='LL_ACTION'&&session.logikleiter&&next.event.logikleiter){
+          const before=session.logikleiter,after=next.event.logikleiter;
+          const rungId=before.rungs[before.index]?.id;
+          if(rungId){
+            const previous=before.awards.filter(a=>a.rungId===rungId);
+            const current=after.awards.filter(a=>a.rungId===rungId);
+            if(JSON.stringify(previous)!==JSON.stringify(current)){
+              for(const saved of rqOutcomes){
+                if(saved.taskId===rungId&&saved.outcomeId.startsWith('ll-award-')&&saved.status==='active')
+                  outcomes.put(outcomeSchema.parse({...saved,status:'void',updatedRevision:next.event.revision}));
+              }
+              for(const a of current){
+                outcomes.add(outcomeSchema.parse({
+                  eventId:session.id,outcomeId:'ll-award-'+next.event.revision+'-'+a.teamId,
+                  taskId:rungId,teamId:a.teamId,points:a.points,
                   status:'active',createdRevision:next.event.revision,updatedRevision:next.event.revision,
                 }));
               }
@@ -482,6 +503,11 @@ export class EventRepository {
                   ...candidate.verbindungen,ownerId:input.newHostId,epoch,
                   paused:action==='RECOVERY_RESTORE'||candidate.lifecycle==='active'||
                     candidate.lifecycle==='paused'||candidate.verbindungen.paused,
+                }}:{}),
+                ...(candidate.logikleiter?{logikleiter:{
+                  ...candidate.logikleiter,ownerId:input.newHostId,epoch,
+                  paused:action==='RECOVERY_RESTORE'||candidate.lifecycle==='active'||
+                    candidate.lifecycle==='paused'||candidate.logikleiter.paused,
                 }}:{}),
                 stageRevision: candidate.stageRevision + 1,
                 lifecycle: candidate.lifecycle === 'active' ? 'paused' : candidate.lifecycle,
