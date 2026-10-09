@@ -6,11 +6,11 @@ import { readFile } from 'node:fs/promises';
 // G12: real browser flows; trial content is deliberately NOT treated as reviewed content.
 // Each scenario uses a fresh Playwright browser context and separate stage window.
 const modes = [
-  { id: 'rundenquiz', label: 'Rundenquiz', host: '.rq-host', scores: '.rq-scoreboard strong', secret: 'Josua', award: 10 },
-  { id: 'quiztafel', label: 'Quiztafel', host: '.qt-host', scores: '.qt-scorebar strong', secret: 'Noah', award: 100 },
-  { id: 'verbindungen', label: 'Verbindungen', host: '.vb-host', scores: '.vb-scorebar strong', secret: 'David', award: 30 },
-  { id: 'logikleiter', label: 'Logikleiter', host: '.ll-host', scores: '.ll-scorebar strong', secret: 'Alle Rosen sind Pflanzen, und keine Pflanze ist ein Metall.', award: 10 },
-  { id: 'umfrageduell', label: 'Umfrageduell', host: '.ud-host', scores: '.ud-scorebar strong', secret: 'Notizblock', award: 20 },
+  { id: 'rundenquiz', label: 'Rundenquiz', host: '.rq-host', scores: '.rq-scoreboard strong', secret: 'Josua', publicProbe: 'Wer führte Israel', award: 10 },
+  { id: 'quiztafel', label: 'Quiztafel', host: '.qt-host', scores: '.qt-scorebar strong', secret: 'Noah', publicProbe: 'Wer baute', award: 100 },
+  { id: 'verbindungen', label: 'Verbindungen', host: '.vb-host', scores: '.vb-scorebar strong', secret: 'David', publicProbe: 'Bethlehem', award: 30 },
+  { id: 'logikleiter', label: 'Logikleiter', host: '.ll-host', scores: '.ll-scorebar strong', secret: 'Alle Rosen sind Pflanzen, und keine Pflanze ist ein Metall.', publicProbe: 'Alle Rosen', award: 10 },
+  { id: 'umfrageduell', label: 'Umfrageduell', host: '.ud-host', scores: '.ud-scorebar strong', secret: 'Notizblock', publicProbe: 'BEISPIELDATEN', award: 20 },
 ];
 
 async function prepare(page, mode, count) {
@@ -148,7 +148,9 @@ for (const mode of modes) {
       const host = await prepare(page, mode, count);
       const { stage, eventId } = await connectStage(page, host);
       await openFirstQuestion(host, mode);
-      // Before deliberate reveal, stage may show public prompts, never the private answer.
+      // Demand a genuinely received live public frame before crash simulation.
+      // A waiting stage trivially hides answers but does not prove privacy or recovery.
+      await expect(stage.locator('main')).toContainText(mode.publicProbe);
       await expect(stage.locator('main')).not.toContainText(mode.secret);
       await page.reload();
       await expect(host.getByRole('button', {
