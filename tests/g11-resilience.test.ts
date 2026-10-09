@@ -51,6 +51,33 @@ describe('G11 session backup and fenced recovery',()=>{
     .rejects.toMatchObject({code:'STALE_HOST'});
   }finally{await origin.close();await dest.close();}
  });
+ it('restores actual committed score-ledger points and full command history',async()=>{
+  const origin=repo(),dest=repo();
+  try{
+   const seed=await origin.create(fixture());
+   async function command(payload:unknown){
+    const latest=(await origin.get(seed.id))!;
+    await origin.dispatch({
+     protocolVersion:1,eventId:seed.id,commandId:crypto.randomUUID(),
+     hostId:latest.hostId,hostEpoch:latest.hostEpoch,expectedRevision:latest.revision,
+     issuedAtEpochMs:latest.updatedAt+100,actor:'host',payload,
+    });
+   }
+   await command({type:'EVENT_START'});
+   await command({type:'TASK_PUBLISH',taskId:'task-001'});
+   await command({type:'SOLUTION_PUBLISH',taskId:'task-001'});
+   await command({type:'OUTCOME_COMMIT',outcomeId:'g11-point-award',taskId:'task-001',teamId:'team-0',points:30});
+   const before=await origin.getScores(seed.id);
+   expect(before['team-0']).toBe(30);
+   const backup=await decodeBackup(await encodeBackup(await origin.exportBackup(seed.id)));
+   const recovered=await dest.restoreBackup(backup,'new-g11-scorehost',3000);
+   expect(recovered.recoveryRequired).toBe(true);
+   expect(await dest.getScores(seed.id)).toEqual(before);
+   expect((await dest.getOutcomes(seed.id)).filter(o=>o.status==='active')).toHaveLength(1);
+   expect((await dest.getAudit(seed.id)).length).toBe(backup.audit.length+1);
+   expect((await dest.getCheckpoints(seed.id)).length).toBe(backup.checkpoints.length+1);
+  }finally{await origin.close();await dest.close();}
+ });
  it('rejects foreign audit/outcome records, missing checkpoint and duplicated evidence',async()=>{
   const store=repo();try{
    await store.create(fixture());
