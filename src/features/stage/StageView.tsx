@@ -6,6 +6,23 @@ import type { PublicStageScene } from '../../domain/projection/public-stage';
 const WAIT: ViewerState = { status: 'connecting', frame: null, lastReceivedAt: null };
 
 function Scene({ scene }: { scene: PublicStageScene }) {
+  if(scene.kind==='vb-sequence')return <div className="vb-stage-sequence">
+    <p className="stage-kicker">{scene.heading} · {scene.activeTeam}</p>
+    <h1>{scene.prompt}</h1>
+    <div className="vb-stage-items">{scene.items.map((item,i)=><span key={i}>{item}</span>)}<span className="vb-stage-missing">?</span></div>
+  </div>;
+  if(scene.kind==='vb-wall')return <section className="vb-stage-wall">
+    <p className="stage-kicker">VERBINDUNGSWAND · {scene.revealed.length} / 4 GRUPPEN AUFGELÖST</p>
+    <h1>Was gehört zusammen?</h1>
+    <div className="vb-stage-tiles">{scene.tiles.map(tile=>{
+      const group=scene.revealed.find(g=>g.tileIds.includes(tile.id));
+      return <div key={tile.id} className={'vb-stage-tile'+(group?' revealed':'')}>
+        <strong>{tile.label}</strong>{group&&<small>{group.link}</small>}
+      </div>;
+    })}</div>
+    {scene.revealed.length>0&&<div className="vb-stage-links">{scene.revealed.map((g,i)=><span key={g.id}>
+      <b>{i+1}</b> {g.link}</span>)}</div>}
+  </section>;
   if(scene.kind==='qt-board'){
     return <section className="qt-stage-board" aria-label="Quiztafel">
       <div className="stage-kicker">QUIZTAFEL · {scene.turn}/{scene.total} FELDER</div>

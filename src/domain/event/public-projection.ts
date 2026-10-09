@@ -2,11 +2,17 @@ import { z } from 'zod';
 import type { EventRecord } from './schemas';
 import { publicScene as rqPublicScene } from '../../games/rundenquiz/engine';
 import { publicScene as qtPublicScene } from '../../games/quiztafel/engine';
+import { publicScene as vbPublicScene } from '../../games/verbindungen/engine';
 import { projectTaskForAudience, waitingScene, type PublicStageDto } from '../projection/public-stage';
 
 const publicSceneSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('waiting'), heading: z.string() }),
   z.strictObject({ kind: z.literal('paused'), heading: z.literal('Pause') }),
+  z.strictObject({kind:z.literal('vb-sequence'),heading:z.string(),activeTeam:z.string(),
+    prompt:z.string(),items:z.array(z.string()).length(3)}),
+  z.strictObject({kind:z.literal('vb-wall'),heading:z.string(),
+    tiles:z.array(z.strictObject({id:z.string(),label:z.string()})).length(16),
+    revealed:z.array(z.strictObject({id:z.string(),tileIds:z.array(z.string()).length(4),link:z.string()})).max(4)}),
   z.strictObject({kind:z.literal('qt-board'),heading:z.string(),
     categories:z.array(z.strictObject({id:z.string(),name:z.string()})).min(3).max(5),
     rows:z.number().int().min(3).max(6),
@@ -30,6 +36,29 @@ export const publicDtoSchema = z.strictObject({
 });
 
 export function derivePublicStage(session: EventRecord): PublicStageDto {
+  if(session.verbindungen){
+    const vb=vbPublicScene(session.verbindungen),game=session.program[0];
+    const scene=session.recoveryRequired?waitingScene():
+      session.lifecycle==='paused'?{kind:'paused' as const,heading:'Pause' as const}:
+      vb.kind==='waiting'?waitingScene():
+      vb.kind==='paused'?{kind:'paused' as const,heading:'Pause' as const}:
+      vb.kind==='clues'?{kind:'question' as const,
+        heading:'Vier Hinweise · '+vb.activeTeam,publicPrompt:'Welche Person oder Verbindung ist gesucht?',
+        visibleClues:vb.clues}:
+      vb.kind==='sequence'?{kind:'vb-sequence' as const,
+        heading:'Folge ergänzen',activeTeam:vb.activeTeam,prompt:vb.prompt,items:vb.items}:
+      vb.kind==='wall'?{kind:'vb-wall' as const,
+        heading:'Verbindungswand',tiles:vb.tiles,revealed:vb.revealed}:
+      vb.kind==='answer'?{kind:'answer' as const,
+        heading:'Verbindungen · Auflösung',publicPrompt:vb.prompt,publishedSolution:vb.answer}:
+      vb.kind==='scores'?{kind:'scores' as const,heading:vb.final?'Endstand':'Zwischenstand',
+        visibleScores:vb.teams.map(t=>({name:t.name,value:t.points}))
+          .sort((a,b)=>b.value-a.value)}:waitingScene();
+    return publicDtoSchema.parse({
+      protocolVersion:1,eventId:session.id,gameId:game?.id??null,
+      hostEpoch:session.hostEpoch,stageRevision:session.stageRevision,scene,
+    });
+  }
   if(session.quiztafel){
     const qt=qtPublicScene(session.quiztafel),game=session.program[0];
     const scene=session.recoveryRequired?waitingScene():

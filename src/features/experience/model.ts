@@ -5,6 +5,9 @@ import { RQ_TRIAL_BANK } from '../../games/rundenquiz/trial-bank';
 import { createSession as createQuiztafel, scores as quiztafelScores,
   eveningHalfPoints as quiztafelEvening } from '../../games/quiztafel/engine';
 import { sampleQuiztafel } from '../../games/quiztafel/trial-bank';
+import { createSession as createVerbindungen, scores as verbindungenScores,
+ eveningHalfPoints as verbindungenEvening } from '../../games/verbindungen/engine';
+import { trialVerbindungen } from '../../games/verbindungen/trial-bank';
 import type { EventRepository } from '../../infrastructure/db/event-repository';
 
 export const HOST_IDENTITY_KEY = 'ligoquiz.v2.g4.rundenquiz.host';
@@ -60,7 +63,7 @@ export function applyMotionPreference(motion: Preferences['motion']): void {
   if (typeof document !== 'undefined') document.documentElement.dataset.ligoMotion = motion;
 }
 
-export type SetupDraft = { teams: string[]; count: 3 | 4 | 5; profile: Profile; game: 'rundenquiz'|'quiztafel'; step: 0 | 1 | 2 };
+export type SetupDraft = { teams: string[]; count: 3 | 4 | 5; profile: Profile; game: 'rundenquiz'|'quiztafel'|'verbindungen'; step: 0 | 1 | 2 };
 export function newSetupDraft(preference: Preferences = DEFAULT_PREFERENCES): SetupDraft {
   return { count: preference.defaultTeams, profile: preference.defaultProfile, game:'rundenquiz', step: 0,
     teams: ['Team 1', 'Team 2', 'Team 3', 'Team 4', 'Team 5'] };
@@ -72,7 +75,7 @@ export function parseSetupDraft(raw: unknown): SetupDraft | null {
       ![0,1,2].includes(Number(x.step)) || !Array.isArray(x.teams) || x.teams.length !== 5 ||
       x.teams.some(name => typeof name !== 'string' || name.length > 40)) return null;
   return { count: x.count as SetupDraft['count'], profile: x.profile as Profile,
-    game:x.game==='quiztafel'?'quiztafel':'rundenquiz',
+    game:x.game==='quiztafel'?'quiztafel':x.game==='verbindungen'?'verbindungen':'rundenquiz',
     step: x.step as SetupDraft['step'], teams: [...x.teams] as string[] };
 }
 export function readSetupDraft(): SetupDraft | null {
@@ -136,7 +139,49 @@ export async function createPreparedQuiztafel(
   return {eventId,hostId};
 }
 
+export async function createPreparedVerbindungen(
+ repo:EventRepository,draft:Pick<SetupDraft,'teams'|'count'|'profile'>,
+):Promise<HostIdentity>{
+ const eventId=crypto.randomUUID(),hostId=crypto.randomUUID();
+ const teams=draft.teams.slice(0,draft.count).map((name,i)=>({
+   id:'vb-team-'+(i+1),order:i,name:name.trim(),colorToken:'team-'+(i+1),
+ }));
+ const puzzles=trialVerbindungen(draft.profile,teams);
+ const vb=createVerbindungen({
+   id:eventId,ownerId:hostId,profile:draft.profile,
+   teams:teams.map(({id,name,order})=>({id,name,order})),puzzles,
+ });
+ const event=createEvent({
+   id:eventId,hostId,at:Date.now(),
+   teams,program:[{id:'vb-game-1',type:'verbindungen',profile:draft.profile,order:0,rulesVersion:'vb-trial-1'}],
+   frozenTasks:puzzles.map(p=>({
+     taskId:p.id,gameType:'verbindungen' as const,
+     publicPrompt:p.kind==='clues'?'Vier Hinweise':p.kind==='sequence'?p.prompt:'Verbindungswand',
+     publicClues:p.kind==='clues'?[...p.clues]:[],
+     privateAnswers:p.kind==='clues'?[p.target]:p.kind==='sequence'?[p.answer]:
+       p.groups.map(g=>g.link+' / '+g.tileIds.join(', ')),
+     moderatorNotes:'G7 Probeinhalt – Quelle: '+p.reference,
+     sourceContentId:p.id,sourceHash:'g7-trial-v1',
+   })),verbindungen:vb,
+ });
+ await repo.create(event);
+ return {eventId,hostId};
+}
+
 export function reportFor(event: EventRecord) {
+ const vb=event.verbindungen;
+ if(vb&&vb.phase==='complete'&&event.lifecycle==='complete'){
+   const raw=verbindungenScores(vb),evening=verbindungenEvening(vb);
+   return {
+     schemaVersion:1 as const,id:event.id,finishedAt:event.updatedAt,
+     gameLabel:'Verbindungen',profile:vb.profile,questionCount:vb.assignments.length,
+     teams:vb.teams.map(t=>({id:t.id,name:t.name,rawPoints:raw[t.id]??0,
+       eveningHalfPoints:evening[t.id]??0}))
+       .sort((a,b)=>b.rawPoints-a.rawPoints||a.name.localeCompare(b.name,'de')),
+     awards:vb.awards.map(a=>({...a})),
+     sourceLabel:'G7 Probeinhalte (noch nicht redaktionell freigegeben)',
+   };
+ }
   const qt=event.quiztafel;
   if(qt && qt.phase==='complete' && event.lifecycle==='complete'){
     const raw=quiztafelScores(qt),evening=quiztafelEvening(qt);

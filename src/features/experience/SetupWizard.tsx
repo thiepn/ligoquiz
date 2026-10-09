@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { EventRepository } from '../../infrastructure/db/event-repository';
 import {
   newSetupDraft, readSetupDraft, readPreferences, saveSetupDraft, clearSetupDraft,
-  createPreparedRundenquiz, createPreparedQuiztafel, writeHostIdentity, type SetupDraft,
+  createPreparedRundenquiz, createPreparedQuiztafel, createPreparedVerbindungen, writeHostIdentity, type SetupDraft,
 } from './model';
 
 const steps=['Teams','Programm','Bereit'] as const;
@@ -31,6 +31,7 @@ export function SetupWizard() {
     const repo=new EventRepository();
     try{
       const identity=draft.game==='quiztafel'?await createPreparedQuiztafel(repo,draft):
+        draft.game==='verbindungen'?await createPreparedVerbindungen(repo,draft):
         await createPreparedRundenquiz(repo,draft);
       writeHostIdentity(identity);
       clearSetupDraft();
@@ -60,7 +61,7 @@ export function SetupWizard() {
     </div>}
     {draft.step===1&&<div className="exp-form">
       <h2>Programm wählen</h2>
-      <p>Zwei Spielmodi sind für den Testbetrieb verfügbar. Weitere Formate folgen in G7–G9.</p>
+      <p>Drei Spielmodi sind im Testbetrieb verfügbar. Logikleiter und Umfrageduell folgen.</p>
       <div className="exp-choice-games" aria-label="Spielmodus wählen">
         <button type="button" className={'exp-program'+(draft.game==='rundenquiz'?' chosen':'')}
           aria-pressed={draft.game==='rundenquiz'} onClick={()=>set({game:'rundenquiz'})}>
@@ -74,21 +75,27 @@ export function SetupWizard() {
           <span><strong>Quiztafel</strong><small>Kategorien, 100–600 Punkte, eine Übernahmechance</small></span>
           <b>{draft.game==='quiztafel'?'Ausgewählt':'Wählen'}</b>
         </button>
+        <button type="button" className={'exp-program'+(draft.game==='verbindungen'?' chosen':'')}
+          aria-pressed={draft.game==='verbindungen'} onClick={()=>set({game:'verbindungen'})}>
+          <span className="exp-program-id">03 / VB</span>
+          <span><strong>Verbindungen</strong><small>Vier Hinweise, Folgen, 4×4 Verbindungswand</small></span>
+          <b>{draft.game==='verbindungen'?'Ausgewählt':'Wählen'}</b>
+        </button>
       </div>
       <label className="exp-field">Umfang
         <select value={draft.profile} onChange={e=>set({profile:e.target.value as SetupDraft['profile']})}>
-          <option value="kurz">Kurz · {draft.game==='quiztafel'?draft.count*3+' Felder':'7 Aufgaben'}</option>
-          <option value="standard">Standard · {draft.game==='quiztafel'?draft.count*5+' Felder':'11 Aufgaben'}</option>
-          <option value="lang">Lang · {draft.game==='quiztafel'?draft.count*6+' Felder':'16 Aufgaben'}</option>
+          <option value="kurz">Kurz · {draft.game==='quiztafel'?draft.count*3+' Felder':draft.game==='verbindungen'?(draft.count+1)+' Aufgaben':'7 Aufgaben'}</option>
+          <option value="standard">Standard · {draft.game==='quiztafel'?draft.count*5+' Felder':draft.game==='verbindungen'?(2*draft.count+1)+' Aufgaben':'11 Aufgaben'}</option>
+          <option value="lang">Lang · {draft.game==='quiztafel'?draft.count*6+' Felder':draft.game==='verbindungen'?(3*draft.count+1)+' Aufgaben':'16 Aufgaben'}</option>
         </select>
       </label>
-      <p className="exp-notice">Die Probeinhalte sind weder importiert noch redaktionell freigegeben. Quiztafel bietet genau eine Spalte pro Team und ein Wahlrecht pro Team je Zeile.</p>
+      <p className="exp-notice">Die Probeinhalte sind weder importiert noch redaktionell freigegeben. Quiztafel hat feste Wahlrechte; Verbindungen verteilt alle Einzelaufgaben gleichmäßig.</p>
     </div>}
     {draft.step===2&&<div className="exp-form">
       <h2>Bereit zum Spielen</h2>
       <div className="exp-summary">
         <div><span>Teams</span><strong>{draft.count}</strong><p>{draft.teams.slice(0,draft.count).join(' · ')}</p></div>
-        <div><span>Programm</span><strong>{draft.game==='quiztafel'?'Quiztafel':'Rundenquiz'}</strong><p>{draft.game==='quiztafel'?draft.count*(draft.profile==='kurz'?3:draft.profile==='standard'?5:6):draft.profile==='kurz'?7:draft.profile==='standard'?11:16} {draft.game==='quiztafel'?'Felder':'Aufgaben'} · Probeinhalte</p></div>
+        <div><span>Programm</span><strong>{draft.game==='quiztafel'?'Quiztafel':draft.game==='verbindungen'?'Verbindungen':'Rundenquiz'}</strong><p>{draft.game==='quiztafel'?draft.count*(draft.profile==='kurz'?3:draft.profile==='standard'?5:6):draft.game==='verbindungen'?draft.count*(draft.profile==='kurz'?1:draft.profile==='standard'?2:3)+1:draft.profile==='kurz'?7:draft.profile==='standard'?11:16} {draft.game==='quiztafel'?'Felder':'Aufgaben'} · Probeinhalte</p></div>
         <div><span>Beamer</span><strong>Noch nicht verbunden</strong><p>Das Beamerfenster öffnest du in der Spielleitung.</p></div>
       </div>
       <label className="exp-ack"><input type="checkbox" checked={projectorAcknowledged}
