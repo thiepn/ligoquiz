@@ -26,8 +26,15 @@ jobs:
         run: npm run verify
       - name: Build static bundle
         run: npm run build
+      - name: Certify scoped PWA assets and write G12 evidence
+        run: node scripts/g12-build-evidence.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: v2-static-bundle
           path: dist/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: g12-build-evidence
+          path: release-evidence/g12-build.json
           if-no-files-found: error
