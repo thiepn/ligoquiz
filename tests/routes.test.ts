@@ -6,7 +6,7 @@ describe('G1 routes and inventory', () => {
   it('registers all five games without falsely marking them playable', () => {
     expect(GAME_MANIFESTS).toHaveLength(5);
     expect(new Set(GAME_MANIFESTS.map((game) => game.id)).size).toBe(5);
-    expect(GAME_MANIFESTS.filter((game) => game.ready).map((game) => game.id)).toEqual(['rundenquiz','quiztafel','verbindungen','logikleiter']);
+    expect(GAME_MANIFESTS.filter((game) => game.ready).map((game) => game.id)).toEqual(['rundenquiz','quiztafel','verbindungen','logikleiter','umfrageduell']);
   });
   it('uses Pages-compatible hash routes', () => {
     expect(parseRoute('#/inhalte')).toBe('inhalte');
