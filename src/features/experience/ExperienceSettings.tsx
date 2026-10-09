@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { readPreferences, savePreferences, type Preferences } from './model';
+import {BackupRecovery} from '../resilience/ResilienceCenter';
 
 export function ExperienceSettings(){
  const [value,setValue]=useState<Preferences>(readPreferences);
@@ -36,5 +37,6 @@ export function ExperienceSettings(){
    <button className="exp-primary" onClick={save}>Einstellungen speichern</button>
    {state&&<p role="status" className="exp-feedback">{state}</p>}
   </div>
+  <BackupRecovery/>
  </section>;
 }
