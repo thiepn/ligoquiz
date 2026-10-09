@@ -105,13 +105,21 @@ export function validateItem(value:unknown):ContentItem{
  return item;
 }
 export function normalizedKey(s:string):string{return s.normalize('NFKC').trim().replace(/\s+/g,' ').toLocaleLowerCase('de-DE');}
+export function contentSignature(item:ContentItem):string|null{
+ const p=item.payload as {prompt?:string;target?:string;answer?:string;round?:string;clues?:string[]};
+ const prompt=typeof p.prompt==='string'?p.prompt:typeof p.target==='string'?p.target:'';
+ if(!prompt)return null;
+ // BP-03 RQ Hinweise deliberately share a generic host prompt.
+ // Their four clues and solution constitute the unique actual question.
+ const discriminator=item.game==='rundenquiz'&&p.round==='hinweise'?
+   '|'+normalizedKey((p.clues??[]).join('|'))+'|'+normalizedKey(p.answer??''):'';
+ return item.game+'|'+normalizedKey(prompt)+discriminator;
+}
 export function findDuplicates(items:readonly ContentItem[]):{id:string;other:string}[]{
  const seen=new Map<string,string>(),found:{id:string;other:string}[]=[];
  for(const item of items.filter(x=>x.status!=='quarantined')){
-  const p=item.payload as {prompt?:string;target?:string};
-  const text=typeof p.prompt==='string'?p.prompt:typeof p.target==='string'?p.target:'';
-  if(!text)continue;
-  const key=item.game+'|'+normalizedKey(text);
+  const key=contentSignature(item);
+  if(!key)continue;
   if(seen.has(key))found.push({id:item.id,other:seen.get(key)!});
   else seen.set(key,item.id);
  }
