@@ -54,8 +54,8 @@ export function applySessionCommand(
       stageChanged=['START','PUBLISH','CLOSE','REVEAL','CONFIRM','CORRECT',
         'ANNUL','NEXT','PAUSE','RESUME'].includes(payload.action.type);
       note='Umfrageduell '+payload.action.type+
-        ('reason' in payload.action?' · '+payload.action.reason:
-         'teamId' in payload.action?' · '+payload.action.teamId:'');
+        ('teamId' in payload.action?' · '+payload.action.teamId:'')+
+        ('reason' in payload.action?' · '+payload.action.reason:'');
       break;
     }
     case 'LL_ACTION': {
