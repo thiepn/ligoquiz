@@ -1,5 +1,5 @@
 import {GAME_TYPES,type GameType} from '../domain/game/contracts';
-import {contentSchema,validateItem,validatePayload,findDuplicates,type ContentItem} from './contracts';
+import {contentSchema,validateItem,validatePayload,findDuplicates,contentSignature,type ContentItem} from './contracts';
 
 export const G10_EXPORT_FORMAT='ligoquiz-v2-content' as const;
 export const LEGACY_PREFIX='ligo.quiz.';
