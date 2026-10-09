@@ -15,6 +15,7 @@ export function UmfrageduellHost(){
  const [ready,setReady]=useState(false),[busy,setBusy]=useState(false);
  const [error,setError]=useState(''),[viewers,setViewers]=useState(0);
  const [drafts,setDrafts]=useState<Record<string,Submission>>({});
+ const draftsRef=useRef<Record<string,Submission>>({});
  const controllerRef=useRef<HostSessionController|null>(null);
  const queueRef=useRef<Promise<void>>(Promise.resolve());
  const [seconds,setSeconds]=useState(30),[clock,setClock]=useState(false);
@@ -55,6 +56,7 @@ export function UmfrageduellHost(){
     prepared[t.id]=response&&response.answers.length>0?
       {answers:[...response.answers],mapped:[...response.mapped]}:empty(n);
    }
+   draftsRef.current=prepared;
    setDrafts(prepared);
   }
  },[ud?.index,ud?.surveys,ud?.phase==='setup']);
@@ -100,18 +102,19 @@ export function UmfrageduellHost(){
   catch(e){setError(errorText(e));}finally{setBusy(false);}
  }
  function revise(teamId:string,position:number,kind:'answers'|'mapped',value:string){
-  setDrafts(prev=>{
-   const current=prev[teamId]??empty(count);
-   const next={answers:[...current.answers],mapped:[...current.mapped]};
-   if(kind==='answers'){
-    next.answers[position]=value;
-    next.mapped[position]=task?suggestMatch(task,value):null;
-   }else next.mapped[position]=value===''?null:Number(value) as Rank;
-   return {...prev,[teamId]:next};
-  });
+  const current=draftsRef.current[teamId]??empty(count);
+  const next={answers:[...current.answers],mapped:[...current.mapped]};
+  if(kind==='answers'){
+   next.answers[position]=value;
+   next.mapped[position]=task?suggestMatch(task,value):null;
+  }else next.mapped[position]=value===''?null:Number(value) as Rank;
+  // Ref updates synchronously during input events, before a rapid Save click.
+  const updated={...draftsRef.current,[teamId]:next};
+  draftsRef.current=updated;
+  setDrafts(updated);
  }
  function collect(tid:string):Submission{
-  const value=drafts[tid]??empty(count);
+  const value=draftsRef.current[tid]??empty(count);
   if(value.answers.every(x=>!x.trim()))return {answers:[],mapped:[]};
   return {answers:[...value.answers],mapped:[...value.mapped]};
  }
