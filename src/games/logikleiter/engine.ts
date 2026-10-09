@@ -25,9 +25,6 @@ export type Command={id:string;ownerId:string;epoch:number;expectedRevision:numb
 export class RuleError extends Error{
  constructor(readonly code:string,message:string){super(message);this.name='LogikleiterRuleError';}
 }
-const assert=(yes:unknown,code:string,message:string):asserts yes=>{
- if(!yes)throw new RuleError(code,message);
-};
 export const LENGTH:Record<Profile,number>={kurz:3,standard:5,lang:7};
 export const rungValue=(index:number)=>10*(index+1);
 export const rungSeconds=(index:number)=>index<2?60:index<5?90:120;
