@@ -369,3 +369,66 @@ html[data-ligo-motion=reduce] *, html[data-ligo-motion=reduce] *::before, html[d
 .vb-stage-links b{margin-right:5px}
 @media(max-width:810px){.vb-host{padding:15px}.vb-active-row{grid-template-columns:1fr 1fr}.vb-mark-row strong{flex-basis:100%}.vb-card{padding:17px}.vb-wall-grid{gap:4px}.vb-wall-grid>div{min-height:52px}}
 @media(max-width:510px){.vb-host-head{flex-direction:column}.vb-active-row{grid-template-columns:1fr}.vb-wall-grid strong{font-size:11px}.vb-wall-grid small{font-size:8px}.vb-stage-tile{min-height:50px}.vb-stage-wall h1{margin:0 0 12px}}
+
+/* G8 — Logikleiter: clean printed-scoreboard host and high-contrast ladder stage. */
+.ll-host{max-width:1220px;margin:18px auto;padding:clamp(15px,3vw,28px);background:#faf9f5;border:1px solid #d5d7d5;color:#26323a}
+.ll-host-head{display:flex;align-items:start;justify-content:space-between;gap:20px}
+.ll-host-head h2{font-size:29px;letter-spacing:-.6px;margin:7px 0}
+.ll-host-head p{max-width:760px;font-size:12px;line-height:1.65;color:#64717b;margin:0}
+.ll-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:15px;margin:17px 0;font-size:11px;color:#63727e}
+.ll-toolbar a:last-child{margin-left:auto;text-decoration:underline}
+.ll-scorebar{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:5px;background:#e7e5dc;padding:6px}
+.ll-scorebar>div{padding:13px 16px;background:#fff;display:grid;gap:4px}
+.ll-scorebar span{font-size:11px;color:#5d6872}.ll-scorebar strong{font-size:27px;font-variant-numeric:tabular-nums}
+.ll-rung-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(75px,1fr));gap:5px;margin-top:14px}
+.ll-rung-strip>div{background:#e5e8e8;border-top:4px solid #bac0c2;padding:11px 8px;display:grid;gap:5px}
+.ll-rung-strip span{font-size:9px;letter-spacing:1px;color:#64717b;font-weight:700}
+.ll-rung-strip strong{font-size:19px}.ll-rung-strip>div.done{background:#dfebe5;border-color:#618c73}
+.ll-rung-strip>div.current{background:#f7eccb;border-color:#b88f39}
+.ll-status{display:flex;justify-content:space-between;gap:15px;margin:15px 0;padding:12px 14px;background:#283943;color:#fbf2d6;font-size:12px;letter-spacing:.5px}
+.ll-host button{border:1px solid #aebbbd;background:#fff;color:#263943;padding:10px 13px;font-size:12px;cursor:pointer}
+.ll-host button:disabled{opacity:.42;cursor:not-allowed}
+.ll-host .g3-tech-primary{background:#263a44;border-color:#263a44;color:#f6d681;font-weight:700}
+.ll-pause{display:flex;justify-content:flex-end;margin:10px 0}
+.ll-card{display:grid;gap:16px;padding:clamp(17px,3vw,27px);margin:16px 0;background:#fff;border:1px solid #dbe0dc}
+.ll-card h3{font-size:clamp(19px,2.2vw,27px);line-height:1.35;letter-spacing:-.4px;margin:0}
+.ll-card h4{font-size:14px;margin:2px 0}.ll-card p{font-size:13px;line-height:1.55}
+.ll-private{display:grid;gap:6px;padding:16px 18px;background:#f6f0df;border-left:4px solid #b58f3a}
+.ll-private small{font-size:9px;font-weight:700;letter-spacing:1px;color:#816d40}
+.ll-private strong{font-size:18px}.ll-private p{margin:0;font-size:12px;color:#596269}
+.ll-clock{display:flex;flex-wrap:wrap;align-items:center;gap:9px;background:#293944;padding:12px;color:#fff}
+.ll-clock>div{display:grid;gap:3px;margin-right:auto}
+.ll-clock>div span{font-size:9px;letter-spacing:1px;color:#f0d68e}
+.ll-clock strong{font-size:29px;font-variant-numeric:tabular-nums}
+.ll-clock small{font-size:10px;color:#c1cbcf}
+.ll-lock-panel{border:1px solid #d5d9d8;background:#f8f9f7;padding:14px 18px;display:grid;gap:10px}
+.ll-lock-panel h4{margin:0}.ll-lock-panel>p{margin:0;font-size:11px;color:#5e6e76}
+.ll-team-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid #d9dfdd;padding:10px 0}
+.ll-team-row>span{flex:1 1 110px;font-size:13px;font-weight:700;display:grid;gap:3px}
+.ll-team-row>strong{font-size:10px;color:#557769;letter-spacing:.4px}
+.ll-team-row>button{margin-left:auto}
+.ll-grades{display:flex;gap:6px;flex-wrap:wrap}
+.ll-grades button[aria-pressed=true]{background:#2c4f46;border-color:#2c4f46;color:#fff}
+.ll-hint{border-left:5px solid #b88f39;background:#faf1dc;padding:15px}
+.ll-hint small{color:#8b6d35;font-weight:700;letter-spacing:1px;font-size:10px}
+.ll-hint p{margin:5px 0 0;font-size:15px}
+.ll-notice{background:#e5efe9;padding:12px;color:#2a5843}
+.ll-awards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.ll-awards p{border:1px solid #d7d8d0;margin:0;padding:12px}
+.ll-annul{border-color:#d3a5a0!important;color:#953c36!important}
+.ll-final{background:#263945;color:#fff}.ll-final h3{color:#f3d488}
+.ll-final p{margin:0;border-bottom:1px solid #63747b;padding:10px 0}
+.ll-final .exp-primary{margin-top:10px;justify-self:start}
+.ll-stage-ladder,.ll-stage-answer{max-width:min(1200px,90vw);margin:0 auto;text-align:left}
+.ll-stage-ladder h1,.ll-stage-answer h1{font-size:clamp(28px,3.6vw,57px);line-height:1.26;letter-spacing:-.5px}
+.ll-rung-bar{display:flex;gap:8px;justify-content:center;margin:26px 0}
+.ll-rung-bar span{width:clamp(32px,4vw,65px);height:clamp(32px,4vw,65px);display:grid;place-items:center;border:2px solid #546574;background:#1a2b3b;color:#718494;font-weight:700}
+.ll-rung-bar span.reached{background:#96752f;color:#fff4d7;border-color:#d9b864}
+.ll-stage-value{color:#f5d88f;font-size:clamp(11px,1.35vw,21px);letter-spacing:2px;font-weight:700}
+.ll-stage-hint{padding:clamp(12px,2vw,24px);background:#3b3b34;border-left:5px solid #e3bf74;margin-top:30px}
+.ll-stage-hint b{color:#f2d68d;letter-spacing:2px;font-size:13px}
+.ll-stage-hint p{font-size:clamp(16px,2vw,28px);line-height:1.4;color:#fff}
+.ll-stage-answer .stage-reveal{display:grid;gap:12px;padding:22px;border-left:5px solid #e3bf74}
+.ll-stage-answer .stage-reveal strong{font-size:clamp(28px,3vw,50px)}
+.ll-stage-answer .stage-reveal p{font-size:clamp(15px,1.7vw,25px);line-height:1.5}
+@media(max-width:760px){.ll-host-head{flex-direction:column}.ll-toolbar a:last-child{margin-left:0}.ll-team-row>span{flex-basis:100%}.ll-rung-strip{grid-template-columns:repeat(auto-fit,minmax(64px,1fr))}.ll-scorebar{grid-template-columns:repeat(2,minmax(0,1fr))}}
