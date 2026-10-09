@@ -43,7 +43,10 @@ describe('G8 shared ladder fairness',()=>{
     s=step(s,{type:'PUBLISH'});
     const open=publicScene(s);
     expect(open.kind).toBe('ladder');
-    expect(JSON.stringify(open)).not.toContain(currentRung(s).answer);
+    // A candidate answer can occur in the publicly stated premises; the stage must
+    // not carry a private answer or explanation field before reveal.
+    expect(open.kind==='ladder'&&'answer' in open).toBe(false);
+    expect(open.kind==='ladder'&&'explanation' in open).toBe(false);
     for(const t of s.teams)s=step(s,{type:'LOCK',teamId:t.id});
     s=step(s,{type:'CLOSE'});s=step(s,{type:'REVEAL'});
     for(const t of s.teams)s=step(s,{type:'GRADE',teamId:t.id,value:'correct'});
