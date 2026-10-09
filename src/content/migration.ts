@@ -57,7 +57,7 @@ export async function previewFile(text:string):Promise<Preview>{
  let raw:unknown;try{raw=JSON.parse(text);}catch{throw Error('Keine gültige JSON-Datei. Quelle bleibt unverändert.');}
  const obj=record(raw);
  if(!obj)throw Error('Import benötigt ein JSON-Objekt');
- let sourceType:Preview['sourceType'],sources:unknown[],warnings:string[]=[];
+ let sourceType:Preview['sourceType'],sources:unknown[];const warnings:string[]=[];
  const originalHash=await sha256(text);
  if(obj.format===G10_EXPORT_FORMAT&&obj.version===1&&asArray(obj.entries)){
   sourceType='v2';sources=asArray(obj.entries)!;
