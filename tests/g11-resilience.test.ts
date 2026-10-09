@@ -84,7 +84,7 @@ describe('G11 session backup and fenced recovery',()=>{
    const backup=await store.exportBackup('g11-event-12345');
    await expect(encodeBackup({...backup,checkpoints:[]})).rejects.toThrow(/Checkpoint/);
    await expect(encodeBackup({...backup,audit:[...backup.audit,
-    {...backup.audit[0]!,eventId:'another-event'}]})).rejects.toThrow(/anderen Sitzungskennungen/);
+    {...backup.audit[0]!,eventId:'another-event'}]})).rejects.toThrow(/andere Sitzungskennungen/);
   }finally{await store.close();}
  });
  it('keeps completed historic games completed after restore',()=>{
