@@ -52,7 +52,10 @@ export function applySessionCommand(
           state.paused?'paused':state.phase==='setup'?'draft':'active'};
       stageChanged=['START','PUBLISH','HINT','CLOSE','REVEAL','CONFIRM','CORRECT',
         'ANNUL','NEXT','PAUSE','RESUME','FAIR_HINT'].includes(payload.action.type);
-      note='Logikleiter '+payload.action.type;
+      note='Logikleiter '+payload.action.type+
+        ('reason' in payload.action?' · '+payload.action.reason:
+         'teamId' in payload.action?' · '+payload.action.teamId+
+           ('value' in payload.action?' / '+payload.action.value:''):'');
       break;
     }
     case 'VB_ACTION': {
