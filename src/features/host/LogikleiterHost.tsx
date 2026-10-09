@@ -76,8 +76,8 @@ export function LogikleiterHost(){
   try{setEvent(await controller.submit({type:'RECOVERY_CONFIRM'},event,crypto.randomUUID()));}
   catch(e){setError(errorText(e));}finally{setBusy(false);}
  }
- function reasoned(type:'ANNUL'|'FAIR_HINT'){
-  const text=window.prompt(type==='ANNUL'?'Grund für Stufenannullierung:':'Grund für faire Hinweisbehandlung:');
+ function reasoned(type:'ANNUL'|'FAIR_HINT'|'CORRECT'){
+  const text=window.prompt(type==='ANNUL'?'Grund für Stufenannullierung:':type==='CORRECT'?'Grund für Wertungskorrektur:':'Grund für faire Hinweisbehandlung:');
   if(text&&text.trim().length>=3)void send({type,reason:text.trim()});
  }
  if(!identity)return <section className="exp-empty"><h2>Keine Spielleitung gewählt</h2><a href="#/spielen">Zu Spielen</a></section>;
@@ -162,7 +162,7 @@ export function LogikleiterHost(){
      <div className="ll-awards">{ll.awards.filter(a=>a.rungId===rung.id).map(a=><p key={a.teamId}>
        {teams.find(t=>t.id===a.teamId)?.name}: <strong>{a.points} Punkte</strong>{a.annulled?' · Annulliert':''}</p>)}</div>
      {!ll.awards.some(a=>a.rungId===rung.id&&a.annulled)&&<button disabled={disabled}
-       onClick={()=>void send({type:'CORRECT'})}>Letzte Wertung korrigieren</button>}
+       onClick={()=>reasoned('CORRECT')}>Letzte Wertung korrigieren</button>}
      <button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'NEXT'})}>
       {ll.index===ll.rungs.length-1?'Logikleiter abschließen':'Nächste Stufe'}</button>
     </>}
