@@ -27,6 +27,8 @@ jobs:
       - name: Build static bundle
         run: npm run build
       - name: Certify scoped PWA assets and write G12 evidence
+        env:
+          G12_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: node scripts/g12-build-evidence.mjs
       - uses: actions/upload-artifact@v4
         with:
