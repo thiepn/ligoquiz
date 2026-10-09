@@ -78,7 +78,6 @@ describe('G7 fair profiles',()=>{
     expect(s.awards).toHaveLength(planned.length-1+n);
     expect(s.index).toBe(planned.length);
    });
- });
  it('clue lock is final and scores only its actual disclosed clue count',()=>{
   let s=fixture(3);s=step(s,{type:'START'});s=step(s,{type:'PUBLISH'});
   expect((publicScene(s) as {clues:string[]}).clues).toHaveLength(1);
