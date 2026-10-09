@@ -1,0 +1,19 @@
+{
+  "name": "LiGoQuiz",
+  "short_name": "LiGoQuiz",
+  "description": "Quizabende lokal vorbereiten und auf einem Beamer moderieren.",
+  "lang": "de",
+  "start_url": "./#/spielen",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#171b21",
+  "theme_color": "#171b21",
+  "icons": [
+    {
+      "src": "./icons/ligoquiz.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
