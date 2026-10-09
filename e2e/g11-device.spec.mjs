@@ -4,7 +4,7 @@ test('preflight, backup controls and projector remain keyboard-reachable without
  const check=page.getByRole('button',{name:'Offline-Vorprüfung erneut ausführen'});
  await expect(check).toBeVisible();
  await check.focus();
- expect(await check.evaluate(x=>x===document.activeElement)).toBe(true);
+ expect(await check.evaluate(x=>x===globalThis.document.activeElement)).toBe(true);
  await page.keyboard.press('Enter');
  await expect(page.getByRole('group',{name:'Gerätestatus'})).toBeVisible();
  await page.goto('/#/einstellungen');
@@ -19,8 +19,8 @@ for(const viewport of [{width:390,height:844},{width:768,height:1024},{width:128
    await page.goto('/#/'+route);
    await expect(page.locator('main')).toBeVisible();
    const width=await page.evaluate(()=>({
-    screen:document.documentElement.clientWidth,
-    content:document.documentElement.scrollWidth,
+    screen:globalThis.document.documentElement.clientWidth,
+    content:globalThis.document.documentElement.scrollWidth,
    }));
    expect(width.content).toBeLessThanOrEqual(width.screen+2);
   }
@@ -31,15 +31,15 @@ test('projector protected pause and 200% text remains within 1280x720 viewport',
  await page.goto('/#/stage?event=unrecognized-G11');
  await expect(page.getByRole('main',{name:'Beamer-Ansicht'})).toBeVisible();
  await expect(page.locator('.stage-preview')).toContainText('Warte auf');
- const initial=await page.evaluate(()=>document.documentElement.scrollWidth);
+ const initial=await page.evaluate(()=>globalThis.document.documentElement.scrollWidth);
  expect(initial).toBeLessThanOrEqual(1282);
- await page.evaluate(()=>{document.documentElement.style.fontSize='32px';});
+ await page.evaluate(()=>{globalThis.document.documentElement.style.fontSize='32px';});
  await expect(page.locator('.stage-preview')).toBeVisible();
 });
 test('reduced motion eliminates transitions in critical shell',async({page})=>{
  await page.emulateMedia({reducedMotion:'reduce'});
  await page.goto('/#/technik');
  const transition=await page.locator('.g11-preflight').evaluate(el=>
-  getComputedStyle(el).transitionDuration);
+  globalThis.getComputedStyle(el).transitionDuration);
  expect(transition).toMatch(/0s/);
 });
