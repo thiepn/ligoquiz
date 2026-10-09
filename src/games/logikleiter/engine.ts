@@ -16,10 +16,11 @@ export type Session={
  audit:{revision:number;commandId:string;action:string;at:number}[];
 };
 export type Action=
- |{type:'START'|'PUBLISH'|'HINT'|'CLOSE'|'REVEAL'|'CONFIRM'|'CORRECT'|'NEXT'|'PAUSE'|'RESUME'}
+ |{type:'START'|'PUBLISH'|'HINT'|'CLOSE'|'REVEAL'|'CONFIRM'|'NEXT'|'PAUSE'|'RESUME'}
  |{type:'LOCK';teamId:string}
  |{type:'GRADE';teamId:string;value:Grade}
  |{type:'FAIR_HINT';reason:string}
+ |{type:'CORRECT';reason:string}
  |{type:'ANNUL';reason:string};
 export type Command={id:string;ownerId:string;epoch:number;expectedRevision:number;at:number;action:Action};
 export class RuleError extends Error{
@@ -118,6 +119,7 @@ export function transition(s:Session,c:Command):Session{
   case 'CONFIRM':phase('revealed');
     next={...s,phase:'graded',awards:[...s.awards,...awardsFor(s)]};break;
   case 'CORRECT':phase('graded');
+    if(a.reason.trim().length<3)throw new RuleError('REASON','Grund für Korrektur fehlt');
     if(!s.awards.some(x=>x.rungId===currentRung(s).id&&!x.annulled))
       throw new RuleError('ANNUL','Annullierte Stufe kann nicht korrigiert werden');
     next={...s,phase:'revealed',awards:s.awards.filter(x=>x.rungId!==currentRung(s).id)};
