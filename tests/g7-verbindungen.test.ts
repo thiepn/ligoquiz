@@ -15,6 +15,7 @@ const fixture=(n=4,profile:Profile='kurz')=>{
 };
 const step=(s:Session,action:Action)=>transition(s,{id:'cmd-'+s.revision,ownerId:s.ownerId,
  epoch:s.epoch,expectedRevision:s.revision,at:100+s.revision,action});
+const visibleClueCount=(s:Session)=>{const scene=publicScene(s);if(scene.kind!=='clues')throw Error('Expected clue scene');return scene.clues.length;};
 const eventFor=(vb:Session):EventRecord=>createEvent({
  id:vb.id,hostId:vb.ownerId,at:100,verbindungen:vb,
  teams:vb.teams.map(t=>({...t,colorToken:'neutral'})),
@@ -80,9 +81,9 @@ describe('G7 fair profiles',()=>{
    });
  it('clue lock is final and scores only its actual disclosed clue count',()=>{
   let s=fixture(3);s=step(s,{type:'START'});s=step(s,{type:'PUBLISH'});
-  expect((publicScene(s) as {clues:string[]}).clues).toHaveLength(1);
+  expect(visibleClueCount(s)).toBe(1);
   s=step(s,{type:'NEXT_CLUE'});
-  expect((publicScene(s) as {clues:string[]}).clues).toHaveLength(2);
+  expect(visibleClueCount(s)).toBe(2);
   s=step(s,{type:'JUDGE',value:'correct'});
   expect(()=>step(s,{type:'NEXT_CLUE'})).toThrow();
   expect(()=>step(s,{type:'JUDGE',value:'wrong'})).toThrow();
@@ -112,7 +113,7 @@ describe('G7 fair profiles',()=>{
    s=step(s,{type:'REVEAL'});s=step(s,{type:'CONFIRM'});s=step(s,{type:'NEXT'});
   }
   s=step(s,{type:'PUBLISH'});s=step(s,{type:'CLOSE_WALL'});s=step(s,{type:'REVEAL_WALL_GROUP'});
-  const group=(active(s).puzzle.kind==='wall'?active(s).puzzle.groups[0]!.id:'none');
+  const puzzle=active(s).puzzle;const group=puzzle.kind==='wall'?puzzle.groups[0]!.id:'none';
   expect(()=>step(s,{type:'MARK_LINK',teamId:s.teams[0]!.id,groupId:group,correct:true})).toThrow();
   s=step(s,{type:'MARK_GROUP',teamId:s.teams[0]!.id,groupId:group,correct:false});
   expect(()=>step(s,{type:'MARK_LINK',teamId:s.teams[0]!.id,groupId:group,correct:true})).toThrow();
