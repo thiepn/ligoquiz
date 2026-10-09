@@ -49,17 +49,17 @@ export async function decodeBackup(text:string):Promise<BackupPayload>{
  if(actual!==bundle.sha256)throw Error('Backup-Prüfsumme ungültig; Quelle nicht verändert');
  return validateBackupPayload(bundle.payload);
 }
-export function stagedRecovery(source:EventRecord,at:number):EventRecord{
+export function stagedRecovery(source:EventRecord,at:number,newHostId:string):EventRecord{
  // Imported sessions never reveal live questions before an explicit host review.
  const paused=source.lifecycle==='complete'?'complete':'paused';
  const enginePause=<T extends {paused:boolean}>(value:T|undefined)=>value?{...value,paused:paused!=='complete'}:undefined;
  return eventSchema.parse({
   ...source,lifecycle:paused,recoveryRequired:paused!=='complete',stageRevision:source.stageRevision+1,
-  revision:source.revision+1,updatedAt:at,
-  ...(source.rundenquiz?{rundenquiz:enginePause(source.rundenquiz)}:{}),
-  ...(source.quiztafel?{quiztafel:enginePause(source.quiztafel)}:{}),
-  ...(source.verbindungen?{verbindungen:enginePause(source.verbindungen)}:{}),
-  ...(source.logikleiter?{logikleiter:enginePause(source.logikleiter)}:{}),
-  ...(source.umfrageduell?{umfrageduell:enginePause(source.umfrageduell)}:{}),
+  revision:source.revision+1,hostEpoch:source.hostEpoch+1,hostId:newHostId,updatedAt:at,
+  ...(source.rundenquiz?{rundenquiz:{...enginePause(source.rundenquiz),ownerId:newHostId,epoch:source.hostEpoch+1}}:{}),
+  ...(source.quiztafel?{quiztafel:{...enginePause(source.quiztafel),ownerId:newHostId,epoch:source.hostEpoch+1}}:{}),
+  ...(source.verbindungen?{verbindungen:{...enginePause(source.verbindungen),ownerId:newHostId,epoch:source.hostEpoch+1}}:{}),
+  ...(source.logikleiter?{logikleiter:{...enginePause(source.logikleiter),ownerId:newHostId,epoch:source.hostEpoch+1}}:{}),
+  ...(source.umfrageduell?{umfrageduell:{...enginePause(source.umfrageduell),ownerId:newHostId,epoch:source.hostEpoch+1}}:{}),
  });
 }
