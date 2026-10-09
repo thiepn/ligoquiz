@@ -85,6 +85,7 @@ export async function previewFile(text:string):Promise<Preview>{
  }
  if(sources.length>2000)throw Error('Mehr als 2000 Datensätze; keine Teilübernahme');
  const items:ContentItem[]=[],quarantined:Quarantine[]=[],seen=new Set<string>();
+ const sourceIndexById=new Map<string,number>();
  sources.forEach((source,index)=>{
   const obj=record(source),nested=record(obj?.payload??obj?.data??obj?.question);
   const game=gameValue(obj?.game??obj?.gameType);
@@ -116,7 +117,7 @@ export async function previewFile(text:string):Promise<Preview>{
       audit:[...parsed.audit,{revision:0,at:Date.now(),action:'IMPORT',note:'Freigabe erneut erforderlich'}]
      }:parsed;
      const validated=validateItem(safe);
-     items.push(validated);seen.add(candidateId);
+     items.push(validated);seen.add(candidateId);sourceIndexById.set(candidateId,index);
     }catch(e){issue=e instanceof Error?e.message:'Datensatz ungültig';}
    }
   }
@@ -125,7 +126,7 @@ export async function previewFile(text:string):Promise<Preview>{
  for(const dup of findDuplicates(items)){
   const idx=items.findIndex(x=>x.id===dup.id);
   if(idx>=0){const [removed]=items.splice(idx,1);
-   quarantined.push({index:idx,sourceId:removed!.id,reason:'Mögliche Doppelung mit '+dup.other,raw:removed});}
+   quarantined.push({index:sourceIndexById.get(removed!.id)??idx,sourceId:removed!.id,reason:'Mögliche Doppelung mit '+dup.other,raw:removed});}
  }
  if(sourceType==='legacy-backup'&&sources.length===0)warnings.push('Keine Legacy-Fragen automatisch übernommen.');
  return {bundleHash:originalHash,sourceType,items,quarantined,warnings,records:sources.length,sourceBytes:sizeOf(text)};
