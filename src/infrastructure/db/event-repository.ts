@@ -304,7 +304,7 @@ export class EventRepository {
               throw new StoreError('STALE_HOST', 'Another host owns this session');
             }
             const outcomeId = 'outcomeId' in command.payload ? command.payload.outcomeId : null;
-            if(command.payload.type === 'RQ_ACTION' || command.payload.type === 'QT_ACTION' || command.payload.type === 'VB_ACTION' || command.payload.type === 'LL_ACTION') {
+            if(command.payload.type === 'RQ_ACTION' || command.payload.type === 'QT_ACTION' || command.payload.type === 'VB_ACTION' || command.payload.type === 'LL_ACTION' || command.payload.type === 'UD_ACTION') {
               const rqPrior = outcomes.index('byEvent').getAll(command.eventId);
               rqPrior.onsuccess = () => {
                 try {
@@ -413,6 +413,27 @@ export class EventRepository {
             }
           }
         }
+        if(command.payload.type==='UD_ACTION'&&session.umfrageduell&&next.event.umfrageduell){
+          const before=session.umfrageduell,after=next.event.umfrageduell;
+          const taskId=before.surveys[before.index]?.id;
+          if(taskId){
+            const previous=before.awards.filter(a=>a.surveyId===taskId);
+            const current=after.awards.filter(a=>a.surveyId===taskId);
+            if(JSON.stringify(previous)!==JSON.stringify(current)){
+              for(const saved of rqOutcomes){
+                if(saved.taskId===taskId&&saved.outcomeId.startsWith('ud-award-')&&saved.status==='active')
+                  outcomes.put(outcomeSchema.parse({...saved,status:'void',updatedRevision:next.event.revision}));
+              }
+              for(const a of current){
+                outcomes.add(outcomeSchema.parse({
+                  eventId:session.id,outcomeId:'ud-award-'+next.event.revision+'-'+a.teamId,
+                  taskId,teamId:a.teamId,points:a.points,
+                  status:'active',createdRevision:next.event.revision,updatedRevision:next.event.revision,
+                }));
+              }
+            }
+          }
+        }
         if (next.outcome) outcomes.put(outcomeSchema.parse(next.outcome));
         events.put(eventSchema.parse(next.event));
         tx.objectStore('checkpoints').add(checkpointOf(next.event));
@@ -508,6 +529,11 @@ export class EventRepository {
                   ...candidate.logikleiter,ownerId:input.newHostId,epoch,
                   paused:action==='RECOVERY_RESTORE'||candidate.lifecycle==='active'||
                     candidate.lifecycle==='paused'||candidate.logikleiter.paused,
+                }}:{}),
+                ...(candidate.umfrageduell?{umfrageduell:{
+                  ...candidate.umfrageduell,ownerId:input.newHostId,epoch,
+                  paused:action==='RECOVERY_RESTORE'||candidate.lifecycle==='active'||
+                    candidate.lifecycle==='paused'||candidate.umfrageduell.paused,
                 }}:{}),
                 stageRevision: candidate.stageRevision + 1,
                 lifecycle: candidate.lifecycle === 'active' ? 'paused' : candidate.lifecycle,

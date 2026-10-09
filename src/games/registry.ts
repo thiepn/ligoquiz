@@ -12,7 +12,7 @@ export const GAME_MANIFESTS: readonly GameManifest[] = [
   { id: 'quiztafel', nameDe: 'Quiztafel', taglineDe: 'Kategorien wählen, Wissen zeigen', code: 'QT', ready: true },
   { id: 'verbindungen', nameDe: 'Verbindungen', taglineDe: 'Hinweise und Zusammenhänge', code: 'VB', ready: true },
   { id: 'logikleiter', nameDe: 'Logikleiter', taglineDe: 'Gemeinsam weiterdenken', code: 'LL', ready: true },
-  { id: 'umfrageduell', nameDe: 'Umfrageduell', taglineDe: 'Was würden andere antworten?', code: 'UD', ready: false },
+  { id: 'umfrageduell', nameDe: 'Umfrageduell', taglineDe: 'Was würden andere antworten?', code: 'UD', ready: true },
 ];
 export function gameManifest(id: GameType): GameManifest {
   const manifest = GAME_MANIFESTS.find((item) => item.id === id);

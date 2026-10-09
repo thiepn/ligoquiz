@@ -4,11 +4,18 @@ import { publicScene as rqPublicScene } from '../../games/rundenquiz/engine';
 import { publicScene as qtPublicScene } from '../../games/quiztafel/engine';
 import { publicScene as vbPublicScene } from '../../games/verbindungen/engine';
 import { publicScene as llPublicScene } from '../../games/logikleiter/engine';
+import {publicScene as udPublicScene} from '../../games/umfrageduell/engine';
 import { projectTaskForAudience, waitingScene, type PublicStageDto } from '../projection/public-stage';
 
 const publicSceneSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('waiting'), heading: z.string() }),
   z.strictObject({ kind: z.literal('paused'), heading: z.literal('Pause') }),
+  z.strictObject({kind:z.literal('ud-prompt'),heading:z.string(),format:z.enum(['popular','top3']),
+    step:z.number().int().positive(),total:z.number().int().positive(),prompt:z.string(),
+    provenance:z.string(),sourceContext:z.string().nullable()}),
+  z.strictObject({kind:z.literal('ud-reveal'),heading:z.string(),format:z.enum(['popular','top3']),
+    step:z.number().int().positive(),total:z.number().int().positive(),prompt:z.string(),
+    categories:z.array(z.string()).length(5),provenance:z.string(),sourceContext:z.string().nullable()}),
   z.strictObject({kind:z.literal('ll-ladder'),heading:z.string(),step:z.number().int().positive(),total:z.number().int().positive(),points:z.number().int().positive(),prompt:z.string(),hint:z.string().nullable()}),
   z.strictObject({kind:z.literal('ll-answer'),heading:z.string(),step:z.number().int().positive(),total:z.number().int().positive(),points:z.number().int().positive(),prompt:z.string(),answer:z.string(),explanation:z.string()}),
   z.strictObject({kind:z.literal('vb-sequence'),heading:z.string(),activeTeam:z.string(),
@@ -39,6 +46,29 @@ export const publicDtoSchema = z.strictObject({
 });
 
 export function derivePublicStage(session: EventRecord): PublicStageDto {
+  if(session.umfrageduell){
+    const ud=udPublicScene(session.umfrageduell),game=session.program[0];
+    const provenance=(source:{kind:'illustrative'}|{kind:'observed';source:string;population:string;method:string;collectedOn:string;limitations:string})=>
+      source.kind==='illustrative'?'BEISPIELDATEN – KEINE ECHTE UMFRAGE':'ECHTE UMFRAGE – QUELLE SIEHE HINWEIS';
+    const context=(source:{kind:'illustrative'}|{kind:'observed';source:string;population:string;method:string;collectedOn:string;limitations:string})=>
+      source.kind==='illustrative'?null:
+      source.source+' · '+source.population+' · '+source.method+' · '+source.collectedOn+' · '+source.limitations;
+    const scene=session.recoveryRequired?waitingScene():
+      session.lifecycle==='paused'?{kind:'paused' as const,heading:'Pause' as const}:
+      ud.kind==='waiting'?waitingScene():
+      ud.kind==='paused'?{kind:'paused' as const,heading:'Pause' as const}:
+      ud.kind==='prompt'?{kind:'ud-prompt' as const,heading:'Umfrageduell',
+        format:ud.format,step:ud.step,total:ud.total,prompt:ud.prompt,
+        provenance:provenance(ud.source),sourceContext:context(ud.source)}:
+      ud.kind==='reveal'?{kind:'ud-reveal' as const,heading:'Umfrageduell · Auflösung',
+        format:ud.format,step:ud.step,total:ud.total,prompt:ud.prompt,
+        categories:ud.categories,provenance:provenance(ud.source),sourceContext:context(ud.source)}:
+      ud.kind==='scores'?{kind:'scores' as const,heading:ud.final?'Umfrageduell · Endstand':'Umfrageduell · Zwischenstand',
+        visibleScores:ud.teams.map(t=>({name:t.name,value:t.points})).sort((a,b)=>b.value-a.value)}:
+      waitingScene();
+    return publicDtoSchema.parse({protocolVersion:1,eventId:session.id,gameId:game?.id??null,
+      hostEpoch:session.hostEpoch,stageRevision:session.stageRevision,scene});
+  }
   if(session.logikleiter){
     const ll=llPublicScene(session.logikleiter),game=session.program[0];
     const scene=session.recoveryRequired?waitingScene():

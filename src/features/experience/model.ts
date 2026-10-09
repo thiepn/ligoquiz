@@ -10,6 +10,8 @@ import { createSession as createVerbindungen, scores as verbindungenScores,
 import { trialVerbindungen } from '../../games/verbindungen/trial-bank';
 import {createSession as createLogikleiter,scores as logikleiterScores,eveningHalfPoints as logikleiterEvening} from '../../games/logikleiter/engine';
 import {trialLogikleiter} from '../../games/logikleiter/trial-bank';
+import {createSession as createUmfrageduell,scores as umfrageduellScores,eveningHalfPoints as umfrageduellEvening} from '../../games/umfrageduell/engine';
+import {trialUmfrageduell} from '../../games/umfrageduell/trial-bank';
 import type { EventRepository } from '../../infrastructure/db/event-repository';
 
 export const HOST_IDENTITY_KEY = 'ligoquiz.v2.g4.rundenquiz.host';
@@ -65,7 +67,7 @@ export function applyMotionPreference(motion: Preferences['motion']): void {
   if (typeof document !== 'undefined') document.documentElement.dataset.ligoMotion = motion;
 }
 
-export type SetupDraft = { teams: string[]; count: 3 | 4 | 5; profile: Profile; game: 'rundenquiz'|'quiztafel'|'verbindungen'|'logikleiter'; step: 0 | 1 | 2 };
+export type SetupDraft = { teams: string[]; count: 3 | 4 | 5; profile: Profile; game: 'rundenquiz'|'quiztafel'|'verbindungen'|'logikleiter'|'umfrageduell'; step: 0 | 1 | 2 };
 export function newSetupDraft(preference: Preferences = DEFAULT_PREFERENCES): SetupDraft {
   return { count: preference.defaultTeams, profile: preference.defaultProfile, game:'rundenquiz', step: 0,
     teams: ['Team 1', 'Team 2', 'Team 3', 'Team 4', 'Team 5'] };
@@ -77,7 +79,7 @@ export function parseSetupDraft(raw: unknown): SetupDraft | null {
       ![0,1,2].includes(Number(x.step)) || !Array.isArray(x.teams) || x.teams.length !== 5 ||
       x.teams.some(name => typeof name !== 'string' || name.length > 40)) return null;
   return { count: x.count as SetupDraft['count'], profile: x.profile as Profile,
-    game:x.game==='quiztafel'?'quiztafel':x.game==='verbindungen'?'verbindungen':x.game==='logikleiter'?'logikleiter':'rundenquiz',
+    game:x.game==='quiztafel'?'quiztafel':x.game==='verbindungen'?'verbindungen':x.game==='logikleiter'?'logikleiter':x.game==='umfrageduell'?'umfrageduell':'rundenquiz',
     step: x.step as SetupDraft['step'], teams: [...x.teams] as string[] };
 }
 export function readSetupDraft(): SetupDraft | null {
@@ -193,7 +195,43 @@ export async function createPreparedLogikleiter(
  await repo.create(event);return {eventId,hostId};
 }
 
+export async function createPreparedUmfrageduell(
+ repo:EventRepository,draft:Pick<SetupDraft,'teams'|'count'|'profile'>,
+):Promise<HostIdentity>{
+ const eventId=crypto.randomUUID(),hostId=crypto.randomUUID();
+ const teams=draft.teams.slice(0,draft.count).map((name,i)=>({
+  id:'ud-team-'+(i+1),order:i,name:name.trim(),colorToken:'team-'+(i+1),
+ }));
+ const surveys=trialUmfrageduell(draft.profile);
+ const ud=createUmfrageduell({id:eventId,ownerId:hostId,profile:draft.profile,
+  teams:teams.map(({id,name,order})=>({id,name,order})),surveys});
+ const event=createEvent({
+  id:eventId,hostId,at:Date.now(),teams,
+  program:[{id:'ud-game-1',type:'umfrageduell',profile:draft.profile,order:0,rulesVersion:'ud-trial-1'}],
+  frozenTasks:surveys.map(q=>({
+   taskId:q.id,gameType:'umfrageduell' as const,publicPrompt:q.prompt,publicClues:[],
+   privateAnswers:q.categories.map(c=>c.label),
+   moderatorNotes:'G9 illustrative example data; not a measured survey',
+   sourceContentId:q.id,sourceHash:'g9-illustrative-v1',
+  })),umfrageduell:ud,
+ });
+ await repo.create(event);return {eventId,hostId};
+}
+
 export function reportFor(event: EventRecord) {
+ const ud=event.umfrageduell;
+ if(ud&&ud.phase==='complete'&&event.lifecycle==='complete'){
+  const raw=umfrageduellScores(ud),evening=umfrageduellEvening(ud);
+  return {
+   schemaVersion:1 as const,id:event.id,finishedAt:event.updatedAt,
+   gameLabel:'Umfrageduell',profile:ud.profile,questionCount:ud.surveys.length,
+   teams:ud.teams.map(t=>({id:t.id,name:t.name,rawPoints:raw[t.id]??0,
+    eveningHalfPoints:evening[t.id]??0}))
+    .sort((a,b)=>b.rawPoints-a.rawPoints||a.name.localeCompare(b.name,'de')),
+   awards:ud.awards.map(a=>({...a})),
+   sourceLabel:'G9 Beispieldaten – keine echte Umfrage',
+  };
+ }
  const ll=event.logikleiter;
  if(ll&&ll.phase==='complete'&&event.lifecycle==='complete'){
   const raw=logikleiterScores(ll),evening=logikleiterEvening(ll);

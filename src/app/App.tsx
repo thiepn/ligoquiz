@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import '../styles/umfrageduell.css';
 import { parseRoute, routeHref, currentEventId, type Route } from './routes';
 import { StageView } from '../features/stage/StageView';
 import { ProjectorTechCheck } from '../features/host/ProjectorTechCheck';
@@ -6,6 +7,7 @@ import { RundenquizHost } from '../features/host/RundenquizHost';
 import { QuiztafelHost } from '../features/host/QuiztafelHost';
 import { VerbindungenHost } from '../features/host/VerbindungenHost';
 import {LogikleiterHost} from '../features/host/LogikleiterHost';
+import {UmfrageduellHost} from '../features/host/UmfrageduellHost';
 import { EventRepository } from '../infrastructure/db/event-repository';
 import { OrganizerHome, SessionHistory } from '../features/experience/Sessions';
 import { SetupWizard } from '../features/experience/SetupWizard';
@@ -33,14 +35,14 @@ function ContentPlaceholder(){
      <p>Die redaktionelle Inhaltsverwaltung und der geprüfte Import folgen in G10.</p></div></div>
    <div className="exp-empty">
      <h2>Fragenbibliothek im Aufbau</h2>
-     <p>Vorläufige Rundenquiz-, Quiztafel-, Verbindungen- und Logikleiter-Fragen liegen ausschließlich im Probeprogramm. Die bisherigen Fragen von v1.14 bleiben unverändert.</p>
+     <p>Vorläufige Rundenquiz-, Quiztafel-, Verbindungen-, Logikleiter- und Umfrageduell-Fragen liegen ausschließlich im Probeprogramm. Die bisherigen Fragen von v1.14 bleiben unverändert.</p>
      <a href="#/spielen" className="exp-secondary">Zurück zu Spielen</a>
    </div>
  </section>;
 }
 function HostSurface(){
  const activeIdentity=readHostIdentity();
- const [mode,setMode]=useState<'rundenquiz'|'quiztafel'|'verbindungen'|'logikleiter'|null>(null);
+ const [mode,setMode]=useState<'rundenquiz'|'quiztafel'|'verbindungen'|'logikleiter'|'umfrageduell'|null>(null);
  const [error,setError]=useState('');
  useEffect(()=>{
    setMode(null);setError('');
@@ -51,7 +53,7 @@ function HostSurface(){
      if(cancelled)return;
      if(!event||event.hostId!==activeIdentity.hostId)
        throw new Error('Die Spielleitung gehört zu einer anderen Sitzung.');
-     setMode(event.logikleiter?'logikleiter':event.verbindungen?'verbindungen':event.quiztafel?'quiztafel':event.rundenquiz?'rundenquiz':null);
+     setMode(event.umfrageduell?'umfrageduell':event.logikleiter?'logikleiter':event.verbindungen?'verbindungen':event.quiztafel?'quiztafel':event.rundenquiz?'rundenquiz':null);
    }).catch(e=>{if(!cancelled)setError(e instanceof Error?e.message:'Sitzung ungültig');})
      .finally(()=>{void repo.close();});
    return ()=>{cancelled=true;};
@@ -61,7 +63,8 @@ function HostSurface(){
      <div><strong>Spielleitung</strong><small>GESPEICHERTER SPIELSTAND · NUR HOST</small></div>
      <a href="#/technik">Technikcheck</a></div>
    {error&&<div role="alert" className="exp-error">{error} <a href="#/spielen">Zur Übersicht</a></div>}
-   {activeIdentity&&!error&&mode==='logikleiter'?<LogikleiterHost/>:
+   {activeIdentity&&!error&&mode==='umfrageduell'?<UmfrageduellHost/>:
+    activeIdentity&&!error&&mode==='logikleiter'?<LogikleiterHost/>:
     activeIdentity&&!error&&mode==='verbindungen'?<VerbindungenHost/>:
     activeIdentity&&!error&&mode==='quiztafel'?<QuiztafelHost/>:
     activeIdentity&&!error&&mode==='rundenquiz'?<RundenquizHost/>:
@@ -99,7 +102,7 @@ export function App(){
      <div className="sidebar-bottom">
        <a className="exp-sidebar-link" href="#/technik">Beamer / Technikcheck</a>
        <a className="exp-sidebar-link" href="#/einstellungen">Einstellungen</a>
-       <div className="version-info">VERSION 2.0 · G8 ENTWICKLUNG</div>
+       <div className="version-info">VERSION 2.0 · G9 ENTWICKLUNG</div>
      </div>
    </aside>
    <main className="workspace" id="main-content">

@@ -5,6 +5,8 @@
 export type PublicStageScene =
   | { readonly kind: 'waiting'; readonly heading: string }
   | { readonly kind: 'paused'; readonly heading: 'Pause' }
+  | { readonly kind:'ud-prompt'; readonly heading:string;readonly format:'popular'|'top3';readonly step:number;readonly total:number;readonly prompt:string;readonly provenance:string;readonly sourceContext:string|null }
+  | { readonly kind:'ud-reveal'; readonly heading:string;readonly format:'popular'|'top3';readonly step:number;readonly total:number;readonly prompt:string;readonly categories:readonly string[];readonly provenance:string;readonly sourceContext:string|null }
   | { readonly kind: 'll-ladder'; readonly heading: string; readonly step: number; readonly total: number; readonly points: number; readonly prompt: string; readonly hint: string | null }
   | { readonly kind: 'll-answer'; readonly heading: string; readonly step: number; readonly total: number; readonly points: number; readonly prompt: string; readonly answer: string; readonly explanation: string }
   | { readonly kind:'vb-sequence'; readonly heading:string; readonly activeTeam:string; readonly prompt:string; readonly items:readonly string[] }

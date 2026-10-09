@@ -1,0 +1,70 @@
+/* G9 Umfrageduell — matches the Studio / Control / Stage design language. */
+.ud-host{max-width:1240px;margin:18px auto;padding:clamp(15px,3vw,29px);background:#faf9f5;border:1px solid #d8ddd9;color:#27343c}
+.ud-host-head{display:flex;justify-content:space-between;align-items:start;gap:20px}
+.ud-host-head h2{font-size:28px;letter-spacing:-.7px;margin:7px 0}
+.ud-host-head p{font-size:12px;line-height:1.7;color:#60707a;max-width:770px;margin:0}
+.ud-toolbar{display:flex;flex-wrap:wrap;gap:16px;align-items:center;font-size:11px;color:#6c7880;margin:16px 0}
+.ud-toolbar a:last-child{margin-left:auto;text-decoration:underline}
+.ud-scorebar{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:5px;padding:6px;background:#e1e6e2}
+.ud-scorebar>div{background:#fff;display:grid;gap:4px;padding:14px}
+.ud-scorebar span{font-size:11px;color:#64717c}
+.ud-scorebar strong{font-size:27px;font-variant-numeric:tabular-nums}
+.ud-progress{display:grid;grid-template-columns:repeat(auto-fit,minmax(48px,1fr));gap:4px;margin:14px 0}
+.ud-progress span{display:grid;place-items:center;gap:2px;padding:12px 5px;background:#e2e6e5;color:#61717b;border-bottom:3px solid #bdc4c1;font-weight:700}
+.ud-progress span.done{background:#deebe5;border-color:#668875;color:#385b4c}
+.ud-progress span.current{background:#f8edce;border-color:#bd8f37;color:#493b24}
+.ud-progress small{font-size:9px;font-weight:700;letter-spacing:.3px}
+.ud-phase{display:flex;justify-content:space-between;gap:12px;padding:13px 16px;background:#273840;color:#f8e7bc;font-size:12px;letter-spacing:.8px}
+.ud-host button{border:1px solid #aeb8b8;background:#fff;color:#2a3a44;padding:10px 13px;font-size:12px;cursor:pointer}
+.ud-host button:disabled{opacity:.45;cursor:not-allowed}
+.ud-host .g3-tech-primary{background:#263941;border:1px solid #263941;color:#f8d989;font-weight:700;min-height:42px}
+.ud-pause{display:flex;justify-content:flex-end;margin:12px 0}
+.ud-card{display:grid;gap:16px;padding:clamp(17px,3vw,28px);margin:18px 0;background:#fff;border:1px solid #dae0db}
+.ud-card h3{font-size:clamp(19px,2.2vw,27px);line-height:1.36;letter-spacing:-.4px;margin:0}
+.ud-card h4{font-size:15px;margin:0}
+.ud-card>p{font-size:13px;line-height:1.6;margin:0;color:#617079}
+.ud-origin{display:inline-flex;align-items:center;justify-self:start;padding:9px 12px;border-left:4px solid #b88e34;background:#f5edda;color:#7d6429;font-size:11px;font-weight:800;letter-spacing:1px}
+.ud-private{display:grid;gap:6px;padding:15px;background:#f4f0e5;border:1px solid #e5dac0}
+.ud-private>small{font-size:9px;letter-spacing:1px;color:#867042;font-weight:800}
+.ud-private>div{display:flex;align-items:baseline;gap:12px;padding:6px 0;border-bottom:1px solid #ded6c3}
+.ud-private b{min-width:135px;font-size:12px}
+.ud-private>div small{font-size:10px;color:#6e7578}
+.ud-clock{display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:#2a3942;padding:13px;color:#fff}
+.ud-clock>div{margin-right:auto;display:grid;gap:3px}
+.ud-clock strong{font-size:30px;font-variant-numeric:tabular-nums}
+.ud-clock span{font-size:9px;color:#f2cf79;letter-spacing:1px}
+.ud-clock small{font-size:10px;color:#c0c9ca}
+.ud-judging{display:grid;gap:12px;background:#f7f8f6;border:1px solid #d8ded9;padding:16px}
+.ud-judging>p{font-size:11px;margin:0;color:#627078}
+.ud-team{display:grid;gap:10px;border:1px solid #d9e0dd;background:#fff;padding:14px}
+.ud-team-head{display:flex;align-items:baseline;gap:12px;justify-content:space-between}
+.ud-team-head strong{font-size:16px}
+.ud-team-head span{font-size:10px;color:#537765;font-weight:700}
+.ud-entry{display:grid;grid-template-columns:minmax(0,1fr) minmax(145px,35%);gap:12px}
+.ud-entry label{display:grid;gap:5px;font-size:10px;font-weight:700;color:#64747c;text-transform:uppercase;letter-spacing:.4px}
+.ud-entry input,.ud-entry select{width:100%;min-height:38px;border:1px solid #b7c0bc;background:#fff;color:#2e3840;padding:8px 11px;font-size:13px;font-weight:400;letter-spacing:0;text-transform:none}
+.ud-entry input:focus-visible,.ud-entry select:focus-visible{outline:3px solid #b39043;outline-offset:2px}
+.ud-team-footer{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.ud-team-footer small{flex:1;color:#66757d;font-size:10px}
+.ud-team-footer button{background:#263941;color:#fff;border-color:#263941}
+.ud-reveal-preview{display:grid;gap:10px;border:1px solid #d4bb80;background:#fcf8ec;padding:15px}
+.ud-reveal-preview p{margin:0;padding:7px 0;border-bottom:1px solid #e7dbc0;font-size:13px}
+.ud-awards{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}
+.ud-awards p{padding:12px;background:#f2f5f2;border:1px solid #dae0da;font-size:12px;margin:0}
+.ud-annul{border-color:#cfa39e!important;color:#a04440!important}
+.ud-final{background:#283943;color:#fff}
+.ud-final h3{color:#efd48d}
+.ud-final p{padding:9px 0;border-bottom:1px solid #62737a}
+.ud-final .exp-primary{justify-self:start}
+.ud-stage{max-width:min(1200px,93vw);width:100%;margin:0 auto;text-align:left}
+.ud-stage h1{font-size:clamp(27px,3.6vw,55px);line-height:1.23;letter-spacing:-.5px;margin:18px 0 22px}
+.ud-provenance{display:inline-block;background:#e1b45d;color:#182637;font-size:clamp(11px,1.25vw,18px);font-weight:900;letter-spacing:1px;padding:10px 14px;border-left:5px solid #f7dfaa}
+.ud-stage-instruction{font-size:clamp(17px,1.9vw,28px);color:#dae4e7;line-height:1.4;border-left:4px solid #e0bb68;padding-left:18px}
+.ud-stage-results{margin:20px 0;padding:0;display:grid;gap:clamp(5px,.8vw,11px);list-style:none}
+.ud-stage-results li{display:grid;grid-template-columns:clamp(50px,6vw,80px) minmax(0,1fr) auto;align-items:center;gap:18px;background:#263850;border:1px solid #52627d;min-height:clamp(47px,8vh,91px);padding:5px clamp(12px,1.5vw,22px)}
+.ud-stage-results li>span{font-size:clamp(22px,3vw,40px);color:#e8c676;font-weight:900;text-align:center}
+.ud-stage-results li strong{font-size:clamp(18px,2.25vw,34px);color:#fff;line-height:1.25;overflow-wrap:anywhere}
+.ud-stage-results li small{font-size:clamp(10px,1vw,16px);font-weight:800;color:#e8c676;white-space:nowrap}
+.ud-stage-source{font-size:clamp(10px,1vw,15px);color:#d7dee5;line-height:1.4;overflow-wrap:anywhere}
+@media(max-width:760px){.ud-host-head{flex-direction:column}.ud-entry{grid-template-columns:1fr}.ud-scorebar{grid-template-columns:repeat(2,minmax(0,1fr))}.ud-toolbar a:last-child{margin-left:0}.ud-private>div{display:grid;gap:3px}.ud-progress{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(max-width:480px){.ud-stage-results li{gap:8px;padding:5px 7px}.ud-stage-results li small{font-size:9px}.ud-team{padding:10px}.ud-judging{padding:9px}}
