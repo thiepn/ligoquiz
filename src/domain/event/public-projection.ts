@@ -51,9 +51,9 @@ export function derivePublicStage(session: EventRecord): PublicStageDto {
         heading:'Verbindungswand',tiles:vb.tiles,revealed:vb.revealed}:
       vb.kind==='answer'?{kind:'answer' as const,
         heading:'Verbindungen · Auflösung',publicPrompt:vb.prompt,publishedSolution:vb.answer}:
-      {kind:'scores' as const,heading:vb.final?'Endstand':'Zwischenstand',
+      vb.kind==='scores'?{kind:'scores' as const,heading:vb.final?'Endstand':'Zwischenstand',
         visibleScores:vb.teams.map(t=>({name:t.name,value:t.points}))
-          .sort((a,b)=>b.value-a.value)};
+          .sort((a,b)=>b.value-a.value)}:waitingScene();
     return publicDtoSchema.parse({
       protocolVersion:1,eventId:session.id,gameId:game?.id??null,
       hostEpoch:session.hostEpoch,stageRevision:session.stageRevision,scene,
@@ -77,10 +77,10 @@ export function derivePublicStage(session: EventRecord): PublicStageDto {
         kind:'qt-answer' as const,heading:'Quiztafel · '+qt.category+' / '+qt.points,
         category:qt.category,points:qt.points,publicPrompt:qt.prompt,
         publishedSolution:qt.answer,
-      }:{
+      }:qt.kind==='scores'?{
         kind:'scores' as const,heading:'Quiztafel · Endstand',
         visibleScores:qt.teams.map(t=>({name:t.name,value:t.points})),
-      };
+      }:waitingScene();
     return publicDtoSchema.parse({
       protocolVersion:1,eventId:session.id,gameId:game?.id??null,
       stageRevision:session.stageRevision,hostEpoch:session.hostEpoch,scene,
