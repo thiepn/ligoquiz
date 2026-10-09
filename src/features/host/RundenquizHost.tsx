@@ -10,8 +10,9 @@ import { parseEstimateInput } from '../../games/rundenquiz/decimal';
 import { timerScopeMatches, newTimerSnapshot } from '../../games/rundenquiz/timer';
 import { RQ_TRIAL_BANK } from '../../games/rundenquiz/trial-bank';
 import type { EventRecord } from '../../domain/event/schemas';
+import { HOST_IDENTITY_KEY, readPreferences } from '../experience/model';
 
-const IDENTITY_KEY='ligoquiz.v2.g4.rundenquiz.host';
+const IDENTITY_KEY=HOST_IDENTITY_KEY;
 type Identity={eventId:string;hostId:string};
 function savedIdentity():Identity|null{
  try{
@@ -28,9 +29,9 @@ const errorMessage=(e:unknown)=>e instanceof Error?e.message:'Aktion fehlgeschla
 export function RundenquizHost(){
  const [identity,setIdentity]=useState<Identity|null>(savedIdentity);
  const [event,setEvent]=useState<EventRecord|null>(null);
- const [count,setCount]=useState(4);
+ const [count,setCount]=useState<number>(()=>readPreferences().defaultTeams);
  const [names,setNames]=useState(['Team 1','Team 2','Team 3','Team 4','Team 5']);
- const [profile,setProfile]=useState<Profile>('kurz');
+ const [profile,setProfile]=useState<Profile>(()=>readPreferences().defaultProfile);
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState<string|null>(null);
  const [viewers,setViewers]=useState(0);
@@ -153,6 +154,19 @@ export function RundenquizHost(){
    setSourceReady(false);
   }catch(e){setError(errorMessage(e));}finally{await repo.close();setBusy(false);}
  }
+ async function confirmRecovery(){
+  if(!event?.recoveryRequired||busy||!sourceReady)return;
+  const controller=controllerRef.current;if(!controller)return;
+  if(!window.confirm('Wiederhergestellten Spielstand bestätigen? Bitte zuerst die Punktetabelle, aktuelle Aufgabe und den Beamer prüfen. Der Abend bleibt danach pausiert.'))return;
+  setBusy(true);setError(null);setTimerRunning(false);
+  try{
+    const next=await controller.submit({type:'RECOVERY_CONFIRM'},event,crypto.randomUUID());
+    setEvent(next);
+  }catch(failure){
+    setError(errorMessage(failure));
+    try{setEvent(await controller.load());}catch{/* Keep the actionable error visible */}
+  }finally{setBusy(false);}
+ }
  async function action(nextAction:Action){
   if(busy||!event||!sourceReady)return;
   if(['CLOSE','REVEAL','NEXT','FINISH','PAUSE'].includes(nextAction.type))
@@ -178,6 +192,7 @@ export function RundenquizHost(){
   if(!window.confirm('Neuen Quizabend vorbereiten? Die bisherige Sitzung bleibt in der lokalen Datenbank archiviert.'))return;
   try{sessionStorage.removeItem(IDENTITY_KEY);}catch{/* Can use temporary state only */}
   setIdentity(null);setEvent(null);setSourceReady(false);setViewers(0);setError(null);
+  window.location.hash='#/setup';
  }
  const rq:Session|undefined=event?.rundenquiz;
  const q=rq?currentQuestion(rq):null;
@@ -209,7 +224,7 @@ export function RundenquizHost(){
    <p className="g3-tech-footnote">G4 verwendet vorläufige Übungsfragen; diese sind nicht als redaktionell freigegebener Fragenkatalog gekennzeichnet.</p>
   </div>:<div className="rq-live">
    <div className="rq-utility">
-    <span>Revision {event?.revision??0} · {profile} · {viewers} Beamer verbunden</span>
+    <span>Revision {event?.revision??0} · {rq?.profile??profile} · {viewers} Beamer verbunden</span>
     <a href={stageUrl(identity.eventId)} target="_blank" rel="noopener noreferrer" className="g3-tech-link">Beamer öffnen ↗</a>
     <button onClick={newEvent}>Neuer Quizabend</button>
    </div>
@@ -218,6 +233,13 @@ export function RundenquizHost(){
     <span>{isPaused?'Pausiert':rq.phase} · {rq.profile}</span>
    </div>}
    {rq && !sourceReady && <p role="status">Sitzung wird geladen bzw. überprüft …</p>}
+   {event?.recoveryRequired && <div className="rq-recovery" role="alert">
+      <strong>Wiederherstellung prüfen</strong>
+      <p>Die Sitzung wurde aus einem gesicherten Stand wiederhergestellt. Die Beameransicht bleibt ausgeblendet. Kontrolliere Teamnamen, Punktestand und aktuelle Frage, bevor du die Wiederherstellung bestätigst.</p>
+      <button className="g3-tech-primary" disabled={busy||!sourceReady} onClick={()=>void confirmRecovery()}>
+        Spielstand geprüft — weiterhin pausiert übernehmen
+      </button>
+   </div>}
    {rq && <div className="rq-scoreboard" aria-label="Punktestand">
     {rq.teams.map(t=><div key={t.id}><span>{t.name}</span><strong>{computed[t.id]??0}</strong></div>)}
    </div>}
