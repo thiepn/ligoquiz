@@ -52,16 +52,16 @@ test('legacy import is previewed/quarantined before explicit commit and then und
 test('unrelated and legacy keys remain untouched after raw backup',async({page})=>{
  await page.goto('/#/inhalte');
  await page.evaluate(()=>{
-  localStorage.setItem('ligo.quiz.content.library.v1','{"legacy":true}');
-  localStorage.setItem('another.app.secret','unrelated');
+  globalThis.localStorage.setItem('ligo.quiz.content.library.v1','{"legacy":true}');
+  globalThis.localStorage.setItem('another.app.secret','unrelated');
  });
  const dl=page.waitForEvent('download');
  await page.getByRole('button',{name:'v1-Rohbackup erstellen'}).click();
  const file=await dl;
  expect(file.suggestedFilename()).toBe('ligoquiz-altbestand-rohbackup.json');
  const raw=await page.evaluate(()=>({
-  legacy:localStorage.getItem('ligo.quiz.content.library.v1'),
-  other:localStorage.getItem('another.app.secret'),
+  legacy:globalThis.localStorage.getItem('ligo.quiz.content.library.v1'),
+  other:globalThis.localStorage.getItem('another.app.secret'),
  }));
  expect(raw).toEqual({legacy:'{"legacy":true}',other:'unrelated'});
 });
