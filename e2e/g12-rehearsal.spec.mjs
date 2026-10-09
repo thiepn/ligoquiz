@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 
