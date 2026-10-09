@@ -52,7 +52,7 @@ function gameValue(v:unknown):GameType|null{
 function packFromKey(value:string):unknown{
  try{return JSON.parse(value);}catch{return {format:'invalid-json',value};}
 }
-export async function previewFile(text:string):Promise<Preview>{
+export async function previewFile(text:string,existing:readonly ContentItem[]=[]):Promise<Preview>{
  assertSize(text);
  let raw:unknown;try{raw=JSON.parse(text);}catch{throw Error('Keine gültige JSON-Datei. Quelle bleibt unverändert.');}
  const obj=record(raw);
@@ -127,6 +127,23 @@ export async function previewFile(text:string):Promise<Preview>{
   const idx=items.findIndex(x=>x.id===dup.id);
   if(idx>=0){const [removed]=items.splice(idx,1);
    quarantined.push({index:sourceIndexById.get(removed!.id)??idx,sourceId:removed!.id,reason:'Mögliche Doppelung mit '+dup.other,raw:removed});}
+ }
+ const originals=new Set(existing.map(x=>x.id));
+ const sharedPrompts=new Map(existing.filter(x=>x.status!=='quarantined').map(x=>{
+  const p=x.payload as {prompt?:string;target?:string};
+  const val=(p.prompt??p.target??'').normalize('NFKC').trim().toLocaleLowerCase('de-DE');
+  return [x.game+'|'+val,x.id] as const;
+ }));
+ for(let i=items.length-1;i>=0;i--){
+  const entry=items[i]!;
+  const p=entry.payload as {prompt?:string;target?:string};
+  const prompt=(p.prompt??p.target??'').normalize('NFKC').trim().toLocaleLowerCase('de-DE');
+  const conflict=originals.has(entry.id)?'Inhaltskennung existiert bereits':prompt?sharedPrompts.get(entry.game+'|'+prompt):undefined;
+  if(conflict){
+   items.splice(i,1);
+   quarantined.push({index:sourceIndexById.get(entry.id)??i,sourceId:entry.id,
+    reason:originals.has(entry.id)?'Inhaltskennung existiert bereits':'Fragestellung bereits vorhanden: '+conflict,raw:entry});
+  }
  }
  if(sourceType==='legacy-backup'&&sources.length===0)warnings.push('Keine Legacy-Fragen automatisch übernommen.');
  return {bundleHash:originalHash,sourceType,items,quarantined,warnings,records:sources.length,sourceBytes:sizeOf(text)};
