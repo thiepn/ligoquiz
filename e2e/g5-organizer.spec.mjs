@@ -48,7 +48,7 @@ test('demo never persists history or a live session',async({page})=>{
  await expect(page.locator('.exp-empty')).toContainText('Noch kein abgeschlossener Quizabend');
  await page.evaluate(async()=>{
    const events=await new Promise((resolve,reject)=>{
-     const open=indexedDB.open('ligoquiz.v2.sessions');
+     const open=globalThis.indexedDB.open('ligoquiz.v2.sessions');
      open.onerror=()=>reject(open.error);
      open.onsuccess=()=>{
        const db=open.result;
