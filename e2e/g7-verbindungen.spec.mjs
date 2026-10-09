@@ -77,6 +77,8 @@ test('refresh during open clue pauses the moderator and blanks the projector',as
  const host=await setup(page,3),projector=await stage(page,host);
  await host.getByRole('button',{name:'Aufgabenreihenfolge bestätigen'}).click();
  await host.getByRole('button',{name:'Aufgabe veröffentlichen'}).click();
+ // Wait for the committed, public frame before testing a reload of an open task.
+ await expect(projector.locator('main')).toContainText('Bethlehem');
  await page.reload();
  await expect(host.getByRole('button',{name:'Spiel ausdrücklich fortsetzen'})).toBeEnabled();
  await expect(projector.locator('main')).toContainText('Pause');
