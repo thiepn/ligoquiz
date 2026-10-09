@@ -9,7 +9,7 @@ import { VerbindungenHost } from '../features/host/VerbindungenHost';
 import {LogikleiterHost} from '../features/host/LogikleiterHost';
 import {UmfrageduellHost} from '../features/host/UmfrageduellHost';
 import {ContentStudio} from '../features/content/ContentStudio';
-import {OfflinePreflight,BackupRecovery} from '../features/resilience/ResilienceCenter';
+import {OfflinePreflight} from '../features/resilience/ResilienceCenter';
 import { EventRepository } from '../infrastructure/db/event-repository';
 import { OrganizerHome, SessionHistory } from '../features/experience/Sessions';
 import { SetupWizard } from '../features/experience/SetupWizard';
