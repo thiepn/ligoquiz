@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import '../styles/umfrageduell.css';
 import { parseRoute, routeHref, currentEventId, type Route } from './routes';
 import { StageView } from '../features/stage/StageView';
 import { ProjectorTechCheck } from '../features/host/ProjectorTechCheck';
