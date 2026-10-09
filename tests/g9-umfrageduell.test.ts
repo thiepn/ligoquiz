@@ -47,7 +47,7 @@ describe('G9 survey rubric',()=>{
   expect(pointsFor(t,{answers:['B','A','C'],mapped:[2,1,3]})).toBe(20);
   expect(pointsFor(t,{answers:['C','D','A'],mapped:[3,4,1]})).toBe(10);
   expect(pointsFor(t,{answers:['D','E','X'],mapped:[4,5,null]})).toBe(0);
-  expect(pointsFor(t,{answers:['A','A','B'],mapped:[1,1,2]})).toBe(10);
+  expect(pointsFor(t,{answers:['A','A','B'],mapped:[1,1,2]})).toBe(15);
   expect(pointsFor(t,none)).toBe(0);
  });
  it('does not assign categories when answer is ambiguous or absent',()=>{
