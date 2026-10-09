@@ -2,6 +2,7 @@ import { eventSchema, outcomeSchema, type CommandEnvelopeV2, type EventRecord, t
 import { transition as rqTransition } from '../../games/rundenquiz/engine';
 import { transition as qtTransition } from '../../games/quiztafel/engine';
 import { transition as vbTransition } from '../../games/verbindungen/engine';
+import { transition as llTransition } from '../../games/logikleiter/engine';
 
 export type Change = {
   event: EventRecord;
@@ -36,6 +37,24 @@ export function applySessionCommand(
     if (session.lifecycle !== 'active') fail('INVALID_PHASE', 'Game is not active');
   };
   switch (payload.type) {
+    case 'LL_ACTION': {
+      const ll=session.logikleiter;
+      if(!ll)throw new DomainError('INVALID_PHASE','Logikleiter not configured');
+      if(session.lifecycle==='complete')throw new DomainError('INVALID_PHASE','Event finished');
+      if(session.lifecycle==='paused'&&payload.action.type!=='RESUME')
+        throw new DomainError('INVALID_PHASE','Game paused');
+      const state=llTransition(ll,{
+        id:command.commandId,ownerId:command.hostId,epoch:command.hostEpoch,
+        expectedRevision:ll.revision,at:command.issuedAtEpochMs,action:payload.action,
+      });
+      next={...session,logikleiter:state,
+        lifecycle:state.phase==='complete'?'complete':
+          state.paused?'paused':state.phase==='setup'?'draft':'active'};
+      stageChanged=['START','PUBLISH','HINT','CLOSE','REVEAL','CONFIRM','CORRECT',
+        'ANNUL','NEXT','PAUSE','RESUME','FAIR_HINT'].includes(payload.action.type);
+      note='Logikleiter '+payload.action.type;
+      break;
+    }
     case 'VB_ACTION': {
       const vb=session.verbindungen;
       if(!vb)throw new DomainError('INVALID_PHASE','Verbindungen not configured');
@@ -206,6 +225,7 @@ export function createEvent(seed: {
   rundenquiz?: EventRecord['rundenquiz'];
   quiztafel?: EventRecord['quiztafel'];
   verbindungen?: EventRecord['verbindungen'];
+  logikleiter?: EventRecord['logikleiter'];
   at: number;
 }): EventRecord {
   return eventSchema.parse({
@@ -218,5 +238,6 @@ export function createEvent(seed: {
     ...(seed.rundenquiz ? {rundenquiz:seed.rundenquiz} : {}),
     ...(seed.quiztafel ? {quiztafel:seed.quiztafel} : {}),
     ...(seed.verbindungen ? {verbindungen:seed.verbindungen} : {}),
+    ...(seed.logikleiter ? {logikleiter:seed.logikleiter} : {}),
   });
 }
