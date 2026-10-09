@@ -132,7 +132,7 @@ export function LogikleiterHost(){
      <div className="ll-lock-panel"><h4>Abgaben sperren</h4>
       <p>Jede frühe Abgabe einzeln erfassen, bevor ein Hinweis veröffentlicht wird. Bereits gesperrte Abgaben bleiben unverändert.</p>
       {teams.map(t=><div className="ll-team-row" key={t.id}><span>{t.name}</span>
-       <strong>{ll.locks[t.id]?(ll.locks[t.id].hintRevision===0?'VOR HINWEIS':'NACH HINWEIS'):'OFFEN'}</strong>
+       <strong>{ll.locks[t.id]?.hintRevision===0?'VOR HINWEIS':ll.locks[t.id]?.hintRevision===1?'NACH HINWEIS':'OFFEN'}</strong>
        <button disabled={disabled||Boolean(ll.locks[t.id])} onClick={()=>void send({type:'LOCK',teamId:t.id})}>
         {ll.locks[t.id]?'Gesperrt':'Abgabe jetzt sperren'}</button></div>)}
      </div>
