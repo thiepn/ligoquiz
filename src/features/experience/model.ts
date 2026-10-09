@@ -67,9 +67,9 @@ export function applyMotionPreference(motion: Preferences['motion']): void {
   if (typeof document !== 'undefined') document.documentElement.dataset.ligoMotion = motion;
 }
 
-export type SetupDraft = { teams: string[]; count: 3 | 4 | 5; profile: Profile; game: 'rundenquiz'|'quiztafel'|'verbindungen'|'logikleiter'|'umfrageduell'; step: 0 | 1 | 2 };
+export type SetupDraft = { teams: string[]; count: 3 | 4 | 5; profile: Profile; game: 'rundenquiz'|'quiztafel'|'verbindungen'|'logikleiter'|'umfrageduell'; contentSource:'trial'|'approved';step: 0 | 1 | 2 };
 export function newSetupDraft(preference: Preferences = DEFAULT_PREFERENCES): SetupDraft {
-  return { count: preference.defaultTeams, profile: preference.defaultProfile, game:'rundenquiz', step: 0,
+  return { count: preference.defaultTeams, profile: preference.defaultProfile, game:'rundenquiz', contentSource:'trial',step: 0,
     teams: ['Team 1', 'Team 2', 'Team 3', 'Team 4', 'Team 5'] };
 }
 export function parseSetupDraft(raw: unknown): SetupDraft | null {
@@ -80,6 +80,7 @@ export function parseSetupDraft(raw: unknown): SetupDraft | null {
       x.teams.some(name => typeof name !== 'string' || name.length > 40)) return null;
   return { count: x.count as SetupDraft['count'], profile: x.profile as Profile,
     game:x.game==='quiztafel'?'quiztafel':x.game==='verbindungen'?'verbindungen':x.game==='logikleiter'?'logikleiter':x.game==='umfrageduell'?'umfrageduell':'rundenquiz',
+    contentSource:x.contentSource==='approved'?'approved':'trial',
     step: x.step as SetupDraft['step'], teams: [...x.teams] as string[] };
 }
 export function readSetupDraft(): SetupDraft | null {

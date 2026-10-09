@@ -8,6 +8,7 @@ import { QuiztafelHost } from '../features/host/QuiztafelHost';
 import { VerbindungenHost } from '../features/host/VerbindungenHost';
 import {LogikleiterHost} from '../features/host/LogikleiterHost';
 import {UmfrageduellHost} from '../features/host/UmfrageduellHost';
+import {ContentStudio} from '../features/content/ContentStudio';
 import { EventRepository } from '../infrastructure/db/event-repository';
 import { OrganizerHome, SessionHistory } from '../features/experience/Sessions';
 import { SetupWizard } from '../features/experience/SetupWizard';
@@ -28,17 +29,6 @@ function useCurrentHash(){
     return ()=>window.removeEventListener('hashchange',handler);
   },[]);
   return hash;
-}
-function ContentPlaceholder(){
- return <section className="exp-page">
-   <div className="exp-heading"><div><p className="eyebrow">INHALTE</p><h1>Inhaltsbibliothek</h1>
-     <p>Die redaktionelle Inhaltsverwaltung und der geprüfte Import folgen in G10.</p></div></div>
-   <div className="exp-empty">
-     <h2>Fragenbibliothek im Aufbau</h2>
-     <p>Vorläufige Rundenquiz-, Quiztafel-, Verbindungen-, Logikleiter- und Umfrageduell-Fragen liegen ausschließlich im Probeprogramm. Die bisherigen Fragen von v1.14 bleiben unverändert.</p>
-     <a href="#/spielen" className="exp-secondary">Zurück zu Spielen</a>
-   </div>
- </section>;
 }
 function HostSurface(){
  const activeIdentity=readHostIdentity();
@@ -102,13 +92,13 @@ export function App(){
      <div className="sidebar-bottom">
        <a className="exp-sidebar-link" href="#/technik">Beamer / Technikcheck</a>
        <a className="exp-sidebar-link" href="#/einstellungen">Einstellungen</a>
-       <div className="version-info">VERSION 2.0 · G9 ENTWICKLUNG</div>
+       <div className="version-info">VERSION 2.0 · G10 ENTWICKLUNG</div>
      </div>
    </aside>
    <main className="workspace" id="main-content">
      {route==='spielen'&&<OrganizerHome/>}
      {route==='setup'&&<SetupWizard/>}
-     {route==='inhalte'&&<ContentPlaceholder/>}
+     {route==='inhalte'&&<ContentStudio/>}
      {route==='verlauf'&&<SessionHistory eventId={null}/>}
      {route==='bericht'&&<SessionHistory eventId={currentEventId(currentHash)}/>}
      {route==='einstellungen'&&<ExperienceSettings/>}
