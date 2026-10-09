@@ -48,7 +48,7 @@ export function derivePublicStage(session: EventRecord): PublicStageDto {
         kind:'qt-answer' as const,heading:'Quiztafel · '+qt.category+' / '+qt.points,
         category:qt.category,points:qt.points,publicPrompt:qt.prompt,
         publishedSolution:qt.answer,
-      }:qt.kind==='scores'?{
+      }:qt.kind==='results'?{
         kind:'scores' as const,heading:'Quiztafel · Endstand',
         visibleScores:qt.teams.map(t=>({name:t.name,value:t.points})),
       }:waitingScene();
