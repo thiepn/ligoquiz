@@ -3,6 +3,7 @@
 import { createHash } from 'node:crypto';
 import { URL } from 'node:url';
 import console from 'node:console';
+import process from 'node:process';
 import { readdir, readFile, mkdir, writeFile } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -59,11 +60,15 @@ invariant((manifest.icons ?? []).every(icon => typeof icon.src === 'string' &&
 const index = await readFile(join(dist, 'index.html'), 'utf8');
 invariant(!/src=["']\/assets\/|href=["']\/assets\//.test(index),
   'absolute root asset detected; would break a scoped deployment');
-const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
-invariant(/^[a-f0-9]{40}$/.test(head), 'invalid checkout SHA');
+const checkoutSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
+// Pull-request CI checks out a synthetic merge; retain BOTH the source head and merge tree SHA.
+const head = process.env.G12_HEAD_SHA || checkoutSha;
+invariant(/^[a-f0-9]{40}$/.test(head) && /^[a-f0-9]{40}$/.test(checkoutSha),
+  'invalid exact-head or checkout SHA');
 const evidence = {
   format: 'ligoquiz-g12-build-evidence-v1',
   gitSha: head,
+  validatedCheckoutSha: checkoutSha,
   deploymentPath: 'relative',
   expectedScope: './',
   offlinePrecache: shell,
