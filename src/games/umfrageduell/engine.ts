@@ -152,7 +152,7 @@ export function transition(s:Session,c:Command):Session{
    next={...s,phase:'revealed'};break;
   case 'CONFIRM':phase('revealed');
    next={...s,awards:[...s.awards,...awardsFor(s)],phase:'graded'};break;
-  case 'CORRECT':phase('graded');team(a.teamId);
+  case 'CORRECT':{phase('graded');team(a.teamId);
    if(a.reason.trim().length<3)throw new RuleError('REASON','Begründung für Korrektur fehlt');
    if(s.awards.some(x=>x.surveyId===currentSurvey(s).id&&x.annulled))
     throw new RuleError('ANNUL','Annullierte Aufgabe kann nicht korrigiert werden');
@@ -160,7 +160,7 @@ export function transition(s:Session,c:Command):Session{
    const revised={...s,submissions:{...s.submissions,[a.teamId]:a.submission}};
    next={...revised,awards:[
      ...s.awards.filter(x=>x.surveyId!==currentSurvey(s).id),...awardsFor(revised)
-   ]};break;
+   ]};break;}
   case 'ANNUL':phase('ready','open','closed','revealed','graded');
    if(a.reason.trim().length<3)throw new RuleError('REASON','Begründung für Annullierung fehlt');
    next={...s,phase:'graded',awards:[
