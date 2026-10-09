@@ -204,7 +204,7 @@ export function VerbindungenHost(){
      {vb.phase==='wall-reveal'&&vb.revealedGroups===4&&<>
       <div className="vb-preview">{teams.map(t=>{
        const marks=vb.wallMarks[t.id]??{};
-       const pts=wall.groups.reduce((sum,g)=>sum+(marks[g.id]?.group?5+(marks[g.id]?.link?5:0):0),0);
+       const pts=wall?.groups.reduce((sum,g)=>sum+(marks[g.id]?.group?5+(marks[g.id]?.link?5:0):0),0)??0;
        return <span key={t.id}>{t.name}: {pts} / 40</span>;
       })}</div>
       <button className="g3-tech-primary" disabled={disabled||!canConfirmWall}
