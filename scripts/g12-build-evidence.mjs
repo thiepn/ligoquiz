@@ -1,6 +1,8 @@
 // G12: deterministic, non-secret, machine-inspectable build and rollback evidence.
 // Run only after npm run build. Never reads browser profiles or session content.
 import { createHash } from 'node:crypto';
+import { URL } from 'node:url';
+import console from 'node:console';
 import { readdir, readFile, mkdir, writeFile } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import { execFileSync } from 'node:child_process';
