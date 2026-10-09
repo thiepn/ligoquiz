@@ -1,7 +1,7 @@
 name: Verify v2 foundation
 on:
   push:
-    branches: ['rebuild/v2', 'feature/g5-shared-experience', 'feature/g6-quiztafel', 'feature/g8-logikleiter', 'feature/g9-umfrageduell', 'feature/g10-content-studio']
+    branches: ['rebuild/v2', 'feature/g5-shared-experience', 'feature/g6-quiztafel', 'feature/g8-logikleiter', 'feature/g9-umfrageduell', 'feature/g10-content-studio', 'feature/g11-production-resilience']
   pull_request:
   workflow_dispatch:
 concurrency:

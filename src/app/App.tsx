@@ -9,6 +9,7 @@ import { VerbindungenHost } from '../features/host/VerbindungenHost';
 import {LogikleiterHost} from '../features/host/LogikleiterHost';
 import {UmfrageduellHost} from '../features/host/UmfrageduellHost';
 import {ContentStudio} from '../features/content/ContentStudio';
+import {OfflinePreflight} from '../features/resilience/ResilienceCenter';
 import { EventRepository } from '../infrastructure/db/event-repository';
 import { OrganizerHome, SessionHistory } from '../features/experience/Sessions';
 import { SetupWizard } from '../features/experience/SetupWizard';
@@ -92,7 +93,7 @@ export function App(){
      <div className="sidebar-bottom">
        <a className="exp-sidebar-link" href="#/technik">Beamer / Technikcheck</a>
        <a className="exp-sidebar-link" href="#/einstellungen">Einstellungen</a>
-       <div className="version-info">VERSION 2.0 · G10 ENTWICKLUNG</div>
+       <div className="version-info">VERSION 2.0 · G11 ENTWICKLUNG</div>
      </div>
    </aside>
    <main className="workspace" id="main-content">
@@ -105,6 +106,7 @@ export function App(){
      {route==='technik'&&<section className="exp-page">
        <div className="exp-heading"><div><p className="eyebrow">GERÄTE</p><h1>Technikcheck</h1>
        <p>Hostfenster auf dem Laptop, öffentliche Beameransicht auf dem erweiterten Bildschirm.</p></div></div>
+       <OfflinePreflight/>
        <ProjectorTechCheck/>
        <p className="exp-footnote">Für einen echten Quizabend verbinde den Beamer über die Spielleitung des aktiven Spiels.</p>
      </section>}

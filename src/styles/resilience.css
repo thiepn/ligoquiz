@@ -1,0 +1,29 @@
+.g11-preflight,.g11-backup{margin:22px 0;padding:clamp(17px,2.5vw,26px);background:#fff;border:1px solid #d9e0dc;color:#26343d}
+.g11-heading h2{font-size:21px;letter-spacing:-.5px;margin:7px 0}.g11-heading p:not(.eyebrow){font-size:12px;color:#667680;line-height:1.7;max-width:800px}
+.g11-preflight button,.g11-backup button{border:1px solid #26343d;background:#26343d;color:#fff;min-height:43px;padding:10px 15px;font-weight:720;font-size:12px;cursor:pointer}
+.g11-preflight button:disabled,.g11-backup button:disabled{opacity:.5;cursor:not-allowed}
+.g11-preflight .exp-secondary{background:#fff;color:#26343d}
+.g11-checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:7px;margin:20px 0}
+.g11-checks>div{display:grid;gap:7px;background:#f4f6f4;padding:13px;border-bottom:3px solid #bdc6c2}
+.g11-checks b{font-size:10px;letter-spacing:1px;color:#385848}
+.g11-checks span{font-size:11px;line-height:1.4}
+.g11-checks .g11-quota{font-size:11px;color:#687780;grid-column:1/-1}
+.g11-problems{padding:15px;background:#f8efdf;border-left:4px solid #b28d3b;font-size:12px}
+.g11-problems ul{margin:8px 0 0;padding-left:20px;display:grid;gap:7px}
+.g11-ready,.g11-result{padding:13px 15px;background:#e5f0e9;color:#315747;font-size:12px}
+.g11-update{margin-top:15px;border-top:1px solid #ced9d1;padding-top:12px}
+.g11-update p{font-size:12px}
+.g11-row{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-top:16px}
+.g11-row>label,.g11-restore>label{display:grid;gap:8px;flex:1;min-width:min(300px,100%);font-size:11px;font-weight:750}
+.g11-backup select,.g11-backup input[type=file]{width:100%;min-height:42px;padding:9px;background:#fff;border:1px solid #acbcb4;color:#26343d}
+.g11-restore{display:grid;gap:14px;border-top:1px solid #dce1dd;margin-top:23px;padding-top:20px}
+.g11-restore h3{font-size:16px;margin:0}
+.g11-preview{padding:17px;border:1px solid #b7c9bd;background:#f4f8f5;display:grid;gap:11px}
+.g11-preview h4{margin:0;font-size:15px}
+.g11-preview p{margin:0;font-size:12px;color:#5c6e64;line-height:1.6}
+.g11-preview label{display:flex;gap:11px;align-items:start;font-size:12px;line-height:1.5}
+.g11-preview input[type=checkbox]{width:18px;height:18px;flex-shrink:0}
+.g11-preflight button:focus-visible,.g11-backup button:focus-visible,.g11-backup select:focus-visible,.g11-backup input:focus-visible{outline:3px solid #bc9236;outline-offset:3px}
+@media(max-width:650px){.g11-row{align-items:stretch}.g11-row>button{width:100%}}
+@media(min-resolution:2dppx){.g11-preflight,.g11-backup{font-synthesis:none}}
+@media(prefers-reduced-motion:reduce){.g11-preflight *,.g11-backup *{scroll-behavior:auto;animation:none!important;transition:none!important}}

@@ -4,6 +4,7 @@ import {
   type CheckpointRecord, type AuditRecord,
 } from '../../domain/event/schemas';
 import { applySessionCommand } from '../../domain/event/transition';
+import {validateBackupPayload,stagedRecovery,type BackupPayload} from '../../resilience/backup';
 import { timerSnapshotSchema, timerScopeMatches, type TimerSnapshot } from '../../games/rundenquiz/timer';
 
 export const G2_DATABASE_NAME = 'ligoquiz.v2.sessions';
@@ -168,6 +169,63 @@ export class EventRepository {
     }
   }
 
+
+  /** Entire score/audit/checkpoint backup from ONE read transaction to avoid split revisions. */
+  async exportBackup(eventId:string):Promise<BackupPayload>{
+    const db=await this.open();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(['events','outcomes','checkpoints','audit'],'readonly');
+      const ev=tx.objectStore('events').get(eventId);
+      const outcomes=tx.objectStore('outcomes').index('byEvent').getAll(eventId);
+      const checkpoints=tx.objectStore('checkpoints').index('byEvent').getAll(eventId);
+      const audit=tx.objectStore('audit').index('byEvent').getAll(eventId);
+      tx.oncomplete=()=>{
+        try{
+          if(!ev.result)throw new StoreError('NOT_FOUND','Event not found for backup');
+          resolve(validateBackupPayload({
+            format:'ligoquiz-v2-session-backup',version:1,
+            exportedAt:new Date().toISOString(),event:eventSchema.parse(ev.result),
+            outcomes:(outcomes.result as unknown[]).map(x=>outcomeSchema.parse(x)),
+            audit:(audit.result as unknown[]).map(x=>auditSchema.parse(x)),
+            checkpoints:(checkpoints.result as unknown[]).map(x=>checkpointSchema.parse(x)),
+          }));
+        }catch(error){reject(error);}
+      };
+      tx.onabort=()=>reject(tx.error??newError('Backup transaction failed'));
+      tx.onerror=()=>{ /* abort handles failure */ };
+    });
+  }
+  /** Restore only if target event ID is absent. Preserve all ledger evidence atomically. */
+  async restoreBackup(untrusted:unknown,newHostId:string,at=Date.now()):Promise<EventRecord>{
+    const bundle=validateBackupPayload(untrusted);
+    if(!/^[a-zA-Z0-9_-]{8,128}$/.test(newHostId))
+      throw new StoreError('STALE_HOST','New host identity invalid');
+    const recovered=stagedRecovery(bundle.event,at,newHostId);
+    const db=await this.open();
+    const tx=db.transaction(['events','outcomes','checkpoints','audit'],'readwrite');
+    const done=transactionDone(tx);
+    let fault:unknown;
+    const request=tx.objectStore('events').get(recovered.id);
+    request.onsuccess=()=>{
+      try{
+        if(request.result)throw new StoreError('ALREADY_EXISTS','Session ID already exists; no overwrite');
+        tx.objectStore('events').add(recovered);
+        for(const outcome of bundle.outcomes)tx.objectStore('outcomes').add(outcomeSchema.parse(outcome));
+        for(const checkpoint of bundle.checkpoints)
+          tx.objectStore('checkpoints').add(checkpointSchema.parse(checkpoint));
+        tx.objectStore('checkpoints').add(checkpointOf(recovered));
+        for(const entry of bundle.audit)tx.objectStore('audit').add(auditSchema.parse(entry));
+        tx.objectStore('audit').add(auditSchema.parse({
+          eventId:recovered.id,revision:recovered.revision,kind:'G11_BACKUP_RESTORE',
+          actorId:newHostId,commandId:'backup-restore-'+crypto.randomUUID(),
+          at,detail:'Restored paused under new host epoch; previous command receipts revoked',
+        }));
+        // Never restore previous command receipts; old hosts have a different epoch.
+      }catch(e){fault=e;abortTransaction(tx,e);}
+    };
+    try{await done;return recovered;}catch(e){throw fault??e;}
+  }
+
   /** Local organizer index. Damaged events are counted, not silently reset or overwritten. */
   async listSessions(): Promise<{ items: EventRecord[]; invalidCount: number }> {
     const db = await this.open();
@@ -297,11 +355,11 @@ export class EventRepository {
               };
               return;
             }
-            if (command.expectedRevision !== session.revision) {
-              throw new StoreError('STALE_REVISION', 'Session has changed; refresh before retrying');
-            }
             if (command.hostEpoch !== session.hostEpoch || command.hostId !== session.hostId) {
               throw new StoreError('STALE_HOST', 'Another host owns this session');
+            }
+            if (command.expectedRevision !== session.revision) {
+              throw new StoreError('STALE_REVISION', 'Session has changed; refresh before retrying');
             }
             const outcomeId = 'outcomeId' in command.payload ? command.payload.outcomeId : null;
             if(command.payload.type === 'RQ_ACTION' || command.payload.type === 'QT_ACTION' || command.payload.type === 'VB_ACTION' || command.payload.type === 'LL_ACTION' || command.payload.type === 'UD_ACTION') {
