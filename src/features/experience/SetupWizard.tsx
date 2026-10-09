@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { EventRepository } from '../../infrastructure/db/event-repository';
+import {createPreparedApproved} from './approved-setup';
 import {
   newSetupDraft, readSetupDraft, readPreferences, saveSetupDraft, clearSetupDraft,
   createPreparedRundenquiz, createPreparedQuiztafel, createPreparedVerbindungen,createPreparedLogikleiter,createPreparedUmfrageduell, writeHostIdentity, type SetupDraft,
@@ -30,7 +31,8 @@ export function SetupWizard() {
     setBusy(true);setError('');
     const repo=new EventRepository();
     try{
-      const identity=draft.game==='quiztafel'?await createPreparedQuiztafel(repo,draft):
+      const identity=draft.contentSource==='approved'?await createPreparedApproved(repo,draft):
+        draft.game==='quiztafel'?await createPreparedQuiztafel(repo,draft):
         draft.game==='verbindungen'?await createPreparedVerbindungen(repo,draft):
         draft.game==='logikleiter'?await createPreparedLogikleiter(repo,draft):
         draft.game==='umfrageduell'?await createPreparedUmfrageduell(repo,draft):
@@ -103,13 +105,23 @@ export function SetupWizard() {
           <option value="lang">Lang · {draft.game==='quiztafel'?draft.count*6+' Felder':draft.game==='logikleiter'?'7 Stufen':draft.game==='umfrageduell'?'10 Umfragen':draft.game==='verbindungen'?(3*draft.count+1)+' Aufgaben':'16 Aufgaben'}</option>
         </select>
       </label>
+      <fieldset className="cx-source-choice"><legend>Woher stammen die Aufgaben?</legend>
+       <label><input type="radio" name="content-source" value="trial" checked={draft.contentSource==='trial'}
+          onChange={()=>set({contentSource:'trial'})}/>
+        Probeprogramm – ungeprüfte Beispielaufgaben, nur zum Testen</label>
+       <label><input type="radio" name="content-source" value="approved" checked={draft.contentSource==='approved'}
+          onChange={()=>set({contentSource:'approved'})}/>
+        Redaktionell freigegebene Inhaltsbibliothek – ohne automatische Probe-Ergänzung</label>
+       {draft.contentSource==='approved'&&<p>Nur vollständig geeignete Pakete sind spielbar. Bestand unter
+        {' '}<a href="#/inhalte">Inhalte</a> prüfen.</p>}
+      </fieldset>
       <p className="exp-notice">Die Probeinhalte sind weder importiert noch redaktionell freigegeben. Quiztafel hat feste Wahlrechte; Verbindungen verteilt alle Einzelaufgaben gleichmäßig. Logikleiter bietet allen Teams dieselben Stufen. Umfrageduell nutzt ausdrücklich erfundene Beispieldaten, keine echte Befragung.</p>
     </div>}
     {draft.step===2&&<div className="exp-form">
       <h2>Bereit zum Spielen</h2>
       <div className="exp-summary">
         <div><span>Teams</span><strong>{draft.count}</strong><p>{draft.teams.slice(0,draft.count).join(' · ')}</p></div>
-        <div><span>Programm</span><strong>{draft.game==='quiztafel'?'Quiztafel':draft.game==='verbindungen'?'Verbindungen':draft.game==='logikleiter'?'Logikleiter':draft.game==='umfrageduell'?'Umfrageduell':'Rundenquiz'}</strong><p>{draft.game==='quiztafel'?draft.count*(draft.profile==='kurz'?3:draft.profile==='standard'?5:6):draft.game==='logikleiter'?(draft.profile==='kurz'?3:draft.profile==='standard'?5:7):draft.game==='umfrageduell'?(draft.profile==='kurz'?4:draft.profile==='standard'?6:10):draft.game==='verbindungen'?draft.count*(draft.profile==='kurz'?1:draft.profile==='standard'?2:3)+1:draft.profile==='kurz'?7:draft.profile==='standard'?11:16} {draft.game==='quiztafel'?'Felder':'Aufgaben'} · Probeinhalte</p></div>
+        <div><span>Programm</span><strong>{draft.game==='quiztafel'?'Quiztafel':draft.game==='verbindungen'?'Verbindungen':draft.game==='logikleiter'?'Logikleiter':draft.game==='umfrageduell'?'Umfrageduell':'Rundenquiz'}</strong><p>{draft.game==='quiztafel'?draft.count*(draft.profile==='kurz'?3:draft.profile==='standard'?5:6):draft.game==='logikleiter'?(draft.profile==='kurz'?3:draft.profile==='standard'?5:7):draft.game==='umfrageduell'?(draft.profile==='kurz'?4:draft.profile==='standard'?6:10):draft.game==='verbindungen'?draft.count*(draft.profile==='kurz'?1:draft.profile==='standard'?2:3)+1:draft.profile==='kurz'?7:draft.profile==='standard'?11:16} {draft.game==='quiztafel'?'Felder':'Aufgaben'} · {draft.contentSource==='approved'?'freigegebene Bibliothek':'Probeinhalte'}</p></div>
         <div><span>Beamer</span><strong>Noch nicht verbunden</strong><p>Das Beamerfenster öffnest du in der Spielleitung.</p></div>
       </div>
       <label className="exp-ack"><input type="checkbox" checked={projectorAcknowledged}
