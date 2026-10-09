@@ -69,7 +69,8 @@ describe('G9 survey rubric',()=>{
  });
  for(const n of [3,4,5])for(const profile of ['kurz','standard','lang'] as const)
   it('plays '+n+' teams / '+profile+' without automatic reveal',()=>{
-   let s=fixture(n,profile),counts=FORMAT_COUNTS[profile];
+   let s=fixture(n,profile);
+   const counts=FORMAT_COUNTS[profile];
    expect(s.surveys.length).toBe(counts.popular+counts.top3);
    s=step(s,{type:'START'});
    for(let i=0;i<s.surveys.length;i++){
