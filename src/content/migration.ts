@@ -129,16 +129,13 @@ export async function previewFile(text:string,existing:readonly ContentItem[]=[]
    quarantined.push({index:sourceIndexById.get(removed!.id)??idx,sourceId:removed!.id,reason:'Mögliche Doppelung mit '+dup.other,raw:removed});}
  }
  const originals=new Set(existing.map(x=>x.id));
- const sharedPrompts=new Map(existing.filter(x=>x.status!=='quarantined').map(x=>{
-  const p=x.payload as {prompt?:string;target?:string};
-  const val=(p.prompt??p.target??'').normalize('NFKC').trim().toLocaleLowerCase('de-DE');
-  return [x.game+'|'+val,x.id] as const;
- }));
+ const sharedPrompts=new Map(existing.filter(x=>x.status!=='quarantined')
+   .map(x=>[contentSignature(x),x.id] as const).filter((x):x is readonly [string,string]=>x[0]!==null));
  for(let i=items.length-1;i>=0;i--){
   const entry=items[i]!;
-  const p=entry.payload as {prompt?:string;target?:string};
-  const prompt=(p.prompt??p.target??'').normalize('NFKC').trim().toLocaleLowerCase('de-DE');
-  const conflict=originals.has(entry.id)?'Inhaltskennung existiert bereits':prompt?sharedPrompts.get(entry.game+'|'+prompt):undefined;
+  const signature=contentSignature(entry);
+  const conflict=originals.has(entry.id)?'Inhaltskennung existiert bereits':
+   signature?sharedPrompts.get(signature):undefined;
   if(conflict){
    items.splice(i,1);
    quarantined.push({index:sourceIndexById.get(entry.id)??i,sourceId:entry.id,
