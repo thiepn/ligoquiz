@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { URL } from 'node:url';
 
 // These tests run on the actual Vite production build, NOT on vite dev.
 // Each test installs the service worker online, then forcefully disconnects the
