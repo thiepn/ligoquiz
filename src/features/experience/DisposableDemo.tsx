@@ -21,8 +21,9 @@ function stageView(s:Session){
  if(scene.kind==='paused')return <h2>Pause</h2>;
  if(scene.kind==='question')return <div><p>WISSEN</p><h2>{scene.prompt}</h2></div>;
  if(scene.kind==='answer')return <div><p>RICHTIGE ANTWORT</p><h2>{scene.solution}</h2></div>;
- return <div><p>ERGEBNIS</p>{scene.teams.map(t=><p key={t.id}>
+ if(scene.kind==='results')return <div><p>ERGEBNIS</p>{scene.teams.map(t=><p key={t.id}>
    {t.name}: <strong>{scene.scores[t.id]??0}</strong> Punkte</p>)}</div>;
+ return null;
 }
 
 /** No repository, storage, session IDs, or public BroadcastChannel. */
