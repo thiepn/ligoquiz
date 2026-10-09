@@ -12,7 +12,7 @@ function guardedOfflineShell():Plugin{
 'use strict';
 const VERSION=${JSON.stringify('g11-'+revision)};
 const CACHE='ligoquiz-v2-shell-'+VERSION;
-const FILES=${JSON.stringify(['index.html',...assets])};
+const FILES=${JSON.stringify(['index.html','manifest.webmanifest','icons/ligoquiz.svg',...assets])};
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)));
  // Intentionally no automatic skipWaiting: live games must never be interrupted by an update.
