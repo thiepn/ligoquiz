@@ -8,7 +8,7 @@ import { readFile } from 'node:fs/promises';
 const modes = [
   { id: 'rundenquiz', label: 'Rundenquiz', host: '.rq-host', scores: '.rq-scoreboard strong', secret: 'Josua', publicProbe: 'Wer führte Israel', award: 10 },
   { id: 'quiztafel', label: 'Quiztafel', host: '.qt-host', scores: '.qt-scorebar strong', secret: 'Noah', publicProbe: 'Wer baute', award: 100 },
-  { id: 'verbindungen', label: 'Verbindungen', host: '.vb-host', scores: '.vb-scorebar strong', secret: 'David', publicProbe: 'Bethlehem', award: 30 },
+  { id: 'verbindungen', label: 'Verbindungen', host: '.vb-host', scores: '.vb-scorebar strong', secret: 'David', publicProbe: 'Bethlehem', award: 40 },
   { id: 'logikleiter', label: 'Logikleiter', host: '.ll-host', scores: '.ll-scorebar strong', secret: 'Alle Rosen sind Pflanzen, und keine Pflanze ist ein Metall.', publicProbe: 'Alle Rosen', award: 10 },
   { id: 'umfrageduell', label: 'Umfrageduell', host: '.ud-host', scores: '.ud-scorebar strong', secret: 'Notizblock', publicProbe: 'BEISPIELDATEN', award: 20 },
 ];
