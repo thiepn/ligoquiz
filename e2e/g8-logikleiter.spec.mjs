@@ -42,6 +42,7 @@ test('early lock, hint, late lock, explicit reveal, score correction and private
  await host.locator('.ll-grades').nth(2).getByRole('button',{name:'Keine Antwort'}).click();
  await host.getByRole('button',{name:'Alle Wertungen verbindlich bestätigen'}).click();
  await expect(host.locator('.ll-scorebar strong')).toHaveText(['10','5','0']);
+ page.once('dialog',dialog=>dialog.accept('Wertung falsch erfasst'));
  await host.getByRole('button',{name:'Letzte Wertung korrigieren'}).click();
  await host.locator('.ll-grades').nth(0).getByRole('button',{name:'Falsch'}).click();
  await host.getByRole('button',{name:'Alle Wertungen verbindlich bestätigen'}).click();
