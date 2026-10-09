@@ -1,7 +1,7 @@
 name: Verify v2 foundation
 on:
   push:
-    branches: ['rebuild/v2']
+    branches: ['rebuild/v2', 'feature/g5-shared-experience']
   pull_request:
   workflow_dispatch:
 concurrency:

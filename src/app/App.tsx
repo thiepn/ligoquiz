@@ -3,6 +3,8 @@ import { parseRoute, routeHref, currentEventId, type Route } from './routes';
 import { StageView } from '../features/stage/StageView';
 import { ProjectorTechCheck } from '../features/host/ProjectorTechCheck';
 import { RundenquizHost } from '../features/host/RundenquizHost';
+import { QuiztafelHost } from '../features/host/QuiztafelHost';
+import { EventRepository } from '../infrastructure/db/event-repository';
 import { OrganizerHome, SessionHistory } from '../features/experience/Sessions';
 import { SetupWizard } from '../features/experience/SetupWizard';
 import { DisposableDemo } from '../features/experience/DisposableDemo';
@@ -29,18 +31,38 @@ function ContentPlaceholder(){
      <p>Die redaktionelle Inhaltsverwaltung und der geprüfte Import folgen in G10.</p></div></div>
    <div className="exp-empty">
      <h2>Fragenbibliothek im Aufbau</h2>
-     <p>Vorläufige Rundenquizfragen liegen ausschließlich im Probeprogramm. Die bisherigen Fragen von v1.14 bleiben unverändert.</p>
+     <p>Vorläufige Rundenquiz- und Quiztafelfragen liegen ausschließlich im Probeprogramm. Die bisherigen Fragen von v1.14 bleiben unverändert.</p>
      <a href="#/spielen" className="exp-secondary">Zurück zu Spielen</a>
    </div>
  </section>;
 }
 function HostSurface(){
  const activeIdentity=readHostIdentity();
+ const [mode,setMode]=useState<'rundenquiz'|'quiztafel'|null>(null);
+ const [error,setError]=useState('');
+ useEffect(()=>{
+   setMode(null);setError('');
+   if(!activeIdentity)return;
+   let cancelled=false;
+   const repo=new EventRepository();
+   void repo.get(activeIdentity.eventId).then(event=>{
+     if(cancelled)return;
+     if(!event||event.hostId!==activeIdentity.hostId)
+       throw new Error('Die Spielleitung gehört zu einer anderen Sitzung.');
+     setMode(event.quiztafel?'quiztafel':event.rundenquiz?'rundenquiz':null);
+   }).catch(e=>{if(!cancelled)setError(e instanceof Error?e.message:'Sitzung ungültig');})
+     .finally(()=>{void repo.close();});
+   return ()=>{cancelled=true;};
+ },[activeIdentity?.eventId,activeIdentity?.hostId]);
  return <section className="exp-host-wrapper" aria-label="Spielleitung">
    <div className="exp-host-header"><a href="#/spielen">← Spielen</a>
      <div><strong>Spielleitung</strong><small>GESPEICHERTER SPIELSTAND · NUR HOST</small></div>
      <a href="#/technik">Technikcheck</a></div>
-   {activeIdentity?<RundenquizHost/>:<div className="exp-page exp-empty">
+   {error&&<div role="alert" className="exp-error">{error} <a href="#/spielen">Zur Übersicht</a></div>}
+   {activeIdentity&&!error&&mode==='quiztafel'?<QuiztafelHost/>:
+    activeIdentity&&!error&&mode==='rundenquiz'?<RundenquizHost/>:
+    activeIdentity&&!error?<div role="status" className="exp-page">Sitzung wird geladen …</div>:
+    <div className="exp-page exp-empty">
      <h2>Keine Spielleitung in diesem Fenster</h2>
      <p>Öffne einen gespeicherten Spielstand aus Spielen oder bereite einen neuen Quizabend vor. Das Beamerfenster benötigt keine Hostanmeldung.</p>
      <a className="exp-primary" href="#/spielen">Spielstände ansehen</a>
@@ -73,7 +95,7 @@ export function App(){
      <div className="sidebar-bottom">
        <a className="exp-sidebar-link" href="#/technik">Beamer / Technikcheck</a>
        <a className="exp-sidebar-link" href="#/einstellungen">Einstellungen</a>
-       <div className="version-info">VERSION 2.0 · G5 ENTWICKLUNG</div>
+       <div className="version-info">VERSION 2.0 · G6 ENTWICKLUNG</div>
      </div>
    </aside>
    <main className="workspace" id="main-content">

@@ -6,6 +6,34 @@ export type PublicStageScene =
   | { readonly kind: 'waiting'; readonly heading: string }
   | { readonly kind: 'paused'; readonly heading: 'Pause' }
   | {
+      readonly kind: 'qt-board';
+      readonly heading: string;
+      readonly categories: readonly { id: string; name: string }[];
+      readonly rows: number;
+      readonly cells: readonly {id:string;categoryId:string;row:number;value:number;closed:boolean}[];
+      readonly selectorName: string;
+      readonly turn: number;
+      readonly total: number;
+    }
+  | {
+      readonly kind: 'qt-question';
+      readonly heading: string;
+      readonly category: string;
+      readonly points: number;
+      readonly publicPrompt: string;
+      readonly selectorName: string;
+      readonly respondingName: string;
+      readonly steal: boolean;
+    }
+  | {
+      readonly kind: 'qt-answer';
+      readonly heading: string;
+      readonly category: string;
+      readonly points: number;
+      readonly publicPrompt: string;
+      readonly publishedSolution: string;
+    }
+  | {
       readonly kind: 'question';
       readonly heading: string;
       readonly publicPrompt: string;

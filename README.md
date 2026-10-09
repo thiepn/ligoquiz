@@ -54,3 +54,16 @@ G5 builds on the still-unreleased G4 browser-qualification work. Both the standa
 - docs/G4_STATUS.md — Rundenquiz functionality, rules and qualification checklist.
 
 Do **not** merge development into main until BP-06 release gates and migration/rollback acceptance have passed.
+
+## G6 — Quiztafel (development)
+
+- Trial board with exactly N category columns for N=3–5 teams and 3/5/6 rows per Kurz/Standard/Lang profile.
+- Private tile selection and deliberate publication; fixed cyclic team selection with exactly one designated steal chance after an unsuccessful primary attempt.
+- 100–600 points per tile, no wagers or deductions, correction/annulment audit and exact tied evening ranks.
+- Integrated G2 transactional storage with G3 public-only board/question/reveal screens.
+- The G5 setup wizard offers a choice of Rundenquiz or Quiztafel, with separate host controls and completed-game reports.
+- Thirty provisional Quiztafel sample tiles; not an audited historical question import.
+
+The G6 work is in draft PR #4 based on unfinished G5 PR #3, which depends on G4 browser qualification PR #2. CI must pass after retargeting onto rebuild/v2, followed by projector/device rehearsals. No merge into production main is authorized.
+
+See docs/G6_STATUS.md for detailed rule and acceptance coverage.

@@ -6,6 +6,38 @@ import type { PublicStageScene } from '../../domain/projection/public-stage';
 const WAIT: ViewerState = { status: 'connecting', frame: null, lastReceivedAt: null };
 
 function Scene({ scene }: { scene: PublicStageScene }) {
+  if(scene.kind==='qt-board'){
+    return <section className="qt-stage-board" aria-label="Quiztafel">
+      <div className="stage-kicker">QUIZTAFEL · {scene.turn}/{scene.total} FELDER</div>
+      <h1>Quiztafel</h1>
+      <p className="qt-stage-selector">Wahlrecht: <strong>{scene.selectorName}</strong></p>
+      <div className="qt-stage-grid" style={{gridTemplateColumns:`repeat(${scene.categories.length},minmax(0,1fr))`}}>
+        {scene.categories.map(c=><div className="qt-stage-column" key={c.id} style={{gridTemplateRows:"auto repeat("+scene.rows+",minmax(0,1fr))"}}>
+          <h2>{c.name}</h2>
+          {Array.from({length:scene.rows},(_,i)=>{
+            const cell=scene.cells.find(t=>t.categoryId===c.id&&t.row===i+1);
+            if(!cell)return null;
+            return <div key={cell.id} className={'qt-stage-cell'+(cell.closed?' closed':'')}>
+              {cell.closed?'—':cell.value}
+            </div>;
+          })}
+        </div>)}
+      </div>
+    </section>;
+  }
+  if(scene.kind==='qt-question'||scene.kind==='qt-answer'){
+    return <div className="stage-live-question qt-stage-prompt">
+      <p className="stage-kicker">{scene.category} · {scene.points} PUNKTE</p>
+      <h1>{scene.publicPrompt}</h1>
+      {scene.kind==='qt-question'&&<div className="qt-stage-team">
+        <span>{scene.steal?'EINMALIGE ÜBERNAHME':'ANTWORTRECHT'}</span>
+        <strong>{scene.respondingName}</strong>
+      </div>}
+      {scene.kind==='qt-answer'&&<div className="stage-reveal">
+        <span>RICHTIGE ANTWORT</span><strong>{scene.publishedSolution}</strong>
+      </div>}
+    </div>;
+  }
   if (scene.kind === 'question' || scene.kind === 'answer') {
     return (
       <div className="stage-live-question">

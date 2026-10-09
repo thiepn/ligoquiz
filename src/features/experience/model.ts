@@ -2,6 +2,9 @@ import type { EventRecord } from '../../domain/event/schemas';
 import { createEvent } from '../../domain/event/transition';
 import { createSession, scores, eveningHalfPoints, type Profile } from '../../games/rundenquiz/engine';
 import { RQ_TRIAL_BANK } from '../../games/rundenquiz/trial-bank';
+import { createSession as createQuiztafel, scores as quiztafelScores,
+  eveningHalfPoints as quiztafelEvening } from '../../games/quiztafel/engine';
+import { sampleQuiztafel } from '../../games/quiztafel/trial-bank';
 import type { EventRepository } from '../../infrastructure/db/event-repository';
 
 export const HOST_IDENTITY_KEY = 'ligoquiz.v2.g4.rundenquiz.host';
@@ -57,9 +60,9 @@ export function applyMotionPreference(motion: Preferences['motion']): void {
   if (typeof document !== 'undefined') document.documentElement.dataset.ligoMotion = motion;
 }
 
-export type SetupDraft = { teams: string[]; count: 3 | 4 | 5; profile: Profile; step: 0 | 1 | 2 };
+export type SetupDraft = { teams: string[]; count: 3 | 4 | 5; profile: Profile; game: 'rundenquiz'|'quiztafel'; step: 0 | 1 | 2 };
 export function newSetupDraft(preference: Preferences = DEFAULT_PREFERENCES): SetupDraft {
-  return { count: preference.defaultTeams, profile: preference.defaultProfile, step: 0,
+  return { count: preference.defaultTeams, profile: preference.defaultProfile, game:'rundenquiz', step: 0,
     teams: ['Team 1', 'Team 2', 'Team 3', 'Team 4', 'Team 5'] };
 }
 export function parseSetupDraft(raw: unknown): SetupDraft | null {
@@ -69,6 +72,7 @@ export function parseSetupDraft(raw: unknown): SetupDraft | null {
       ![0,1,2].includes(Number(x.step)) || !Array.isArray(x.teams) || x.teams.length !== 5 ||
       x.teams.some(name => typeof name !== 'string' || name.length > 40)) return null;
   return { count: x.count as SetupDraft['count'], profile: x.profile as Profile,
+    game:x.game==='quiztafel'?'quiztafel':'rundenquiz',
     step: x.step as SetupDraft['step'], teams: [...x.teams] as string[] };
 }
 export function readSetupDraft(): SetupDraft | null {
@@ -106,7 +110,46 @@ export async function createPreparedRundenquiz(
   return { eventId, hostId };
 }
 
+export async function createPreparedQuiztafel(
+  repo:EventRepository,draft:Pick<SetupDraft,'teams'|'count'|'profile'>,
+):Promise<HostIdentity>{
+  const eventId=crypto.randomUUID(),hostId=crypto.randomUUID();
+  const teams=draft.teams.slice(0,draft.count).map((name,i)=>({
+    id:'qt-team-'+(i+1),order:i,name:name.trim(),colorToken:'team-'+(i+1),
+  }));
+  const board=sampleQuiztafel(draft.profile,teams);
+  const qt=createQuiztafel({
+    id:eventId,ownerId:hostId,profile:draft.profile,
+    teams:teams.map(({id,name,order})=>({id,name,order})),...board,
+  });
+  const event=createEvent({
+    id:eventId,hostId,at:Date.now(),
+    teams,program:[{id:'qt-game-1',type:'quiztafel',profile:draft.profile,order:0,rulesVersion:'qt-trial-1'}],
+    frozenTasks:qt.tiles.map(tile=>({
+      taskId:tile.id,gameType:'quiztafel' as const,publicPrompt:tile.prompt,
+      publicClues:[],privateAnswers:[tile.answer],
+      moderatorNotes:'G6 Probeinhalte: '+tile.reference,
+      sourceContentId:tile.id,sourceHash:'g6-trial-v1',
+    })),quiztafel:qt,
+  });
+  await repo.create(event);
+  return {eventId,hostId};
+}
+
 export function reportFor(event: EventRecord) {
+  const qt=event.quiztafel;
+  if(qt && qt.phase==='complete' && event.lifecycle==='complete'){
+    const raw=quiztafelScores(qt),evening=quiztafelEvening(qt);
+    return {
+      schemaVersion:1 as const,id:event.id,finishedAt:event.updatedAt,
+      gameLabel:'Quiztafel',profile:qt.profile,questionCount:qt.tiles.length,
+      teams:qt.teams.map(t=>({id:t.id,name:t.name,rawPoints:raw[t.id]??0,
+        eveningHalfPoints:evening[t.id]??0}))
+        .sort((a,b)=>b.rawPoints-a.rawPoints||a.name.localeCompare(b.name,'de')),
+      awards:qt.outcomes.map(o=>({...o})),
+      sourceLabel:'G6 Probeinhalte (noch nicht redaktionell freigegeben)',
+    };
+  }
   const rq=event.rundenquiz;
   if(!rq || rq.phase!=='complete' || event.lifecycle!=='complete') return null;
   const raw=scores(rq), evening=eveningHalfPoints(rq);
@@ -115,7 +158,7 @@ export function reportFor(event: EventRecord) {
   })).sort((a,b)=>b.rawPoints-a.rawPoints||a.name.localeCompare(b.name,'de'));
   return {
     schemaVersion:1 as const,id:event.id,finishedAt:event.updatedAt,
-    profile:rq.profile,questionCount:rq.questions.length,teams,
+    gameLabel:'Rundenquiz',profile:rq.profile,questionCount:rq.questions.length,teams,
     awards:rq.awards.map(a=>({...a})),
     sourceLabel:'G5 Probeinhalte (noch nicht redaktionell freigegeben)',
   };

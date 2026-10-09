@@ -1,5 +1,6 @@
 import { eventSchema, outcomeSchema, type CommandEnvelopeV2, type EventRecord, type OutcomeRecord } from './schemas';
 import { transition as rqTransition } from '../../games/rundenquiz/engine';
+import { transition as qtTransition } from '../../games/quiztafel/engine';
 
 export type Change = {
   event: EventRecord;
@@ -34,6 +35,24 @@ export function applySessionCommand(
     if (session.lifecycle !== 'active') fail('INVALID_PHASE', 'Game is not active');
   };
   switch (payload.type) {
+    case 'QT_ACTION': {
+      const qt=session.quiztafel;
+      if(!qt)throw new DomainError('INVALID_PHASE','Quiztafel not configured');
+      if(session.lifecycle==='complete')throw new DomainError('INVALID_PHASE','Game already finished');
+      if(session.lifecycle==='paused'&&payload.action.type!=='RESUME')
+        throw new DomainError('INVALID_PHASE','Game is paused');
+      const state=qtTransition(qt,{
+        id:command.commandId,ownerId:command.hostId,epoch:command.hostEpoch,
+        expectedRevision:qt.revision,at:command.issuedAtEpochMs,action:payload.action,
+      });
+      next={...session,quiztafel:state,
+        lifecycle:state.phase==='complete'?'complete':
+          state.paused?'paused':state.phase==='setup'?'draft':'active'};
+      stageChanged=['START','PUBLISH','OFFER_STEAL','REVEAL','CONFIRM','CORRECT',
+        'ANNUL','NEXT','PAUSE','RESUME'].includes(payload.action.type);
+      note='Quiztafel '+payload.action.type;
+      break;
+    }
     case 'RQ_ACTION': {
       const rq=session.rundenquiz;
       if (!rq) throw new DomainError('INVALID_PHASE','Rundenquiz not configured');
@@ -166,6 +185,7 @@ export function createEvent(seed: {
   program: EventRecord['program'];
   frozenTasks: EventRecord['frozenTasks'];
   rundenquiz?: EventRecord['rundenquiz'];
+  quiztafel?: EventRecord['quiztafel'];
   at: number;
 }): EventRecord {
   return eventSchema.parse({
@@ -176,5 +196,6 @@ export function createEvent(seed: {
     stageRevision: 0, recoveryRequired: false,
     createdAt: seed.at, updatedAt: seed.at,
     ...(seed.rundenquiz ? {rundenquiz:seed.rundenquiz} : {}),
+    ...(seed.quiztafel ? {quiztafel:seed.quiztafel} : {}),
   });
 }

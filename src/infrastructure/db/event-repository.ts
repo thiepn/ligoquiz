@@ -304,7 +304,7 @@ export class EventRepository {
               throw new StoreError('STALE_HOST', 'Another host owns this session');
             }
             const outcomeId = 'outcomeId' in command.payload ? command.payload.outcomeId : null;
-            if(command.payload.type === 'RQ_ACTION') {
+            if(command.payload.type === 'RQ_ACTION' || command.payload.type === 'QT_ACTION') {
               const rqPrior = outcomes.index('byEvent').getAll(command.eventId);
               rqPrior.onsuccess = () => {
                 try {
@@ -346,6 +346,27 @@ export class EventRepository {
                 taskId:question.id,teamId:awarded.teamId,points:awarded.points,
                 status:'active',createdRevision:next.event.revision,updatedRevision:next.event.revision,
               }));
+            }
+          }
+        }
+        if(command.payload.type==='QT_ACTION' && session.quiztafel && next.event.quiztafel){
+          const before=session.quiztafel,after=next.event.quiztafel;
+          const tileId=before.selectedTileId;
+          if(tileId){
+            const prior=before.outcomes.find(o=>o.tileId===tileId);
+            const current=after.outcomes.find(o=>o.tileId===tileId);
+            if(JSON.stringify(prior??null)!==JSON.stringify(current??null)){
+              for(const saved of rqOutcomes){
+                if(saved.taskId===tileId && saved.outcomeId.startsWith('qt-award-') && saved.status==='active')
+                  outcomes.put(outcomeSchema.parse({...saved,status:'void',updatedRevision:next.event.revision}));
+              }
+              if(current){
+                outcomes.add(outcomeSchema.parse({
+                  eventId:session.id,outcomeId:'qt-award-'+next.event.revision+'-'+tileId,
+                  taskId:tileId,teamId:current.winnerId??current.selectorId,points:current.points,
+                  status:'active',createdRevision:next.event.revision,updatedRevision:next.event.revision,
+                }));
+              }
             }
           }
         }
@@ -430,6 +451,11 @@ export class EventRepository {
                   paused:action==='RECOVERY_RESTORE' || candidate.lifecycle==='active' ||
                     candidate.lifecycle==='paused' || candidate.rundenquiz.paused,
                 }} : {}),
+                ...(candidate.quiztafel?{quiztafel:{
+                  ...candidate.quiztafel,ownerId:input.newHostId,epoch,
+                  paused:action==='RECOVERY_RESTORE' || candidate.lifecycle==='active' ||
+                    candidate.lifecycle==='paused'||candidate.quiztafel.paused,
+                }}:{}),
                 stageRevision: candidate.stageRevision + 1,
                 lifecycle: candidate.lifecycle === 'active' ? 'paused' : candidate.lifecycle,
                 recoveryRequired: action === 'RECOVERY_RESTORE' ? true : candidate.recoveryRequired,
