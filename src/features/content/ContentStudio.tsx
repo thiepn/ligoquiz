@@ -132,6 +132,9 @@ export function ContentStudio(){
  }
  async function approve(){
   if(!current)return;
+  if(json!==JSON.stringify(current.payload,null,2)){
+   setError('Änderungen im Editor müssen vor einer Freigabe als Entwurf gespeichert werden.');return;
+  }
   if(!checklist.every(Boolean)){setError('Alle vier redaktionellen Prüfpunkte müssen bestätigt werden.');return;}
   await act(async()=>{const approved=await repo.approve(current,{
    reviewer,note:reviewNote,checklist:[true,true,true,true],
@@ -155,7 +158,7 @@ export function ContentStudio(){
   if(!file)return;
   await act(async()=>{
    if(file.size>12*1024*1024)throw Error('Datei größer als 12 MiB; Import abgelehnt');
-   const proposal=await previewFile(await file.text());
+   const proposal=await previewFile(await file.text(),items);
    setPreview(proposal);setImportConsent(false);
    setMessage(proposal.items.length+' gültige Entwürfe, '+proposal.quarantined.length+
     ' isolierte Einträge. Noch nichts importiert.');
