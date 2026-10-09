@@ -7,12 +7,13 @@ type Directory = { items: EventRecord[]; invalidCount: number };
 function statusFor(event: EventRecord): string {
   if (event.lifecycle==='complete') return 'Abgeschlossen';
   if (event.recoveryRequired) return 'Überprüfung erforderlich';
-  if (event.lifecycle==='paused' || event.rundenquiz?.paused || event.quiztafel?.paused || event.verbindungen?.paused) return 'Pausiert';
+  if (event.lifecycle==='paused' || event.rundenquiz?.paused || event.quiztafel?.paused || event.verbindungen?.paused || event.logikleiter?.paused) return 'Pausiert';
   if (event.lifecycle==='active') return 'Läuft';
   return 'Vorbereitung';
 }
 function eventProgress(event:EventRecord):string {
-  const rq=event.rundenquiz,qt=event.quiztafel,vb=event.verbindungen;
+  const rq=event.rundenquiz,qt=event.quiztafel,vb=event.verbindungen,ll=event.logikleiter;
+  if(ll)return 'Logikleiter · '+Math.min(ll.index+1,ll.rungs.length)+'/'+ll.rungs.length+' Stufen · '+event.teams.length+' Teams';
   if(vb)return 'Verbindungen · '+vb.index+'/'+vb.assignments.length+' Aufgaben · '+event.teams.length+' Teams';
   if(qt)return 'Quiztafel · '+qt.usedTileIds.length+'/'+qt.tiles.length+' Felder · '+event.teams.length+' Teams';
   return rq ? 'Rundenquiz · '+(rq.index+1)+'/'+rq.questions.length+' Aufgaben · '+event.teams.length+' Teams' :
@@ -81,7 +82,7 @@ export function OrganizerHome() {
    <a className="exp-secondary exp-demo-action" href="#/demo">Demo ausprobieren <span aria-hidden="true">↗</span></a>
   </div>
   {draft&&<div className="exp-resume-note"><div><strong>Vorbereitung fortsetzen</strong>
-    <p>{draft.count} Teams · {draft.game==='quiztafel'?'Quiztafel':draft.game==='verbindungen'?'Verbindungen':'Rundenquiz'} {draft.profile} · Schritt {draft.step+1} von 3</p></div>
+    <p>{draft.count} Teams · {draft.game==='quiztafel'?'Quiztafel':draft.game==='verbindungen'?'Verbindungen':draft.game==='logikleiter'?'Logikleiter':'Rundenquiz'} {draft.profile} · Schritt {draft.step+1} von 3</p></div>
     <a className="exp-secondary" href="#/setup">Fortsetzen</a></div>}
   {latest&&<div className="exp-active">
     <div><span className="eyebrow">ZULETZT GESPEICHERT</span><h2>{statusFor(latest)}</h2>
@@ -100,7 +101,7 @@ export function OrganizerHome() {
   {dir?.invalidCount ? <p role="alert" className="exp-error">{dir.invalidCount} beschädigte Spielstände wurden erkannt und nicht verändert. Wiederherstellung erfordert eine gesonderte Prüfung.</p> : null}
   <div className="exp-utility-line"><a href="#/technik">Beamer / Technikcheck</a>
    <a href="#/einstellungen">Einstellungen</a><a href="#/verlauf">Vergangene Abende</a></div>
-  <p className="exp-footnote">Im Testbetrieb: Rundenquiz, Quiztafel und Verbindungen mit Probeinhalten. Weitere Spiele und die geprüfte Inhaltsbibliothek folgen.</p>
+  <p className="exp-footnote">Im Testbetrieb: Rundenquiz, Quiztafel, Verbindungen und Logikleiter mit Probeinhalten. Weitere Spiele und die geprüfte Inhaltsbibliothek folgen.</p>
  </section>;
 }
 
@@ -162,7 +163,7 @@ export function SessionHistory({eventId}:{eventId:string|null}) {
       <a className="exp-secondary" href="#/setup">Quizabend vorbereiten</a></div>:
      <div className="exp-session-list">{completed.map(e=><a className="exp-session-row" key={e.id}
         href={'#/bericht?event='+encodeURIComponent(e.id)}>
-       <div><strong>{e.verbindungen?'Verbindungen':e.quiztafel?'Quiztafel':'Rundenquiz'} · {e.verbindungen?.profile??e.quiztafel?.profile??e.rundenquiz?.profile}</strong><p>{e.teams.length} Teams · {e.verbindungen?.assignments.length??e.quiztafel?.tiles.length??e.rundenquiz?.questions.length} {e.quiztafel?'Felder':'Aufgaben'}</p>
+       <div><strong>{e.logikleiter?'Logikleiter':e.verbindungen?'Verbindungen':e.quiztafel?'Quiztafel':'Rundenquiz'} · {e.logikleiter?.profile??e.verbindungen?.profile??e.quiztafel?.profile??e.rundenquiz?.profile}</strong><p>{e.teams.length} Teams · {e.logikleiter?.rungs.length??e.verbindungen?.assignments.length??e.quiztafel?.tiles.length??e.rundenquiz?.questions.length} {e.quiztafel?'Felder':'Aufgaben'}</p>
        <small>{new Date(e.updatedAt).toLocaleString('de-DE')}</small></div><span>Bericht ansehen ↗</span></a>)}</div>}
    {dir?.invalidCount ? <p className="exp-error" role="alert">{dir.invalidCount} beschädigte Sitzungen wurden nicht verändert.</p> : null}
    {error&&<p role="alert" className="exp-error">{error}</p>}
