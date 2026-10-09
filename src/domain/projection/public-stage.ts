@@ -5,6 +5,8 @@
 export type PublicStageScene =
   | { readonly kind: 'waiting'; readonly heading: string }
   | { readonly kind: 'paused'; readonly heading: 'Pause' }
+  | { readonly kind: 'll-ladder'; readonly heading: string; readonly step: number; readonly total: number; readonly points: number; readonly prompt: string; readonly hint: string | null }
+  | { readonly kind: 'll-answer'; readonly heading: string; readonly step: number; readonly total: number; readonly points: number; readonly prompt: string; readonly answer: string; readonly explanation: string }
   | { readonly kind:'vb-sequence'; readonly heading:string; readonly activeTeam:string; readonly prompt:string; readonly items:readonly string[] }
   | { readonly kind:'vb-wall'; readonly heading:string;
       readonly tiles:readonly {id:string;label:string}[];
