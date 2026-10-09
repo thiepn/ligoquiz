@@ -3,11 +3,14 @@ import type { EventRecord } from './schemas';
 import { publicScene as rqPublicScene } from '../../games/rundenquiz/engine';
 import { publicScene as qtPublicScene } from '../../games/quiztafel/engine';
 import { publicScene as vbPublicScene } from '../../games/verbindungen/engine';
+import { publicScene as llPublicScene } from '../../games/logikleiter/engine';
 import { projectTaskForAudience, waitingScene, type PublicStageDto } from '../projection/public-stage';
 
 const publicSceneSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('waiting'), heading: z.string() }),
   z.strictObject({ kind: z.literal('paused'), heading: z.literal('Pause') }),
+  z.strictObject({kind:z.literal('ll-ladder'),heading:z.string(),step:z.number().int().positive(),total:z.number().int().positive(),points:z.number().int().positive(),prompt:z.string(),hint:z.string().nullable()}),
+  z.strictObject({kind:z.literal('ll-answer'),heading:z.string(),step:z.number().int().positive(),total:z.number().int().positive(),points:z.number().int().positive(),prompt:z.string(),answer:z.string(),explanation:z.string()}),
   z.strictObject({kind:z.literal('vb-sequence'),heading:z.string(),activeTeam:z.string(),
     prompt:z.string(),items:z.array(z.string()).length(3)}),
   z.strictObject({kind:z.literal('vb-wall'),heading:z.string(),
@@ -36,6 +39,23 @@ export const publicDtoSchema = z.strictObject({
 });
 
 export function derivePublicStage(session: EventRecord): PublicStageDto {
+  if(session.logikleiter){
+    const ll=llPublicScene(session.logikleiter),game=session.program[0];
+    const scene=session.recoveryRequired?waitingScene():
+      session.lifecycle==='paused'?{kind:'paused' as const,heading:'Pause' as const}:
+      ll.kind==='waiting'?waitingScene():
+      ll.kind==='paused'?{kind:'paused' as const,heading:'Pause' as const}:
+      ll.kind==='ladder'?{kind:'ll-ladder' as const,heading:'Logikleiter',
+        step:ll.step,total:ll.total,points:ll.points,prompt:ll.prompt,hint:ll.hint}:
+      ll.kind==='answer'?{kind:'ll-answer' as const,heading:'Logikleiter · Auflösung',
+        step:ll.step,total:ll.total,points:ll.points,prompt:ll.prompt,answer:ll.answer,
+        explanation:ll.explanation}:
+      ll.kind==='scores'?{kind:'scores' as const,heading:ll.final?'Endstand':'Zwischenstand',
+        visibleScores:ll.teams.map(t=>({name:t.name,value:t.points})).sort((a,b)=>b.value-a.value)}:
+      waitingScene();
+    return publicDtoSchema.parse({protocolVersion:1,eventId:session.id,gameId:game?.id??null,
+      hostEpoch:session.hostEpoch,stageRevision:session.stageRevision,scene});
+  }
   if(session.verbindungen){
     const vb=vbPublicScene(session.verbindungen),game=session.program[0];
     const scene=session.recoveryRequired?waitingScene():
