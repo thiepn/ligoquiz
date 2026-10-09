@@ -148,6 +148,8 @@ export function selectReviewedPack(items:readonly ContentItem[],game:'umfragedue
 export function selectReviewedPack(items:readonly ContentItem[],game:GameType,profile:GameProfile,teams:number):
  Question[]|{categories:{id:string;name:string}[];tiles:Tile[]}|Puzzle[]|Rung[]|Survey[]{
  const approved=items.filter(i=>i.game===game&&i.status==='approved'&&validatePayload(i.game,i.payload).length===0);
+ const duplicates=findDuplicates(approved);
+ if(duplicates.length)throw Error('Doppelte Fragestellungen im freigegebenen Pool: '+duplicates[0]!.id+' / '+duplicates[0]!.other);
  if(game==='rundenquiz')return selectProfile(approved.map(i=>rq.parse(i.payload) as Question),profile);
  if(game==='quiztafel'){
   const tiles=approved.map(i=>qt.parse(i.payload)),categoriesById=new Map<string,string>();
