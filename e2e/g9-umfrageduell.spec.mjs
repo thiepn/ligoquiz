@@ -31,10 +31,15 @@ test('illustrative source, delayed reveal, manual canonical mapping and audited 
  await host.getByRole('button',{name:'Alle Antworten schließen'}).click();
  await expect(stage.locator('.ud-stage-results')).toHaveCount(0);
  await host.locator('.ud-team').nth(0).getByRole('textbox',{name:'Antwort 1'}).fill('Snacks');
+ await expect(host.locator('.ud-team').nth(0).getByRole('combobox',{name:'Zuordnung'})).toHaveValue('1');
  await host.locator('.ud-team').nth(0).getByRole('button',{name:'Antwort erfassen'}).click();
+ await expect(host.locator('.ud-team').nth(0)).toContainText('Erfasst: 20 Punkte');
  await host.locator('.ud-team').nth(1).getByRole('textbox',{name:'Antwort 1'}).fill('Getränke');
+ await expect(host.locator('.ud-team').nth(1).getByRole('combobox',{name:'Zuordnung'})).toHaveValue('2');
  await host.locator('.ud-team').nth(1).getByRole('button',{name:'Antwort erfassen'}).click();
+ await expect(host.locator('.ud-team').nth(1)).toContainText('Erfasst: 15 Punkte');
  await host.locator('.ud-team').nth(2).getByRole('button',{name:'Antwort erfassen'}).click();
+ await expect(host.locator('.ud-team').nth(2)).toContainText('Erfasst: 0 Punkte');
  await host.getByRole('button',{name:'Kategorien und Rangfolge veröffentlichen'}).click();
  await expect(stage.locator('.ud-stage-results li')).toHaveCount(5);
  await expect(stage.locator('.ud-stage-results')).toContainText('Snacks');
