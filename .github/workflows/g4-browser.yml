@@ -1,9 +1,9 @@
 name: G4 Browser Qualification
 on:
   pull_request:
-    branches: ['rebuild/v2', 'feature/g5-shared-experience', 'feature/g6-quiztafel']
+    branches: ['rebuild/v2', 'feature/g5-shared-experience', 'feature/g6-quiztafel', 'feature/g7-verbindungen', 'feature/g8-logikleiter']
   push:
-    branches: ['rebuild/v2']
+    branches: ['rebuild/v2', 'feature/g8-logikleiter']
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -29,7 +29,7 @@ jobs:
         run: npm install --no-save --package-lock=false --no-audit --no-fund @playwright/test@1.56.1
       - name: Install Chromium and system libraries
         run: npx playwright install --with-deps chromium
-      - name: Exercise Rundenquiz browser flows
+      - name: Exercise full game and projector browser flows
         run: npx playwright test --config e2e/playwright.config.mjs
       - name: Preserve browser diagnostics on failure
         if: failure()

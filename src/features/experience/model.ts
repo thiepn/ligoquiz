@@ -8,6 +8,8 @@ import { sampleQuiztafel } from '../../games/quiztafel/trial-bank';
 import { createSession as createVerbindungen, scores as verbindungenScores,
  eveningHalfPoints as verbindungenEvening } from '../../games/verbindungen/engine';
 import { trialVerbindungen } from '../../games/verbindungen/trial-bank';
+import {createSession as createLogikleiter,scores as logikleiterScores,eveningHalfPoints as logikleiterEvening} from '../../games/logikleiter/engine';
+import {trialLogikleiter} from '../../games/logikleiter/trial-bank';
 import type { EventRepository } from '../../infrastructure/db/event-repository';
 
 export const HOST_IDENTITY_KEY = 'ligoquiz.v2.g4.rundenquiz.host';
@@ -63,7 +65,7 @@ export function applyMotionPreference(motion: Preferences['motion']): void {
   if (typeof document !== 'undefined') document.documentElement.dataset.ligoMotion = motion;
 }
 
-export type SetupDraft = { teams: string[]; count: 3 | 4 | 5; profile: Profile; game: 'rundenquiz'|'quiztafel'|'verbindungen'; step: 0 | 1 | 2 };
+export type SetupDraft = { teams: string[]; count: 3 | 4 | 5; profile: Profile; game: 'rundenquiz'|'quiztafel'|'verbindungen'|'logikleiter'; step: 0 | 1 | 2 };
 export function newSetupDraft(preference: Preferences = DEFAULT_PREFERENCES): SetupDraft {
   return { count: preference.defaultTeams, profile: preference.defaultProfile, game:'rundenquiz', step: 0,
     teams: ['Team 1', 'Team 2', 'Team 3', 'Team 4', 'Team 5'] };
@@ -75,7 +77,7 @@ export function parseSetupDraft(raw: unknown): SetupDraft | null {
       ![0,1,2].includes(Number(x.step)) || !Array.isArray(x.teams) || x.teams.length !== 5 ||
       x.teams.some(name => typeof name !== 'string' || name.length > 40)) return null;
   return { count: x.count as SetupDraft['count'], profile: x.profile as Profile,
-    game:x.game==='quiztafel'?'quiztafel':x.game==='verbindungen'?'verbindungen':'rundenquiz',
+    game:x.game==='quiztafel'?'quiztafel':x.game==='verbindungen'?'verbindungen':x.game==='logikleiter'?'logikleiter':'rundenquiz',
     step: x.step as SetupDraft['step'], teams: [...x.teams] as string[] };
 }
 export function readSetupDraft(): SetupDraft | null {
@@ -168,7 +170,43 @@ export async function createPreparedVerbindungen(
  return {eventId,hostId};
 }
 
+export async function createPreparedLogikleiter(
+ repo:EventRepository,draft:Pick<SetupDraft,'teams'|'count'|'profile'>,
+):Promise<HostIdentity>{
+ const eventId=crypto.randomUUID(),hostId=crypto.randomUUID();
+ const teams=draft.teams.slice(0,draft.count).map((name,i)=>({
+  id:'ll-team-'+(i+1),order:i,name:name.trim(),colorToken:'team-'+(i+1),
+ }));
+ const rungs=trialLogikleiter(draft.profile);
+ const ll=createLogikleiter({id:eventId,ownerId:hostId,profile:draft.profile,
+  teams:teams.map(({id,name,order})=>({id,name,order})),rungs});
+ const event=createEvent({
+  id:eventId,hostId,at:Date.now(),teams,
+  program:[{id:'ll-game-1',type:'logikleiter',profile:draft.profile,order:0,rulesVersion:'ll-trial-1'}],
+  frozenTasks:rungs.map(r=>({
+   taskId:r.id,gameType:'logikleiter' as const,publicPrompt:r.prompt,
+   publicClues:[r.hint],privateAnswers:[r.answer],
+   moderatorNotes:'G8 Probeinhalt: '+r.explanation+' / '+r.reference,
+   sourceContentId:r.id,sourceHash:'g8-trial-v1',
+  })),logikleiter:ll,
+ });
+ await repo.create(event);return {eventId,hostId};
+}
+
 export function reportFor(event: EventRecord) {
+ const ll=event.logikleiter;
+ if(ll&&ll.phase==='complete'&&event.lifecycle==='complete'){
+  const raw=logikleiterScores(ll),evening=logikleiterEvening(ll);
+  return {
+   schemaVersion:1 as const,id:event.id,finishedAt:event.updatedAt,
+   gameLabel:'Logikleiter',profile:ll.profile,questionCount:ll.rungs.length,
+   teams:ll.teams.map(t=>({id:t.id,name:t.name,rawPoints:raw[t.id]??0,
+    eveningHalfPoints:evening[t.id]??0}))
+    .sort((a,b)=>b.rawPoints-a.rawPoints||a.name.localeCompare(b.name,'de')),
+   awards:ll.awards.map(a=>({...a})),
+   sourceLabel:'G8 Probeinhalte (noch nicht redaktionell freigegeben)',
+  };
+ }
  const vb=event.verbindungen;
  if(vb&&vb.phase==='complete'&&event.lifecycle==='complete'){
    const raw=verbindungenScores(vb),evening=verbindungenEvening(vb);

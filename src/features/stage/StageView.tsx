@@ -6,6 +6,18 @@ import type { PublicStageScene } from '../../domain/projection/public-stage';
 const WAIT: ViewerState = { status: 'connecting', frame: null, lastReceivedAt: null };
 
 function Scene({ scene }: { scene: PublicStageScene }) {
+  if(scene.kind==='ll-ladder')return <section className="ll-stage-ladder" aria-label="Logikleiter">
+    <p className="stage-kicker">LOGIKLEITER · STUFE {scene.step} / {scene.total}</p>
+    <div className="ll-rung-bar" aria-hidden="true">{Array.from({length:scene.total},(_,i)=><span key={i} className={i<scene.step?'reached':''}>{i+1}</span>)}</div>
+    <p className="ll-stage-value">{scene.points} PUNKTE · VOR DEM HINWEIS</p>
+    <h1>{scene.prompt}</h1>
+    {scene.hint&&<div className="ll-stage-hint"><b>HINWEIS</b><p>{scene.hint}</p></div>}
+  </section>;
+  if(scene.kind==='ll-answer')return <section className="ll-stage-answer">
+    <p className="stage-kicker">LOGIKLEITER · STUFE {scene.step} / {scene.total}</p>
+    <h1>{scene.prompt}</h1>
+    <div className="stage-reveal"><strong>{scene.answer}</strong><p>{scene.explanation}</p></div>
+  </section>;
   if(scene.kind==='vb-sequence')return <div className="vb-stage-sequence">
     <p className="stage-kicker">{scene.heading} · {scene.activeTeam}</p>
     <h1>{scene.prompt}</h1>

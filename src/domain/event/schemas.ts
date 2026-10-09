@@ -3,6 +3,7 @@ import { GAME_TYPES } from '../game/contracts';
 import { rqSessionSchema, rqActionSchema } from '../../games/rundenquiz/schema';
 import { qtSessionSchema, qtActionSchema } from '../../games/quiztafel/schema';
 import { vbSessionSchema, vbActionSchema } from '../../games/verbindungen/schema';
+import { llSessionSchema,llActionSchema } from '../../games/logikleiter/schema';
 
 const id = z.string().min(1).max(128);
 const nonnegative = z.number().int().min(0).safe();
@@ -41,6 +42,7 @@ export const eventSchema = z.strictObject({
   rundenquiz: rqSessionSchema.optional(),
   quiztafel: qtSessionSchema.optional(),
   verbindungen: vbSessionSchema.optional(),
+  logikleiter: llSessionSchema.optional(),
 }).superRefine((value, ctx) => {
   function unique(items: readonly { id: string }[], path: string) {
     if (new Set(items.map((item) => item.id)).size !== items.length) {
@@ -48,8 +50,22 @@ export const eventSchema = z.strictObject({
     }
   }
   unique(value.teams, 'teams');
-  if([value.rundenquiz,value.quiztafel,value.verbindungen].filter(Boolean).length>1)
+  if([value.rundenquiz,value.quiztafel,value.verbindungen,value.logikleiter].filter(Boolean).length>1)
     ctx.addIssue({code:'custom',path:['program'],message:'G7 allows one game engine per event'});
+  if(value.logikleiter){
+    const ll=value.logikleiter;
+    if(ll.id!==value.id||ll.ownerId!==value.hostId||ll.epoch!==value.hostEpoch)
+      ctx.addIssue({code:'custom',path:['logikleiter'],message:'LL identity/epoch mismatch'});
+    if(value.program.length!==1||value.program[0]?.type!=='logikleiter'||value.program[0]?.profile!==ll.profile)
+      ctx.addIssue({code:'custom',path:['logikleiter'],message:'LL program mismatch'});
+    if(ll.teams.length!==value.teams.length||
+      ll.teams.some(t=>!value.teams.some(v=>v.id===t.id&&v.name===t.name&&v.order===t.order)))
+      ctx.addIssue({code:'custom',path:['logikleiter'],message:'LL team roster mismatch'});
+    if(ll.rungs.length!==value.frozenTasks.length||
+      ll.rungs.some(r=>!value.frozenTasks.some(t=>t.taskId===r.id&&t.gameType==='logikleiter'&&
+       t.publicPrompt===r.prompt&&t.privateAnswers[0]===r.answer)))
+      ctx.addIssue({code:'custom',path:['logikleiter'],message:'LL frozen questions mismatch'});
+  }
   if(value.verbindungen){
     const vb=value.verbindungen;
     if(vb.id!==value.id||vb.ownerId!==value.hostId||vb.epoch!==value.hostEpoch)
@@ -127,6 +143,7 @@ const commandPayloadSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('RQ_ACTION'), action: rqActionSchema }),
   z.strictObject({ type: z.literal('QT_ACTION'), action: qtActionSchema }),
   z.strictObject({type:z.literal('VB_ACTION'),action:vbActionSchema}),
+  z.strictObject({type:z.literal('LL_ACTION'),action:llActionSchema}),
   z.strictObject({ type: z.literal('EVENT_PAUSE') }),
   z.strictObject({ type: z.literal('EVENT_RESUME') }),
   z.strictObject({ type: z.literal('TASK_PUBLISH'), taskId: id }),

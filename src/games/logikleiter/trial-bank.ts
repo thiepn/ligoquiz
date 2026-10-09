@@ -1,0 +1,46 @@
+import type {Profile,Rung} from './engine';
+import {LENGTH} from './engine';
+/** Disposable, provisional German rehearsal content. NOT editorially approved. */
+const RUNG_TRIAL:readonly Rung[]=[
+ {id:'ll-01',difficulty:1,kind:'deduction',
+  prompt:'Alle Rosen sind Pflanzen. Keine Pflanze ist ein Metall. Kann eine Rose ein Metall sein?',
+  hint:'Verbindet die beiden Aussagen logisch.',
+  answer:'Nein',explanation:'Alle Rosen sind Pflanzen, und keine Pflanze ist ein Metall.',
+  reference:'Logikleiter – eigens erstellter Probetext'},
+ {id:'ll-02',difficulty:2,kind:'numeric',
+  prompt:'In einer Schublade sind 5 rote und 5 blaue Socken. Wie viele Socken muss man blind ziehen, um garantiert zwei derselben Farbe zu haben?',
+  hint:'Betrachtet den ungünstigsten Fall nach zwei Ziehungen.',
+  answer:'3',explanation:'Zwei Socken können verschiedene Farben haben; die dritte hat eine der beiden Farben.',
+  reference:'Schubfachprinzip – Probetext'},
+ {id:'ll-03',difficulty:3,kind:'ordering',
+  prompt:'Anna ist älter als Ben. Clara ist jünger als Anna, aber älter als Ben. Wer ist am jüngsten?',
+  hint:'Schreibt die drei Personen vom ältesten zum jüngsten auf.',
+  answer:'Ben',explanation:'Die eindeutige Reihenfolge ist Anna, Clara, Ben.',
+  reference:'Ordnungstransitivität – Probetext'},
+ {id:'ll-04',difficulty:4,kind:'numeric',
+  prompt:'In einer Reihe stehen 7 Stühle. Genau 2 Stühle zwischen Anna und Ben bleiben frei. Anna sitzt auf Platz 2. Auf welchem Platz sitzt Ben, wenn nur Plätze 1 bis 7 existieren?',
+  hint:'Zwei freie Plätze liegen genau zwischen den besetzten Positionen.',
+  answer:'Platz 5',explanation:'Zwischen Platz 2 und Platz 5 liegen die Plätze 3 und 4.',
+  reference:'Abstände in einer Reihe – Probetext'},
+ {id:'ll-05',difficulty:5,kind:'constraint',
+  prompt:'Drei Kisten tragen die Aufschriften „Äpfel“, „Birnen“ und „Gemischt“. Alle drei Aufschriften sind falsch. Aus welcher Kiste muss man genau eine Frucht ziehen, um danach alle Kisten richtig zuzuordnen?',
+  hint:'Die als „Gemischt“ beschriftete Kiste kann nicht gemischt sein.',
+  answer:'Aus der Kiste mit der Aufschrift „Gemischt“',
+  explanation:'Die Kiste „Gemischt“ ist sortenrein. Eine Frucht bestimmt ihre Sorte; wegen der beiden weiteren falschen Etiketten sind die anderen Inhalte eindeutig.',
+  reference:'Klassisches Etikettenlogik-Rätsel – Probetext'},
+ {id:'ll-06',difficulty:6,kind:'numeric',
+  prompt:'Vier Menschen benötigen für eine Brücke 1, 2, 7 bzw. 10 Minuten. Maximal zwei gehen gleichzeitig, mit einer Lampe. Die Lampe muss stets mitgeführt werden. Wie viele Minuten mindestens benötigen alle zusammen?',
+  hint:'Die beiden Schnellsten können die Lampe strategisch zurückbringen.',
+  answer:'17 Minuten',
+  explanation:'1+2 hin (2), 1 zurück (1), 7+10 hin (10), 2 zurück (2), 1+2 hin (2) = 17.',
+  reference:'Brücken-und-Lampe-Problem – Probetext'},
+ {id:'ll-07',difficulty:7,kind:'deduction',
+  prompt:'A sagt: „B lügt immer.“ B sagt: „A und ich sind beide Lügner.“ Jeder sagt entweder immer die Wahrheit oder lügt immer. Wer sagt die Wahrheit?',
+  hint:'Prüft zunächst, ob die Aussage von B wahr sein könnte.',
+  answer:'A sagt die Wahrheit; B lügt.',
+  explanation:'B kann nicht die Wahrheit sagen, sonst wäre B zugleich Lügner. Also lügt B. Dann ist A\u2019s Aussage über B wahr.',
+  reference:'Wahrsprecher-und-Lügner-Logik – Probetext'},
+];
+export function trialLogikleiter(profile:Profile):Rung[]{
+ return RUNG_TRIAL.slice(0,LENGTH[profile]).map(r=>({...r}));
+}
