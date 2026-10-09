@@ -16,6 +16,7 @@ export function UmfrageduellHost(){
  const [error,setError]=useState(''),[viewers,setViewers]=useState(0);
  const [drafts,setDrafts]=useState<Record<string,Submission>>({});
  const controllerRef=useRef<HostSessionController|null>(null);
+ const queueRef=useRef<Promise<void>>(Promise.resolve());
  const [seconds,setSeconds]=useState(30),[clock,setClock]=useState(false);
  const lastTick=useRef(Date.now());
  const ud=event?.umfrageduell;
@@ -69,15 +70,26 @@ export function UmfrageduellHost(){
   return ()=>window.clearInterval(timer);
  },[clock,ud?.paused,ud?.index,ud?.phase,seconds===0]);
  useEffect(()=>{if(seconds===0)setClock(false);},[seconds]);
- async function send(action:Action){
-  if(!ready||busy||!event||event.recoveryRequired)return;
-  const ctrl=controllerRef.current;if(!ctrl)return;
-  if(['CLOSE','REVEAL','CONFIRM','NEXT','PAUSE'].includes(action.type))setClock(false);
-  setBusy(true);setError('');
-  try{setEvent(await ctrl.submit({type:'UD_ACTION',action},event,crypto.randomUUID()));}
-  catch(e){setError(errorText(e));
-   try{setEvent(await ctrl.load());}catch{/* show original error */}
-  }finally{setBusy(false);}
+ function send(action:Action):Promise<void>{
+  if(!ready||!event||event.recoveryRequired)return Promise.resolve();
+  const ctrl=controllerRef.current;if(!ctrl)return Promise.resolve();
+  // A rapidly submitted host click must never disappear behind a busy-state
+  // rerender. Serialize commands and fence each against the LATEST IDB revision.
+  const job=queueRef.current.then(async()=>{
+   if(['CLOSE','REVEAL','CONFIRM','NEXT','PAUSE'].includes(action.type))setClock(false);
+   setBusy(true);setError('');
+   try{
+    const latest=await ctrl.load();
+    if(!latest.umfrageduell||latest.recoveryRequired)
+     throw Error('Sitzung erfordert zuerst eine Überprüfung');
+    setEvent(await ctrl.submit({type:'UD_ACTION',action},latest,crypto.randomUUID()));
+   }catch(e){
+    setError(errorText(e));
+    try{setEvent(await ctrl.load());}catch{/* keep original error */}
+   }finally{setBusy(false);}
+  });
+  queueRef.current=job;
+  return job;
  }
  async function reviewRecovery(){
   if(!event?.recoveryRequired||!ready||busy)return;
