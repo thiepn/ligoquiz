@@ -94,7 +94,7 @@ describe('G8 shared ladder fairness',()=>{
   s=step(s,{type:'ANNUL',reason:'Unklare Aufgabenstellung'});
   expect(s.awards.every(a=>a.points===0&&a.annulled)).toBe(true);
   expect(JSON.stringify(publicScene(s))).not.toContain(currentRung(s).answer);
-  expect(()=>step(s,{type:'CORRECT'})).toThrow();
+  expect(()=>step(s,{type:'CORRECT',reason:'Wertung irrtümlich eingetragen'})).toThrow();
  });
  it('corrects a confirmed outcome with an auditable replacement',()=>{
   let s=fixture(3,'kurz');
@@ -103,7 +103,7 @@ describe('G8 shared ladder fairness',()=>{
   s=step(s,{type:'CLOSE'});s=step(s,{type:'REVEAL'});
   for(const t of s.teams)s=step(s,{type:'GRADE',teamId:t.id,value:'absent'});
   s=step(s,{type:'CONFIRM'});expect(scores(s)['ll-team-0']).toBe(0);
-  s=step(s,{type:'CORRECT'});
+  s=step(s,{type:'CORRECT',reason:'Wertung irrtümlich eingetragen'});
   s=step(s,{type:'GRADE',teamId:'ll-team-0',value:'correct'});
   s=step(s,{type:'CONFIRM'});expect(scores(s)['ll-team-0']).toBe(10);
   expect(s.audit.map(a=>a.action)).toContain('CORRECT');
@@ -147,7 +147,7 @@ describe('G8 G2 atomic ledger and host epoch',()=>{
    expect((await repo.dispatch(cmd)).effect).toBe('already-committed');
    e=(await repo.get(e.id))!;
    expect(await repo.getScores(e.id)).toEqual({'ll-team-0':10,'ll-team-1':5,'ll-team-2':0});
-   await send({type:'CORRECT'},'correct');
+   await send({type:'CORRECT',reason:'Teamwertung falsch erfasst'},'correct');
    expect(await repo.getScores(e.id)).toEqual({'ll-team-0':0,'ll-team-1':0,'ll-team-2':0});
    await send({type:'GRADE',teamId:'ll-team-0',value:'absent'},'remark');
    await send({type:'CONFIRM'},'reconfirm');
