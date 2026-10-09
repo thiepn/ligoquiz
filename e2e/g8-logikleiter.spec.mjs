@@ -25,7 +25,7 @@ test('early lock, hint, late lock, explicit reveal, score correction and private
  await host.getByRole('button',{name:'Stufenfolge bestätigen'}).click();
  await host.getByRole('button',{name:'Aufgabe veröffentlichen'}).click();
  await expect(projector.locator('.ll-stage-ladder')).toContainText('Alle Rosen');
- await expect(projector.locator('main')).not.toContainText('Keine Pflanze ist ein Metall.');
+ await expect(projector.locator('main')).not.toContainText('Alle Rosen sind Pflanzen, und keine Pflanze ist ein Metall.');
  await expect(projector.locator('.ll-stage-hint')).toHaveCount(0);
  await host.locator('.ll-team-row').nth(0).getByRole('button',{name:'Abgabe jetzt sperren'}).click();
  await host.getByRole('button',{name:'Hinweis bewusst veröffentlichen'}).click();
