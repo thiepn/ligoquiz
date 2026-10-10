@@ -1,0 +1,27 @@
+/* G15: real 200%-zoom and touch ergonomics for ALL moderator modes. */
+[data-host-game]{min-width:0;max-width:100%;overflow-wrap:anywhere}
+[data-host-game] :is(button,a,input,select,textarea):focus-visible{
+ outline:3px solid #a67a12!important;outline-offset:3px;
+}
+[data-host-game] :is(button,input,select,textarea){min-height:44px}
+[data-host-game] :is(input,select,textarea){max-width:100%}
+[data-host-game] :is(.rq-scoreboard,.qt-scorebar,.vb-scorebar,.ll-scorebar,.ud-scorebar){min-width:0}
+[data-host-game] :is(.rq-head,.qt-host-header,.vb-host-head,.ll-host-head,.ud-host-head){min-width:0}
+@media(max-width:700px){
+ .exp-host-wrapper{padding:12px!important;min-width:0}
+ .exp-host-header{gap:10px;flex-wrap:wrap}
+ .exp-host-header>div{min-width:0}
+ [data-host-game]{padding:12px!important;margin:12px auto!important}
+ [data-host-game] :is(.rq-scoreboard,.qt-scorebar,.vb-scorebar,.ll-scorebar,.ud-scorebar){
+  grid-template-columns:repeat(2,minmax(0,1fr));
+ }
+ [data-host-game] :is(.rq-utility,.qt-host-toolbar,.vb-host-toolbar,.ll-toolbar,.ud-toolbar){
+  gap:8px;flex-wrap:wrap
+ }
+ [data-host-game] :is(.rq-teamfields,.qt-decision,.vb-mark-row,.ll-team-row,.ud-team){
+  min-width:0;max-width:100%
+ }
+ [data-host-game] :is(.qt-board-host,.qt-grid){max-width:100%;min-width:0;overflow-x:auto}
+ [data-host-game] :is(.ud-entry,.rq-teamfields){grid-template-columns:1fr}
+ [data-host-game] :is(.g3-tech-primary,button){white-space:normal}
+}

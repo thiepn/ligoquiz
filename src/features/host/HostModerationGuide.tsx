@@ -1,3 +1,4 @@
+import '../../styles/g15-host-a11y.css';
 import {useCallback,useEffect} from 'react';
 import '../../styles/g14-moderator.css';
 
@@ -86,6 +87,10 @@ export function HostModerationGuide(props:HostGuideInput){
  },[props.game,props.paused,props.recovery]);
  useEffect(()=>{
   function onKey(e:KeyboardEvent){
+   // Keep editing fields and native dialogs free from global moderation shortcuts.
+   const origin=e.target;
+   if(origin instanceof HTMLElement && (origin.isContentEditable ||
+     origin.closest('input, textarea, select, [contenteditable="true"], [role="dialog"]')))return;
    if(e.repeat||e.isComposing||e.key.toLowerCase()!=='n'||!e.altKey||!e.shiftKey||e.ctrlKey||e.metaKey)return;
    if(focusNext())e.preventDefault();
   }

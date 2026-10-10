@@ -1,3 +1,4 @@
+import '../../styles/g15-projection.css';
 import { useEffect, useState } from 'react';
 import { BrowserStagePort, stageEventIdFromHash } from './protocol';
 import { StageViewer, type ViewerState } from './stage-viewer';
@@ -146,7 +147,7 @@ export function StageView() {
     : state.status === 'conflict' ? 'Übertragung widersprüchlich'
     : 'Verbindung unterbrochen';
 
-  return <main className="stage-preview" aria-label="Beamer-Ansicht">
+  return <main className="stage-preview" data-public-scene={scene?.kind??'withheld'} aria-label="Beamer-Ansicht">
     <div className="stage-topline">
       <span>LiGo<span className="stage-yellow">Quiz</span></span>
       <span>LIGOQUIZ · BEAMER</span>
