@@ -57,7 +57,7 @@ describe('G23 source-rights and content-only editor checks',()=>{
   const item=make('id-sensitive','Super secret original question text 9483 ?',
    'Quellenbeleg hinzufügen');
   const preview=await previewFile(JSON.stringify({format:'ligo-content-pack',items:[
-   {id:'legacy-1',game:'rundenquiz',payload:{...item.payload,id:'old'},status:'approved'},
+   {id:'legacy-1',game:'rundenquiz',payload:{...(item.payload as object),id:'old'},status:'approved'},
    {id:'legacy-2',game:'other',payload:{prompt:'hidden question'}}]}));
   const audit=auditLibrary([item]);
   const exported=exportAudit(audit,preview);
