@@ -35,19 +35,19 @@ jobs:
         run: npx playwright test --config e2e/playwright.config.mjs e2e/g12-rehearsal.spec.mjs --grep "Quiztafel, 3 teams"
       - name: Exercise G15 projected-stage and 200-percent host geometry
         run: npx playwright test --config e2e/playwright.config.mjs e2e/g15-visual-accessibility.spec.mjs
-      - name: Exercise full game and projector browser flows
-        run: npx playwright test --config e2e/playwright.config.mjs
-      - name: Build scoped offline PWA
-        run: npm run build
-      - name: Test offline installed build and safe navigation
-        run: npx playwright test --config e2e/playwright.offline.config.mjs
       - name: Preserve G15 screenshots for independent visual review
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: g15-visual-evidence
           path: test-results/g15-evidence/
-          if-no-files-found: ignore
+          if-no-files-found: error
+      - name: Exercise full game and projector browser flows
+        run: npx playwright test --config e2e/playwright.config.mjs
+      - name: Build scoped offline PWA
+        run: npm run build
+      - name: Test offline installed build and safe navigation
+        run: npx playwright test --config e2e/playwright.offline.config.mjs
       - name: Preserve browser diagnostics on failure
         if: failure()
         uses: actions/upload-artifact@v4
