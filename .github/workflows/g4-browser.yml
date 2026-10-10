@@ -31,6 +31,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Exercise G14 moderation and keyboard smoke first
         run: npx playwright test --config e2e/playwright.config.mjs e2e/g14-host-guide.spec.mjs
+      - name: Rehearse G12 Quiztafel three-team restart before full suite
+        run: npx playwright test --config e2e/playwright.config.mjs e2e/g12-rehearsal.spec.mjs --grep "Quiztafel, 3 teams"
       - name: Exercise full game and projector browser flows
         run: npx playwright test --config e2e/playwright.config.mjs
       - name: Build scoped offline PWA

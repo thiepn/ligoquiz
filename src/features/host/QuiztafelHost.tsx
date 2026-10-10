@@ -1,3 +1,4 @@
+import {loadSafelyPausedQuiztafel} from './quiztafel-load';
 import {HostModerationGuide} from './HostModerationGuide';
 import { useEffect, useRef, useState } from 'react';
 import { EventRepository } from '../../infrastructure/db/event-repository';
@@ -44,13 +45,7 @@ export function QuiztafelHost(){
     const controller=new HostSessionController(db,identity.eventId,identity.hostId,
       ()=>{void publisher.refresh();});
     controllerRef.current=controller;
-    void controller.load().then(async current=>{
-      if(!current.quiztafel||current.hostId!==identity.hostId)
-        throw new Error('Keine Quiztafel-Sitzung für dieses Hostfenster');
-      // A restarted live moderator does not silently resume the game.
-      if(current.lifecycle==='active'&&!current.quiztafel.paused)
-        current=await controller.submit({type:'QT_ACTION',action:{type:'PAUSE'}},
-          current,crypto.randomUUID());
+    void loadSafelyPausedQuiztafel(controller).then(current=>{
       if(!disposed){setEvent(current);setReady(true);}
     }).catch(e=>{if(!disposed)setError(errorText(e));});
     const ticker=window.setInterval(()=>{void publisher.refresh();},1600);
