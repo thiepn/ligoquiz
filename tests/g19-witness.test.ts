@@ -4,7 +4,7 @@ import {verifyWitness,appendWitnessChain,decisionForWitnesses,parseWitness,
  type Statement,type VerifiedWitness} from '../src/features/experience/g19-witness';
 const toB64=(bytes:Uint8Array)=>btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''));
 const bytes=(v:BufferSource)=>new Uint8Array(v instanceof ArrayBuffer?v:v.buffer.slice(v.byteOffset,v.byteOffset+v.byteLength));
-const hash=async(b:Uint8Array)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',b)),x=>x.toString(16).padStart(2,'0')).join('');
+const hash=async(b:Uint8Array)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',Uint8Array.from(b).buffer as ArrayBuffer)),x=>x.toString(16).padStart(2,'0')).join('');
 async function signer(){
  const keys=await crypto.subtle.generateKey({name:'Ed25519'},true,['sign','verify']);
  const pub=bytes(await crypto.subtle.exportKey('raw',keys.publicKey));
