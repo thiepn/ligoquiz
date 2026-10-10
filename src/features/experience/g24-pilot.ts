@@ -123,6 +123,6 @@ export function pilotCard(id:ScenarioKey,existing:TrialRow|null=null):string{
   'Ablauf: #/setup -> #/host -> #/technik -> #/einstellungen.',
   'Beamer: echte Publikumsdistanz; private Antworten müssen vor Aufdeckung verborgen bleiben.',
   'Lizenz-, Gerätetest-, Wiederherstellungs- und Eigentümerfreigaben bleiben unabhängig OFFEN.',
-  'NO_GO / nicht signiert / kein Beweis einer physischen Durchführung',
+  'NO_GO / nicht signiert / keine Abnahme / kein Beweis einer physischen Durchführung',
  ].join('\n');
 }
