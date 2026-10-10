@@ -1,3 +1,4 @@
+import {IndependentReleaseDryRun} from '../features/experience/IndependentReleaseDryRun';
 import {CustodyHandoffReview} from '../features/experience/CustodyHandoffReview';
 import {WitnessEvidenceReview} from '../features/experience/WitnessEvidenceReview';
 import {EventTrialReadiness} from '../features/experience/EventTrialReadiness';
@@ -116,6 +117,7 @@ export function App(){
        <EventTrialReadiness/>
        <WitnessEvidenceReview/>
        <CustodyHandoffReview/>
+       <IndependentReleaseDryRun/>
        <p className="exp-footnote">Für einen echten Quizabend verbinde den Beamer über die Spielleitung des aktiven Spiels.</p>
      </section>}
    </main>
