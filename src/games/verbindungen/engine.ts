@@ -106,7 +106,7 @@ export function wallAwards(s:Session):Award[]{
   return {puzzleId:puzzle.id,teamId:t.id,points,annulled:false};
  });
 }
-function awardsFor(s:Session):Award[]{
+export function awardsFor(s:Session):Award[]{
  const {assignment,puzzle}=active(s);
  if(puzzle.kind==='wall')return wallAwards(s);
  assert(assignment.teamId&&s.judgement,'RESPONSE','Teamwertung fehlt');

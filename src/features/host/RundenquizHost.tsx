@@ -1,3 +1,4 @@
+import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {HostModerationGuide} from './HostModerationGuide';
 import { useEffect, useRef, useState } from 'react';
 import { createEvent } from '../../domain/event/transition';
@@ -232,6 +233,7 @@ export function RundenquizHost(){
    {rq&&<HostModerationGuide game="rundenquiz" phase={rq.phase} paused={isPaused}
      recovery={Boolean(event?.recoveryRequired)} completed={rq.phase==='complete'?rq.questions.length:rq.index}
      total={rq.questions.length} viewers={viewers} ready={sourceReady} busy={busy}/>}
+   {rq&&<ScoreDecisionPanel source={{game:'rundenquiz',session:rq}} blocked={isPaused||!sourceReady||Boolean(event?.recoveryRequired)}/>}
    {rq&&<div className="rq-status">
     <strong>{rq.phase==='complete'?'Quizabend beendet':q?title(q.round)+' · Aufgabe '+(rq.index+1)+'/'+rq.questions.length:'Vorbereitung'}</strong>
     <span>{isPaused?'Pausiert':rq.phase} · {rq.profile}</span>

@@ -1,3 +1,4 @@
+import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {loadSafelyPausedQuiztafel} from './quiztafel-load';
 import {HostModerationGuide} from './HostModerationGuide';
 import { useEffect, useRef, useState } from 'react';
@@ -133,6 +134,7 @@ export function QuiztafelHost(){
       <HostModerationGuide game="quiztafel" phase={qt.phase} paused={qt.paused}
       recovery={Boolean(event?.recoveryRequired)} completed={qt.usedTileIds.length} total={qt.tiles.length}
       viewers={connected} ready={ready} busy={busy}/>
+    <ScoreDecisionPanel source={{game:'quiztafel',session:qt}} blocked={disabled}/>
     <div className="qt-scorebar">{teams.map(team=><div key={team.id}>
         <span>{team.name}</span><strong>{tally[team.id]??0}</strong></div>)}</div>
       <div className="qt-active-row">

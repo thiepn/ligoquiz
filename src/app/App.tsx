@@ -1,3 +1,4 @@
+import {VisualEvidenceReview} from '../features/experience/VisualEvidenceReview';
 import { useEffect, useState } from 'react';
 import '../styles/umfrageduell.css';
 import { parseRoute, routeHref, currentEventId, type Route } from './routes';
@@ -108,6 +109,7 @@ export function App(){
        <p>Hostfenster auf dem Laptop, öffentliche Beameransicht auf dem erweiterten Bildschirm.</p></div></div>
        <OfflinePreflight/>
        <ProjectorTechCheck/>
+       <VisualEvidenceReview/>
        <p className="exp-footnote">Für einen echten Quizabend verbinde den Beamer über die Spielleitung des aktiven Spiels.</p>
      </section>}
    </main>

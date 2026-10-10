@@ -1,3 +1,4 @@
+import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {loadSafelyPausedVerbindungen} from './verbindungen-load';
 import {HostModerationGuide} from './HostModerationGuide';
 import {useEffect,useRef,useState} from 'react';
@@ -111,6 +112,7 @@ export function VerbindungenHost(){
    <HostModerationGuide game="verbindungen" phase={vb.phase} paused={vb.paused}
       recovery={Boolean(event?.recoveryRequired)} completed={vb.phase==='complete'?vb.assignments.length:vb.index} total={vb.assignments.length}
       viewers={viewers} ready={ready} busy={busy}/>
+    <ScoreDecisionPanel source={{game:'verbindungen',session:vb}} blocked={disabled}/>
     <div className="vb-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span>
     <strong>{totals[t.id]??0}</strong></div>)}</div>
    <div className="vb-active-row"><div><small>TEIL / AUFGABE</small><strong>{task?sectionName:'Endstand'} · {Math.min(vb.index+1,vb.assignments.length)}/{vb.assignments.length}</strong></div>
