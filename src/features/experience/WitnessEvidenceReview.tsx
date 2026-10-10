@@ -47,7 +47,8 @@ export function WitnessEvidenceReview(){
   setBusy(true);setError('');setNotice('');
   try{
    const checked=await verifyWitness(witness,publicKey.trim(),g18,attachment??undefined);
-   setEntries(previous=>appendWitnessChain(previous,checked));
+   const accepted=appendWitnessChain(entries,checked);
+   setEntries(accepted);
    setWitness(null);setWitnessName('');setAttachment(null);setAttachmentName('');
    setNotice('Ed25519 korrekt, Quelle geprüft, Kette konsistent. SCHLÜSSELVERTRAUEN UNGEKLÄRT — NO-GO.');
   }catch(e){setError('Nachweis zurückgewiesen: '+(e instanceof Error?e.message:'Prüfung fehlgeschlagen'));}
