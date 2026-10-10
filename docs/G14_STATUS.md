@@ -10,6 +10,11 @@
 - Adaptive 200%-scale compact cards and min-44px control, visible focus outline, no generic overlay obscuring game controls.
 - Unit matrix for all five games and browser tests on genuine setup/host route for each game, including keyboard no-mutation and narrow simulated zoom.
 
+### Confirmed G12 Quiztafel reload race repaired
+- G14 full-browser regression exposed a real G12 Quiztafel 3-team reload: concurrent same-host pauses could cause STALE_REVISION and leave the resumed host without controls.
+- The new bounded `loadSafelyPausedQuiztafel` reconciles only STALE_REVISION by reloading validated state and pausing when necessary. It never retries STALE_HOST or authorizes an automatic resume.
+- Unit regressions cover concurrent restart and ownership fencing; dedicated G12 3-team browser rehearsal now precedes the full Chromium suite.
+
 ### Approval and privacy
 The original confirmation/reason prompts for actual recovery, correction and cancellation stay authoritative. No new automatic confirmation is substituted for the explicit reveal and score buttons. Host guide never enters the public stage allowlist and does not handle answers. Existing scoring, audit, event storage, offline, and human signoffs unchanged.
 
