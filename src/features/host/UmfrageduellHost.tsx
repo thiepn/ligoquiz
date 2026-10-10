@@ -146,7 +146,7 @@ export function UmfrageduellHost(){
    <HostModerationGuide game="umfrageduell" phase={ud.phase} paused={ud.paused}
       recovery={Boolean(event?.recoveryRequired)} completed={ud.phase==='complete'?ud.surveys.length:ud.index} total={ud.surveys.length}
       viewers={viewers} ready={ready} busy={busy}/>
-    <ScoreDecisionPanel source={{game:'umfrageduell',session:ud}} blocked={blocked}/>
+    <ScoreDecisionPanel source={{game:'umfrageduell',session:ud}} blocked={Boolean(blocked)}/>
     <div className="ud-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span><strong>{raw[t.id]??0}</strong></div>)}</div>
    <div className="ud-progress">{ud.surveys.map((item,i)=><span key={item.id}
     className={i<ud.index?'done':i===ud.index?'current':''}>{i+1}<small>{item.format==='top3'?'TOP 3':'TOP 1'}</small></span>)}</div>

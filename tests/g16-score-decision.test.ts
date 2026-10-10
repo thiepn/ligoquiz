@@ -29,7 +29,7 @@ describe('G16 point decisions, no state mutation',()=>{
    const e=await db.get(id.eventId),s=e!.rundenquiz!;
    const first=rq.currentQuestion(s)!;
    const entries=Object.fromEntries(s.teams.map(t=>[t.id,{
-    judgement:'richtig' as const,lockLevel:1,estimate:first.round==='schaetzen'?first.truth:null
+    judgement:'richtig' as const,lockLevel:1,estimate:null
    }]));
    const revealed={...s,phase:'revealed' as const,entries};
    const pending=scoreDecisionFor({game:'rundenquiz',session:revealed});
