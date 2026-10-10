@@ -1,3 +1,4 @@
+import {HostModerationGuide} from './HostModerationGuide';
 import { useEffect, useRef, useState } from 'react';
 import { EventRepository } from '../../infrastructure/db/event-repository';
 import { HostSessionController } from '../../application/host-controller/host-session';
@@ -118,7 +119,7 @@ export function QuiztafelHost(){
   if(!identity)return <div className="qt-host exp-empty">
     <h2>Keine Sitzung ausgewählt</h2><a href="#/spielen" className="exp-secondary">Spielstände</a>
   </div>;
-  return <section className="qt-host" aria-label="Quiztafel Spielleitung">
+  return <section className="qt-host" data-host-game="quiztafel" aria-label="Quiztafel Spielleitung">
     <header className="qt-host-header">
       <div><span className="eyebrow">G6 · SPIELMODUS IM TEST</span><h2>Quiztafel</h2>
         <p>Jedes Team wählt reihum ein Feld. Genau eine Übernahmechance bei einem Fehlversuch.</p></div>
@@ -134,7 +135,10 @@ export function QuiztafelHost(){
     </div>
     {!qt&&<p role="status">Quiztafel-Sitzung wird geprüft …</p>}
     {qt&&<>
-      <div className="qt-scorebar">{teams.map(team=><div key={team.id}>
+      <HostModerationGuide game="quiztafel" phase={qt.phase} paused={qt.paused}
+      recovery={Boolean(event?.recoveryRequired)} completed={qt.usedTileIds.length} total={qt.tiles.length}
+      viewers={connected} ready={ready} busy={busy}/>
+    <div className="qt-scorebar">{teams.map(team=><div key={team.id}>
         <span>{team.name}</span><strong>{tally[team.id]??0}</strong></div>)}</div>
       <div className="qt-active-row">
         <div><small>AKTUELLES WAHLRECHT</small><strong>{selectorTeam?.name}</strong></div>
@@ -144,12 +148,12 @@ export function QuiztafelHost(){
       {event?.recoveryRequired&&<div className="rq-recovery" role="alert">
         <strong>Wiederhergestellten Spielstand prüfen</strong>
         <p>Bitte prüfe Felder, Punkte und die aktuelle Frage. Der Beamer bleibt bis zur ausdrücklichen Bestätigung ausgeblendet.</p>
-        <button className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void acceptRecovery()}>
+        <button data-host-next className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void acceptRecovery()}>
           Prüfung bestätigen — pausiert bleiben
         </button>
       </div>}
       {qt.phase!=='complete'&&qt.phase!=='setup'&&<div className="qt-pauser">
-        {qt.paused?<button disabled={!ready||busy||event?.recoveryRequired}
+        {qt.paused?<button data-host-resume disabled={!ready||busy||event?.recoveryRequired}
           onClick={()=>void send({type:'RESUME'})}>Spiel ausdrücklich fortsetzen</button>:
           <button disabled={disabled} onClick={()=>void send({type:'PAUSE'})}>Spielleitung pausieren</button>}
       </div>}
@@ -172,14 +176,14 @@ export function QuiztafelHost(){
             })}
           </div>)}
         </div>
-        {qt.phase==='setup'&&<button className="g3-tech-primary" disabled={!ready||busy}
+        {qt.phase==='setup'&&<button data-host-next className="g3-tech-primary" disabled={!ready||busy}
           onClick={()=>void send({type:'START'})}>Quiztafel auf dem Beamer vorbereiten</button>}
         {qt.phase==='prepared'&&<div className="qt-decision">
           <div><span className="eyebrow">PRIVATE FELDAUSWAHL</span>
             <h3>{currentCategory?.name} / {tile?.value} Punkte</h3>
             <p>{tile?.prompt}</p><p className="qt-internal">Private Lösung: <b>{tile?.answer}</b></p></div>
           <button disabled={disabled} onClick={()=>void send({type:'UNPICK'})}>Auswahl zurücknehmen</button>
-          <button className="g3-tech-primary" disabled={disabled}
+          <button data-host-next className="g3-tech-primary" disabled={disabled}
             onClick={()=>void send({type:'PUBLISH'})}>Frage ausdrücklich veröffentlichen</button>
         </div>}
       </div>}
@@ -198,24 +202,24 @@ export function QuiztafelHost(){
           <button disabled={disabled} onClick={()=>{setClockRunning(false);setTimeLeft(qt.phase==='steal'?10:20);}}>Zurücksetzen</button>
         </div>}
         {qt.phase==='question'&&<div className="qt-decisions">
-          <button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'PRIMARY',result:'correct'})}>Erstantwort richtig</button>
+          <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'PRIMARY',result:'correct'})}>Erstantwort richtig</button>
           <button disabled={disabled} onClick={()=>void send({type:'PRIMARY',result:'wrong'})}>Erstantwort falsch</button>
           <button disabled={disabled} onClick={()=>void send({type:'PRIMARY',result:'none'})}>Keine Antwort</button>
         </div>}
         {qt.phase==='steal-offer'&&<div className="qt-decision">
           <h3>Einmalige Übernahme: {stealer?.name}</h3>
           <p>Dieses Team erhält die einzige Übernahmechance. Kein weiteres Team darf antworten.</p>
-          <button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'OFFER_STEAL'})}>Übernahme anbieten</button>
+          <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'OFFER_STEAL'})}>Übernahme anbieten</button>
         </div>}
         {qt.phase==='steal'&&<div className="qt-decisions">
-          <button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'STEAL',result:'correct'})}>Übernahme richtig</button>
+          <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'STEAL',result:'correct'})}>Übernahme richtig</button>
           <button disabled={disabled} onClick={()=>void send({type:'STEAL',result:'wrong'})}>Übernahme falsch</button>
           <button disabled={disabled} onClick={()=>void send({type:'STEAL',result:'none'})}>Keine Antwort</button>
           <button disabled={disabled} onClick={()=>void send({type:'STEAL',result:'declined'})}>Team verzichtet</button>
         </div>}
         {qt.phase==='adjudicated'&&<div className="qt-decision">
           <p>Antwortversuche abgeschlossen. Noch keine Punkte verbucht.</p>
-          <button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'REVEAL'})}>Lösung ausdrücklich zeigen</button>
+          <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'REVEAL'})}>Lösung ausdrücklich zeigen</button>
         </div>}
         {qt.phase==='revealed'&&<div className="qt-decision">
           <h3>Punktevorschau</h3>
@@ -227,7 +231,7 @@ export function QuiztafelHost(){
               onClick={()=>void send({type:'ADJUST',winner:'stealer'})}>Wertung: Übernahme</button>}
             <button disabled={disabled} onClick={()=>void send({type:'ADJUST',winner:'none'})}>Wertung: 0 Punkte</button>
           </div>
-          <button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'CONFIRM'})}>Punkte verbindlich bestätigen</button>
+          <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'CONFIRM'})}>Punkte verbindlich bestätigen</button>
         </div>}
         {qt.phase==='awarded'&&<div className="qt-decision">
           <h3>Feld abgeschlossen</h3>
@@ -235,7 +239,7 @@ export function QuiztafelHost(){
             (qt.outcomes.find(o=>o.tileId===tile.id)?.winnerId?
               'Punkte vergeben.':'Kein Team erhält Punkte.')}</p>
           {!qt.annulled&&<button disabled={disabled} onClick={()=>void send({type:'CORRECT'})}>Wertung auditiert korrigieren</button>}
-          <button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'NEXT'})}>
+          <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'NEXT'})}>
             {qt.usedTileIds.length===qt.tiles.length?'Quiztafel abschließen':'Zurück zur Tafel · nächstes Wahlrecht'}
           </button>
         </div>}

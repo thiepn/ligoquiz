@@ -1,3 +1,4 @@
+import {HostModerationGuide} from './HostModerationGuide';
 import {useEffect,useRef,useState} from 'react';
 import {EventRepository} from '../../infrastructure/db/event-repository';
 import {HostSessionController} from '../../application/host-controller/host-session';
@@ -84,7 +85,7 @@ export function LogikleiterHost(){
  const teams=ll?orderedTeams(ll):[],totals=ll?scores(ll):{};
  const disabled=!ready||busy||ll?.paused||event?.recoveryRequired;
  const canConfirm=ll?.phase==='revealed'&&teams.every(t=>Boolean(ll.grades[t.id]));
- return <section className="ll-host" aria-label="Logikleiter Spielleitung">
+ return <section className="ll-host" data-host-game="logikleiter" aria-label="Logikleiter Spielleitung">
   <header className="ll-host-head">
    <div><span className="eyebrow">G8 · SPIELMODUS IM TEST</span><h2>Logikleiter</h2>
     <p>Alle Teams lösen dieselbe Aufgabe. Frühe Abgabe = volle Punktzahl; Abgabe nach Hinweis = halbe Punktzahl.</p></div>
@@ -96,7 +97,10 @@ export function LogikleiterHost(){
    <a href="#/spielen">Übersicht</a>
   </div>
   {!ll?<p role="status">Sitzung wird geprüft …</p>:<>
-   <div className="ll-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span><strong>{totals[t.id]??0}</strong></div>)}</div>
+   <HostModerationGuide game="logikleiter" phase={ll.phase} paused={ll.paused}
+      recovery={Boolean(event?.recoveryRequired)} completed={ll.phase==='complete'?ll.rungs.length:ll.index} total={ll.rungs.length}
+      viewers={viewers} ready={ready} busy={busy}/>
+    <div className="ll-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span><strong>{totals[t.id]??0}</strong></div>)}</div>
    <div className="ll-rung-strip">{ll.rungs.map((r,i)=><div key={r.id} className={i<ll.index?'done':i===ll.index?'current':''}>
     <span>STUFE {i+1}</span><strong>{rungValue(i)}</strong></div>)}</div>
    <div className="ll-status"><span>STUFE {Math.min(ll.index+1,ll.rungs.length)} / {ll.rungs.length}</span>
@@ -104,23 +108,23 @@ export function LogikleiterHost(){
    {event?.recoveryRequired&&<div className="rq-recovery" role="alert">
     <h3>Wiederhergestellte Sitzung prüfen</h3>
     <p>Hinweis und Abgaben bleiben gespeichert. Der Beamer bleibt bis zur Bestätigung ausgeblendet.</p>
-    <button className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void reviewRecovery()}>Wiederherstellung bestätigen</button>
+    <button data-host-next className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void reviewRecovery()}>Wiederherstellung bestätigen</button>
    </div>}
    {ll.phase!=='setup'&&ll.phase!=='complete'&&<div className="ll-pause">
-    {ll.paused?<button disabled={!ready||busy||event?.recoveryRequired}
+    {ll.paused?<button data-host-resume disabled={!ready||busy||event?.recoveryRequired}
       onClick={()=>void send({type:'RESUME'})}>Spiel ausdrücklich fortsetzen</button>:
      <button disabled={disabled} onClick={()=>void send({type:'PAUSE'})}>Pausieren</button>}
    </div>}
    {ll.phase==='setup'&&<div className="ll-card"><h3>Leiter vorbereiten</h3>
     <p>{ll.rungs.length} gemeinsam gespielte Stufen mit 10 bis {rungValue(ll.rungs.length-1)} Punkten.</p>
-    <button className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void send({type:'START'})}>Stufenfolge bestätigen</button>
+    <button data-host-next className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void send({type:'START'})}>Stufenfolge bestätigen</button>
    </div>}
    {rung&&ll.phase!=='setup'&&<div className="ll-card">
     <div className="eyebrow">STUFE {ll.index+1} · {rungValue(ll.index)} PUNKTE · {rung.kind.toUpperCase()}</div>
     <h3>{rung.prompt}</h3>
     <div className="ll-private"><small>NUR SPIELLEITUNG · LÖSUNG</small><strong>{rung.answer}</strong>
      <p>{rung.explanation}</p><small>{rung.reference}</small></div>
-    {ll.phase==='ready'&&<button className="g3-tech-primary" disabled={disabled}
+    {ll.phase==='ready'&&<button data-host-next className="g3-tech-primary" disabled={disabled}
       onClick={()=>void send({type:'PUBLISH'})}>Aufgabe veröffentlichen</button>}
     {ll.phase==='open'&&<>
      <div className="ll-clock"><div><span>OPTIONALER TIMER</span><strong>{seconds} s</strong>
@@ -141,10 +145,10 @@ export function LogikleiterHost(){
      {ll.hintShown&&!ll.fairHint&&<button disabled={disabled} onClick={()=>reasoned('FAIR_HINT')}>
       Hinweis versehentlich früh gezeigt – alle richtigen Antworten voll werten</button>}
      {ll.fairHint&&<p className="ll-notice">Faire Hinweisbehandlung: alle korrekten Abgaben zählen voll.</p>}
-     <button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'CLOSE'})}>Alle Antworten schließen</button>
+     <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'CLOSE'})}>Alle Antworten schließen</button>
     </>}
     {ll.phase==='closed'&&<p>Antworten sind geschlossen. Keine Teamabgabe kann mehr geändert werden.</p>}
-    {ll.phase==='closed'&&<button className="g3-tech-primary" disabled={disabled}
+    {ll.phase==='closed'&&<button data-host-next className="g3-tech-primary" disabled={disabled}
      onClick={()=>void send({type:'REVEAL'})}>Lösung und Begründung veröffentlichen</button>}
     {ll.phase==='revealed'&&<>
       <h4>Teamwertungen bestätigen</h4><p>Richtige Abgaben ohne dokumentierte Sperre werden nicht akzeptiert.</p>
@@ -155,7 +159,7 @@ export function LogikleiterHost(){
         onClick={()=>void send({type:'GRADE',teamId:t.id,value})}>
         {value==='correct'?'Richtig':value==='wrong'?'Falsch':'Keine Antwort'}</button>)}</div>
       </div>)}</div>
-      <button className="g3-tech-primary" disabled={disabled||!canConfirm}
+      <button data-host-next className="g3-tech-primary" disabled={disabled||!canConfirm}
        onClick={()=>void send({type:'CONFIRM'})}>Alle Wertungen verbindlich bestätigen</button>
     </>}
     {ll.phase==='graded'&&<>
@@ -163,7 +167,7 @@ export function LogikleiterHost(){
        {teams.find(t=>t.id===a.teamId)?.name}: <strong>{a.points} Punkte</strong>{a.annulled?' · Annulliert':''}</p>)}</div>
      {!ll.awards.some(a=>a.rungId===rung.id&&a.annulled)&&<button disabled={disabled}
        onClick={()=>reasoned('CORRECT')}>Letzte Wertung korrigieren</button>}
-     <button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'NEXT'})}>
+     <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'NEXT'})}>
       {ll.index===ll.rungs.length-1?'Logikleiter abschließen':'Nächste Stufe'}</button>
     </>}
     {ll.phase!=='graded'&&<button className="ll-annul" disabled={disabled}
