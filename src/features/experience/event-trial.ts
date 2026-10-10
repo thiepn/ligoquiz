@@ -110,7 +110,7 @@ export async function reconcileTrial(raw:unknown):Promise<ReturnType<typeof cano
   if(!isObject(item)||Object.keys(item).sort().join(',')!=='checks,evidence,note,scenarioId'||
    item.scenarioId!==s.id||typeof item.note!=='string'||item.note.length>800||!isObject(item.checks)||
    Object.keys(item.checks).sort().join(',')!==CHECKS.map(c=>c.id).sort().join(',')||
-   CHECKS.some(c=>!OBSERVATIONS.includes((item.checks as Record<string,Observation>)[c.id])))
+   CHECKS.some(c=>!OBSERVATIONS.includes((item.checks as Record<string,Observation>)[c.id]??'invalid' as Observation)))
    throw Error('Scenario ordering or checks were modified');
   const ev=item.evidence;
   if(ev!==null&&(!isObject(ev)||Object.keys(ev).sort().join(',')!=='bytes,name,sha256'))
