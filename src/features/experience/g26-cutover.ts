@@ -7,11 +7,12 @@ export const G26_QUALIFIED_PARENT='0a1e54320554ad63db7ca8073fd22bb0a201f3f1' as 
 export const G26_PARENT_BUNDLE='00d06decc4bf813dfc5ef7af0a7830286b0b5465f45f1a6009a9f66983dedcf9' as const;
 const jsonObject=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value);
 const hash=z.string().regex(/^[a-f0-9]{64}$/);
+const gitCommitHash=z.string().regex(/^[a-f0-9]{40}$/);
 const relative=z.string().min(1).max(200).refine(v=>!v.startsWith('/')&&!v.startsWith('http')&&
  !v.includes('..')&&!v.includes('\\')&&!v.includes('?')&&!v.includes('#'),'Nicht relativer Pfad');
 const manifest=z.strictObject({
  format:z.literal('ligoquiz-g12-build-evidence-v1'),
- gitSha:z.literal(G26_QUALIFIED_PARENT),validatedCheckoutSha:hash,
+ gitSha:z.literal(G26_QUALIFIED_PARENT),validatedCheckoutSha:gitCommitHash,
  deploymentPath:z.literal('relative'),expectedScope:z.literal('./'),
  offlinePrecache:z.array(relative).min(4).max(30),
  files:z.array(z.strictObject({path:relative,sha256:hash})).length(7),
