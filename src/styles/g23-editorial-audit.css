@@ -1,0 +1,26 @@
+.g23-panel{margin:22px 0 24px;border:1px solid #c0cdc7;border-top:4px solid #476b65;background:#f8faf8;color:#253e36;padding:clamp(12px,2vw,21px);min-width:0}
+.g23-panel header{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;align-items:flex-start}
+.g23-panel header>div{max-width:70ch}.g23-panel h2{font-size:clamp(19px,2.2vw,25px);margin:5px 0}
+.g23-panel p{font-size:12px;line-height:1.65}
+.g23-panel header>strong{font-size:11px;color:#813b28;background:#fff1ea;border:1px solid #bf8069;padding:10px}
+.g23-inventory{border-left:3px solid #ba933f;padding:12px;background:#f4f0e4}
+.g23-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.g23-metrics>div{background:#fff;border:1px solid #d3ded7;padding:12px;min-width:0;display:grid;gap:8px;align-content:start}
+.g23-metrics b{font-size:22px}.g23-metrics span{font-size:11px;line-height:1.4;color:#52665c}
+.g23-legacy{border:1px solid #d5ded8;background:white;padding:12px;margin:12px 0;font-size:12px}
+.g23-legacy summary{cursor:pointer;font-weight:750}.g23-legacy code{overflow-wrap:anywhere}
+.g23-legacy>div,.g23-types{display:flex;flex-wrap:wrap;gap:9px}
+.g23-legacy>div>span,.g23-types>span{background:white;border:1px solid #cbd6ce;padding:8px 11px;font-size:11px}
+.g23-preview{border-left:4px solid #af8746;background:#f9efdc;padding:12px}
+.g23-controls{display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin:16px 0}
+.g23-controls label{display:flex;gap:9px;align-items:center;font-size:12px}
+.g23-controls input[type=checkbox]{width:18px;height:18px}
+.g23-panel .g23-controls button{min-height:44px;padding:10px}
+.g23-types{margin:12px 0}
+.g23-findings{max-height:390px;overflow:auto;border:1px solid #d0dbd2;background:white;padding:7px;display:grid;gap:6px}
+.g23-panel .g23-finding{display:grid;gap:6px;text-align:left;width:100%;padding:12px;border:1px solid #d3ded5;background:white;color:#20352e;cursor:pointer;overflow-wrap:anywhere}
+.g23-panel .g23-finding:hover{background:#f6f2e6}
+.g23-finding b{font-size:11px;letter-spacing:.3px;color:#8f4629}.g23-finding span{font-size:12px}.g23-finding small{font-size:10px;color:#596f62}
+.g23-panel :is(button,summary,input):focus-visible{outline:3px solid #a07a2e;outline-offset:3px}
+@media(max-width:720px){.g23-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:360px){.g23-metrics{grid-template-columns:1fr}}
