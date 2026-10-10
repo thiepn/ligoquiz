@@ -18,3 +18,6 @@ Based on qualified G14 draft PR #12 at exact head `18cc85dff54f6d842cd3415b639f9
 
 ## Next G16 — Moderator Decision Clarity and Visual Acceptance Reconciliation
 Objectives: based on G15 screenshot evidence, remove cramped/failing areas, enhance noncommitting score-delta inspection and error recovery, add versioned visual-evidence acceptance metadata with strict human approval gates. **Not started.**
+
+## Confirmed concurrent Verbindungen reload defect, repaired in G15
+The earlier push browser run (38040261207) exposed an intermittent G12 Verbindungen 3-team reload that stopped on `STALE_REVISION` instead of restoring the paused host controls. Independent browser diagnostics contained an actionable stale-revision error and retained a public-safe stage. The new bounded `loadSafelyPausedVerbindungen` retries **only** revision conflicts, never revoked ownership, preserves host epochs and never resumes/reveals. Two independent IndexedDB tests and a targeted G12 3-team browser rehearsal gate the fix. Existing Quiztafel fencing remains unchanged.

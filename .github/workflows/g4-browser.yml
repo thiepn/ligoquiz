@@ -42,6 +42,8 @@ jobs:
           name: g15-visual-evidence
           path: test-results/g15-evidence/
           if-no-files-found: error
+      - name: Rehearse Verbindungen three-team crash and safe pause
+        run: npx playwright test --config e2e/playwright.config.mjs e2e/g12-rehearsal.spec.mjs --grep "Verbindungen, 3 teams"
       - name: Exercise full game and projector browser flows
         run: npx playwright test --config e2e/playwright.config.mjs
       - name: Build scoped offline PWA
