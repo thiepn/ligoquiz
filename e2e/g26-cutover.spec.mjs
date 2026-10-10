@@ -10,8 +10,8 @@ test('G26 uses a genuine generated G25 handoff as source without altering local 
  const form=desk(page);
  await expect(form).toContainText('NO-GO · NICHT VERÖFFENTLICHEN');
  await page.evaluate(()=>{
-  localStorage.setItem('ligo.quiz.legacy.g26.synthetic','PRESERVE-LEGACY');
-  sessionStorage.setItem('unrelated.g26','PRESERVE-OTHER');
+  globalThis.localStorage.setItem('ligo.quiz.legacy.g26.synthetic','PRESERVE-LEGACY');
+  globalThis.sessionStorage.setItem('unrelated.g26','PRESERVE-OTHER');
  });
  const g25=page.getByRole('region',{name:'G25 Spielabend und Release-Handoff'});
  const wait=page.waitForEvent('download');
@@ -32,12 +32,12 @@ test('G26 uses a genuine generated G25 handoff as source without altering local 
   ownerReleaseAuthorization:false,originalLegacyBrowserPreserved:true});
  expect(packet.handoff.sha256).toMatch(/^[0-9a-f]{64}$/);
  const earlier=await page.evaluate(()=>({
-  legacy:localStorage.getItem('ligo.quiz.legacy.g26.synthetic'),
-  other:sessionStorage.getItem('unrelated.g26')}));
+  legacy:globalThis.localStorage.getItem('ligo.quiz.legacy.g26.synthetic'),
+  other:globalThis.sessionStorage.getItem('unrelated.g26')}));
  expect(earlier).toEqual({legacy:'PRESERVE-LEGACY',other:'PRESERVE-OTHER'});
  await form.locator('.g26-files > section').nth(1).getByRole('button',{name:'Nur diese Vorschau verwerfen'}).click();
  await expect(form).toContainText('Keine Datei geprüft');
- expect(await page.evaluate(()=>localStorage.getItem('ligo.quiz.legacy.g26.synthetic'))).toBe('PRESERVE-LEGACY');
+ expect(await page.evaluate(()=>globalThis.localStorage.getItem('ligo.quiz.legacy.g26.synthetic'))).toBe('PRESERVE-LEGACY');
 });
 test('G26 rejects forged or misplaced release manifests and session backups without imports',async({page})=>{
  await page.goto('/#/technik');
@@ -65,7 +65,7 @@ test('G26 mobile 200 percent keyboard and overflow stay usable without live acti
  await mkdir(directory,{recursive:true});
  await page.setViewportSize({width:640,height:800});
  await page.goto('/#/technik');
- await page.evaluate(()=>{document.documentElement.style.zoom='2';});
+ await page.evaluate(()=>{globalThis.document.documentElement.style.zoom='2';});
  const form=desk(page);
  await expect(form).toContainText('V2.0 sicher vorbereiten');
  const input=form.locator('.g26-files > section').first().getByLabel('Originaldatei lokal auswählen');
