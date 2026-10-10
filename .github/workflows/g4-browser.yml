@@ -44,6 +44,8 @@ jobs:
           if-no-files-found: error
       - name: Rehearse Verbindungen three-team crash and safe pause
         run: npx playwright test --config e2e/playwright.config.mjs e2e/g12-rehearsal.spec.mjs --grep "Verbindungen, 3 teams"
+      - name: Rehearse G9 Umfrageduell reload and preserved adjudications
+        run: npx playwright test --config e2e/playwright.config.mjs e2e/g9-umfrageduell.spec.mjs --grep "reload pauses projector"
       - name: Exercise full game and projector browser flows
         run: npx playwright test --config e2e/playwright.config.mjs
       - name: Build scoped offline PWA

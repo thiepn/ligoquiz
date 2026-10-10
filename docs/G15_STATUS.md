@@ -21,3 +21,6 @@ Objectives: based on G15 screenshot evidence, remove cramped/failing areas, enha
 
 ## Confirmed concurrent Verbindungen reload defect, repaired in G15
 The earlier push browser run (38040261207) exposed an intermittent G12 Verbindungen 3-team reload that stopped on `STALE_REVISION` instead of restoring the paused host controls. Independent browser diagnostics contained an actionable stale-revision error and retained a public-safe stage. The new bounded `loadSafelyPausedVerbindungen` retries **only** revision conflicts, never revoked ownership, preserves host epochs and never resumes/reveals. Two independent IndexedDB tests and a targeted G12 3-team browser rehearsal gate the fix. Existing Quiztafel fencing remains unchanged.
+
+## Confirmed G9 Umfrageduell reload revision race
+Browser run 38040544887 exposed `STALE_REVISION` in the existing G9 reload test, documented by page-state diagnostic evidence. The new bounded same-host restart reconciler retries only revision collisions; revoked hosts fail closed, no auto-resume or reveal, and existing queued scoring semantics are unchanged. Dedicated concurrent-reload and takeover-fencing unit tests plus the targeted G9 browser scenario now gate it.

@@ -1,3 +1,4 @@
+import {loadSafelyPausedUmfrageduell} from './umfrageduell-load';
 import {HostModerationGuide} from './HostModerationGuide';
 import {useEffect,useRef,useState} from 'react';
 import {EventRepository} from '../../infrastructure/db/event-repository';
@@ -39,11 +40,7 @@ export function UmfrageduellHost(){
   const controller=new HostSessionController(db,identity.eventId,identity.hostId,
    ()=>{void publisher.refresh();});
   controllerRef.current=controller;
-  void controller.load().then(async saved=>{
-   if(!saved.umfrageduell||saved.hostId!==identity.hostId)
-    throw Error('Keine Umfrageduell-Sitzung für diese Spielleitung');
-   if(saved.lifecycle==='active'&&!saved.umfrageduell.paused)
-    saved=await controller.submit({type:'UD_ACTION',action:{type:'PAUSE'}},saved,crypto.randomUUID());
+  void loadSafelyPausedUmfrageduell(controller).then(saved=>{
    if(!disposed){setEvent(saved);setReady(true);}
   }).catch(e=>{if(!disposed)setError(errorText(e));});
   const interval=window.setInterval(()=>{void publisher.refresh();},1600);
