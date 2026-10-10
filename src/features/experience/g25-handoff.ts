@@ -152,7 +152,7 @@ export function handoffJson(input:HandoffInput){return JSON.stringify(assembleHa
 export function handoffCsv(input:HandoffInput){
  const report=assembleHandoff(input),columns=['Kategorie','Schwere','Spiel','Szenario','Prüfpunkt','Inhalt-ID','Code'];
  const safe=(s:string)=>{const trimmed=s.replace(/[\r\n\t]+/g,' ').trim();
-  const protectedValue=/^[=+@\-]/.test(trimmed)?"'"+trimmed:trimmed;
+  const protectedValue=/^[=+@-]/.test(trimmed)?"'"+trimmed:trimmed;
   return '"'+protectedValue.replace(/"/g,'""')+'"';};
  const rows=report.issues.map(x=>[x.category,x.severity,x.game??'',x.scenarioId??'',
   x.checkId??'',x.contentId??'',x.label]);
