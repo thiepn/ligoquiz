@@ -63,7 +63,7 @@ export function recoveryAdvice(error:string):RecoveryAdvice{
  if(/stale.revision|revision veraltet|spielstand hat sich geändert|session has changed|gleichzeitig geändert/.test(e))
   return {type:'stale',title:'Spielstand wurde anderswo geändert',
    next:'Den aktuellen Stand explizit neu laden; danach Revision, Punkte, Aufgabe und Beamer prüfen. Keine automatische Wiederholung der Aktion.',reload:true};
- if(/wiederherstell|recovery|gesicherten stand/.test(e))
+ if(/wiederherstell|wiederhergestell|recovery|gesicherten stand/.test(e))
   return {type:'recovery',title:'Wiederherstellung erfordert Prüfung',
    next:'Wiederherstellung ausschließlich im vorhandenen Prüfmodus bestätigen; Beamer bleibt bis dahin gesperrt.',reload:true};
  if(/network|netz|offline|verbindung/.test(e))
