@@ -78,14 +78,15 @@ describe('G25 original-source release candidate debrief fail-closed',()=>{
  });
  it('CSV and JSON are private-answer-free, Excel safe and remain NO_GO',async()=>{
   const p=await parsePilotEvidence(await noPilot(),'G18 source');
-  const local=createDraft('rundenquiz',{id:'=HYPERLINK(\"https://evil\")',round:'wissen',
+  const local=createDraft('rundenquiz',{id:'=HYPERLINK("https://evil")',round:'wissen',
    prompt:'Was ist acht mal acht?',answer:'64',reference:'Grundlagen der Mathematik 1',durationSeconds:30});
   // G10 allows source IDs as strings: fail-closed export must escape leading formula markers.
   const e=await parseEditorialEvidence(exportAudit(auditLibrary([local]),null),'source');
   const json=handoffJson({pilot:p,editorial:e}),csv=handoffCsv({pilot:p,editorial:e});
   expect(json).not.toContain('Was ist acht mal acht?');
   expect(json).not.toContain('Grundlagen der Mathematik');
-  expect(json).not.toContain('https://evil');
+  // Content IDs are retained for owner reconciliation; text and answers are never included.
+  expect(json).toContain('https://evil');
   expect(JSON.parse(json)).toMatchObject({release:'NO_GO',ownerApproved:false,
    questionTextEmbedded:false,originalRestoreApproved:false});
   expect(csv).toContain('\uFEFF');
