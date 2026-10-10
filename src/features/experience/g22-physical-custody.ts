@@ -58,7 +58,7 @@ export async function readG22Parent(raw:unknown,g18Original:unknown):Promise<G22
   raw.format!=='ligoquiz-g21-dry-run-packet-v1'||raw.qualifiedG20Head!==G21_PARENT_HEAD||
   typeof raw.parentG20Checksum!=='string'||!hash.test(raw.parentG20Checksum)||
   typeof raw.note!=='string'||raw.note.length>1200||
-  !Array.isArray(raw.witnesses)||raw.witnesses.length>100||
+  !Array.isArray(raw.witnesses)||raw.witnesses.length===0||raw.witnesses.length>100||
   !isObject(raw.decision)||raw.decision.release!=='NO_GO'||
   raw.decision.mergeAuthorized!==false||raw.decision.deployAuthorized!==false||
   raw.decision.parentG20OriginalSignaturesReverified!==false||
