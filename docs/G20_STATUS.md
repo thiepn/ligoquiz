@@ -12,3 +12,6 @@ G19 draft PR #17 exactly `e45cbb99e07f89ff4b663afb0026bf75768758a4`, Verify run 
 
 ## Next phase G21 — Independent Trust-Root Attestation & Multi-Party Release Dry Run
 **Status: NOT STARTED.** Introduce independent off-application witness/owner root cross-attestation review and recovery rehearsal receipts, containment of conflicting external credentials, and explicit deny-by-default release decision preparation. Do not mint or claim actual external approvals; no merge, deployment, migration or screenshot golden changes.
+
+## Confirmed inherited G12/G8 defect repaired during G20 qualification
+The exact-head browser run initially found a genuine `STALE_REVISION` on a four-team Logikleiter crash/reload (diagnostic context showed the host remained blank because concurrent same-host startup pauses raced). This was independently inspected in artifact #11676480793, not attributed to the G20 custody feature. The G20 repair adds a three-attempt bounded, same-host pause reconciliation helper matching qualified G14/G15 recovery behavior. Only `StoreError('STALE_REVISION')` retries; `STALE_HOST`/host epoch revocation and all other errors fail closed. Both adversarial IndexedDB tests and a targeted real Chromium four-team restart gate precede the full 15-configuration browser rehearsal; no snapshot golden/rules changed.

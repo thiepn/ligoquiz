@@ -68,6 +68,8 @@ jobs:
           name: g19-witness-visuals
           path: test-results/g19-evidence/
           if-no-files-found: error
+      - name: Rehearse Logikleiter four-team stale-revision recovery (G20 confirmed defect)
+        run: npx playwright test --config e2e/playwright.config.mjs e2e/g12-rehearsal.spec.mjs --grep "Logikleiter, 4 teams"
       - name: Exercise G20 independent custody receipt and denied root workflows
         run: npx playwright test --config e2e/playwright.config.mjs e2e/g20-custody-review.spec.mjs
       - name: Retain G20 synthetic unsigned visual records
