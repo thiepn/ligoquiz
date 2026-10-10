@@ -1,0 +1,26 @@
+/* G13 — faster session discovery and results for event organizers */
+.exp-search{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:18px 0 14px}
+.exp-search label{display:grid;gap:6px;flex:1;min-width:min(240px,100%);max-width:490px;font-size:12px;font-weight:750;color:#45515b}
+.exp-search input{width:100%;min-height:44px;border:1px solid #aeb9b4;background:#fff;color:#202830;padding:10px 13px;font:inherit;font-size:13px;border-radius:0}
+.exp-search small{font-size:11px;color:#64737c;padding-bottom:13px}
+.exp-team-names{overflow-wrap:anywhere;color:#505c66!important}
+.exp-search-empty{font-size:13px;border:1px dashed #c8cfcb;background:#fff;padding:18px 20px;color:#56656d}
+.exp-report-actions{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}
+.exp-report-actions button{font:inherit}
+.exp-report-source{font-size:12px;color:#55626d;line-height:1.6;border-left:3px solid #b49a57;padding-left:12px;margin-bottom:15px}
+.exp-search input:focus-visible,.exp-report-actions button:focus-visible{outline:3px solid #b69343;outline-offset:3px}
+@media print{
+ @page{size:A4;margin:16mm}
+ html,body,.app-shell,.workspace,.exp-page{background:#fff!important;color:#141414!important}
+ .app-shell{display:block!important}
+ .workspace{padding:0!important;margin:0!important;min-width:0!important}
+ .exp-page{max-width:none!important}
+ .sidebar,.exp-report-actions,.exp-report details,.exp-heading .exp-quiet,.exp-footnote{display:none!important}
+ .exp-heading{margin-bottom:14px!important}
+ .exp-heading h1{font-size:27pt!important;color:#111!important}
+ .exp-report h2{color:#111!important}
+ .exp-summary{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ .exp-summary>div{background:#fff!important;border:1px solid #bbb!important;break-inside:avoid}
+ .exp-score-table>div{grid-template-columns:36px minmax(0,1fr) 120px 110px!important;break-inside:avoid;background:#fff!important}
+ .exp-report-source{color:#333!important}
+}
