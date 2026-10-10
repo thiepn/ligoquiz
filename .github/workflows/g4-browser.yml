@@ -1,7 +1,7 @@
 name: G4 Browser Qualification
 on:
   pull_request:
-    branches: ['rebuild/v2', 'feature/g5-shared-experience', 'feature/g6-quiztafel', 'feature/g7-verbindungen', 'feature/g8-logikleiter', 'feature/g9-umfrageduell', 'feature/g10-content-studio', 'feature/g11-production-resilience', 'feature/g12-event-rehearsal', 'feature/g13-organizer-workflows', 'feature/g14-host-moderation', 'feature/g15-readable-stage-accessibility', 'feature/g16-moderation-evidence-review', 'feature/g17-correction-provenance-recovery', 'feature/g18-event-trial-release-matrix', 'feature/g19-witness-review-custody', 'feature/g20-independent-custody-handoff', 'feature/g21-independent-trust-root-dry-run']
+    branches: ['rebuild/v2', 'feature/g5-shared-experience', 'feature/g6-quiztafel', 'feature/g7-verbindungen', 'feature/g8-logikleiter', 'feature/g9-umfrageduell', 'feature/g10-content-studio', 'feature/g11-production-resilience', 'feature/g12-event-rehearsal', 'feature/g13-organizer-workflows', 'feature/g14-host-moderation', 'feature/g15-readable-stage-accessibility', 'feature/g16-moderation-evidence-review', 'feature/g17-correction-provenance-recovery', 'feature/g18-event-trial-release-matrix', 'feature/g19-witness-review-custody', 'feature/g20-independent-custody-handoff', 'feature/g21-independent-trust-root-dry-run', 'feature/g22-physical-original-custody']
   push:
     branches: ['rebuild/v2', 'feature/g8-logikleiter', 'feature/g9-umfrageduell', 'feature/g10-content-studio', 'feature/g11-production-resilience', 'feature/g12-event-rehearsal', 'feature/g15-readable-stage-accessibility']
   workflow_dispatch:
@@ -87,6 +87,15 @@ jobs:
         with:
           name: g21-cross-attestation-visuals
           path: test-results/g21-evidence/
+          if-no-files-found: error
+      - name: Exercise G22 original-byte custody and independent physical evidence controls
+        run: npx playwright test --config e2e/playwright.config.mjs e2e/g22-physical-custody.spec.mjs
+      - name: Retain G22 synthetic-only physical evidence and keyboard screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g22-original-custody-visuals
+          path: test-results/g22-evidence/
           if-no-files-found: error
       - name: Exercise full game and projector browser flows
         run: npx playwright test --config e2e/playwright.config.mjs
