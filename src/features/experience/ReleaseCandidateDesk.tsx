@@ -78,7 +78,7 @@ export function ReleaseCandidateDesk(){
     <a href="#/einstellungen">Original-Backup nicht überschreiben</a>
    </div>
   </div>
-  <div className="g25-triage" aria-label="G25 konkrete Prüfprobleme">
+  <div className="g25-triage" role="region" aria-label="G25 konkrete Prüfprobleme">
    <div className="g25-triage-head"><h3>Prüfliste aus tatsächlich geladenen Dateien</h3>
     <span>{found.length} von {report.issues.length} Hinweisen</span></div>
    <div className="g25-filters">
