@@ -1,7 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {sealTrial} from '../src/features/experience/event-trial';
 import {verifyWitness,appendWitnessChain,decisionForWitnesses,parseWitness,
- type Statement,type VerifiedWitness} from '../src/features/experience/g19-witness';
+ type Statement} from '../src/features/experience/g19-witness';
 const toB64=(bytes:Uint8Array)=>btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''));
 const bytes=(v:BufferSource)=>new Uint8Array(v instanceof ArrayBuffer?v:v.buffer.slice(v.byteOffset,v.byteOffset+v.byteLength));
 const hash=async(b:Uint8Array)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',Uint8Array.from(b).buffer as ArrayBuffer)),x=>x.toString(16).padStart(2,'0')).join('');
@@ -66,8 +66,10 @@ describe('G19 detached verification and source custody',()=>{
    issuedAt:'2026-10-10T14:01:00Z'};
   const rotated=await verifyWitness(await sealStatement(rotate,f.key.privateKey),f.key.publicKey,f.g18);
   const after=appendWitnessChain(chain,rotated);
-  const broken:VerifiedWitness={...first,statement:{...f.statement,sequence:3,previousDigest:rotated.digest,
-   issuedAt:'2026-10-10T14:02:00Z'}};
+  const brokenStatement:Statement={...f.statement,sequence:3,previousDigest:rotated.digest,
+   issuedAt:'2026-10-10T14:02:00Z'};
+  const broken=await verifyWitness(await sealStatement(brokenStatement,f.key.privateKey),
+   f.key.publicKey,f.g18);
   expect(()=>appendWitnessChain(after,broken)).toThrow(/rotation/);
   const revoke:Statement={...rotate,sequence:3,previousDigest:rotated.digest,
    operation:'revoke',keyFingerprint:newKey.fingerprint,nextKeyFingerprint:null,
