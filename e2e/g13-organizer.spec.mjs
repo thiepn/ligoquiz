@@ -15,7 +15,7 @@ test('organizer searches all saved sessions and supports clearing an empty resul
  await createDraft(page,'Nordgruppe');
  await createDraft(page,'Suedgruppe');
  await page.goto('/#/spielen');
- const search=page.getByRole('textbox',{name:'Spielstände durchsuchen'});
+ const search=page.getByRole('searchbox',{name:'Spielstände durchsuchen'});
  await expect(search).toBeVisible();
  await expect(page.getByText('2 von 2 Spielständen')).toBeVisible();
  await search.fill('Nordgruppe');
