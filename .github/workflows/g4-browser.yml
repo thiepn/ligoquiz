@@ -1,9 +1,9 @@
 name: G4 Browser Qualification
 on:
   pull_request:
-    branches: ['rebuild/v2', 'feature/g5-shared-experience', 'feature/g6-quiztafel', 'feature/g7-verbindungen', 'feature/g8-logikleiter', 'feature/g9-umfrageduell', 'feature/g10-content-studio', 'feature/g11-production-resilience', 'feature/g12-event-rehearsal', 'feature/g13-organizer-workflows']
+    branches: ['rebuild/v2', 'feature/g5-shared-experience', 'feature/g6-quiztafel', 'feature/g7-verbindungen', 'feature/g8-logikleiter', 'feature/g9-umfrageduell', 'feature/g10-content-studio', 'feature/g11-production-resilience', 'feature/g12-event-rehearsal', 'feature/g13-organizer-workflows', 'feature/g14-host-moderation']
   push:
-    branches: ['rebuild/v2', 'feature/g8-logikleiter', 'feature/g9-umfrageduell', 'feature/g10-content-studio', 'feature/g11-production-resilience', 'feature/g12-event-rehearsal']
+    branches: ['rebuild/v2', 'feature/g8-logikleiter', 'feature/g9-umfrageduell', 'feature/g10-content-studio', 'feature/g11-production-resilience', 'feature/g12-event-rehearsal', 'feature/g15-readable-stage-accessibility']
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -33,6 +33,19 @@ jobs:
         run: npx playwright test --config e2e/playwright.config.mjs e2e/g14-host-guide.spec.mjs
       - name: Rehearse G12 Quiztafel three-team restart before full suite
         run: npx playwright test --config e2e/playwright.config.mjs e2e/g12-rehearsal.spec.mjs --grep "Quiztafel, 3 teams"
+      - name: Exercise G15 projected-stage and 200-percent host geometry
+        run: npx playwright test --config e2e/playwright.config.mjs e2e/g15-visual-accessibility.spec.mjs
+      - name: Preserve G15 screenshots for independent visual review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g15-visual-evidence
+          path: test-results/g15-evidence/
+          if-no-files-found: error
+      - name: Rehearse Verbindungen three-team crash and safe pause
+        run: npx playwright test --config e2e/playwright.config.mjs e2e/g12-rehearsal.spec.mjs --grep "Verbindungen, 3 teams"
+      - name: Rehearse G9 Umfrageduell reload and preserved adjudications
+        run: npx playwright test --config e2e/playwright.config.mjs e2e/g9-umfrageduell.spec.mjs --grep "reload pauses projector"
       - name: Exercise full game and projector browser flows
         run: npx playwright test --config e2e/playwright.config.mjs
       - name: Build scoped offline PWA

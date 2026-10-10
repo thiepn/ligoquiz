@@ -1,3 +1,4 @@
+import '../../styles/g15-host-a11y.css';
 import {useCallback,useEffect} from 'react';
 import '../../styles/g14-moderator.css';
 
@@ -66,6 +67,13 @@ export function describeHostStep(input:HostGuideInput):HostGuideState{
  return {step,next,visibility,scoring,warning,finished:false};
 }
 
+/** A keyboard shortcut is a focus hint, never a game command or input-editing override. */
+export type FocusShortcut = Pick<KeyboardEvent,'key'|'altKey'|'shiftKey'|'ctrlKey'|'metaKey'|'repeat'|'isComposing'>;
+export function isFocusShortcut(event:FocusShortcut, editing:boolean):boolean{
+ return !editing&&!event.repeat&&!event.isComposing&&event.key.toLowerCase()==='n'&&
+  event.altKey&&event.shiftKey&&!event.ctrlKey&&!event.metaKey;
+}
+
 /** Focus only. Does not dispatch, reveal, score, pause or resume. */
 export function focusHostAction(root:Element|null, paused:boolean,recovery:boolean):boolean{
  if(!root)return false;
@@ -86,7 +94,11 @@ export function HostModerationGuide(props:HostGuideInput){
  },[props.game,props.paused,props.recovery]);
  useEffect(()=>{
   function onKey(e:KeyboardEvent){
-   if(e.repeat||e.isComposing||e.key.toLowerCase()!=='n'||!e.altKey||!e.shiftKey||e.ctrlKey||e.metaKey)return;
+   // Keep editing fields and native dialogs free from global moderation shortcuts.
+   const origin=e.target;
+   const editing=origin instanceof HTMLElement && (origin.isContentEditable ||
+     Boolean(origin.closest('input, textarea, select, [contenteditable="true"], [role="dialog"]')));
+   if(!isFocusShortcut(e,editing))return;
    if(focusNext())e.preventDefault();
   }
   window.addEventListener('keydown',onKey);

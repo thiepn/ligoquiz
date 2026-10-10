@@ -1,3 +1,4 @@
+import {loadSafelyPausedVerbindungen} from './verbindungen-load';
 import {HostModerationGuide} from './HostModerationGuide';
 import {useEffect,useRef,useState} from 'react';
 import {EventRepository} from '../../infrastructure/db/event-repository';
@@ -40,11 +41,7 @@ export function VerbindungenHost(){
   const controller=new HostSessionController(db,identity.eventId,identity.hostId,
    ()=>{void publisher.refresh();});
   controllerRef.current=controller;
-  void controller.load().then(async record=>{
-   if(!record.verbindungen||record.hostId!==identity.hostId)
-    throw new Error('Keine Verbindungen-Sitzung für dieses Hostfenster.');
-   if(record.lifecycle==='active'&&!record.verbindungen.paused)
-    record=await controller.submit({type:'VB_ACTION',action:{type:'PAUSE'}},record,crypto.randomUUID());
+  void loadSafelyPausedVerbindungen(controller).then(record=>{
    if(!disposed){setEvent(record);setReady(true);}
   }).catch(e=>{if(!disposed)setError(errorText(e));});
   const interval=window.setInterval(()=>{void publisher.refresh();},1600);
