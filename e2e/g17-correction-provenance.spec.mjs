@@ -26,7 +26,7 @@ for(const mode of modes)test('G17 authentic audit history and zoomed keyboard di
  await details.focus();
  await page.keyboard.press('Enter');
  await expect(history).toContainText('Spielstart bestätigt');
- await expect(history).not.toContainText(/commandId|Befehls-ID/);
+ await expect(history).not.toContainText(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/);
  await expect(page.locator('html')).not.toHaveJSProperty('scrollWidth',99999);
 });
 test('G17 operator can import consistent local evidence and reject altered notes without approval',async({page})=>{

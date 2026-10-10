@@ -77,8 +77,8 @@ describe('G17 local-only evidence reconciliation',()=>{
   const forged=structuredClone(valid);
   forged.packet.humanApproval=true;
   await expect(reconcileObservation(forged)).rejects.toThrow(/Abnahmefelder/);
-  const badHash=structuredClone(valid);
-  badHash.packet.source.files[0].sha256='0'.repeat(64) as typeof badHash.packet.source.files[0]['sha256'];
+  const badHash=JSON.parse(JSON.stringify(valid)) as {packet:{source:{files:{sha256:string}[]}}};
+  badHash.packet.source.files[0]!.sha256='0'.repeat(64);
   await expect(reconcileObservation(badHash)).rejects.toThrow(/Abnahmefelder|Bildnachweis/);
   const removed=structuredClone(valid);
   removed.packet.records.pop();
