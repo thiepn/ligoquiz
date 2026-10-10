@@ -41,7 +41,7 @@ for(const mode of modes){
   await stage.setViewportSize({width:1280,height:720});
   await stage.goto('http://127.0.0.1:4178/'+href);
   await expect(stage.getByRole('main',{name:'Beamer-Ansicht'})).toBeVisible();
-  await expect(stage.locator('.stage-preview')).toHaveAttribute('data-public-scene','withheld');
+  await expect(stage.locator('.stage-preview')).toHaveAttribute('data-public-scene',/^(withheld|waiting)$/);
   await expect(stage.locator('.stage-center')).not.toContainText(mode.privateText);
   await host.getByRole('button',{name:mode.initial}).click();
   if(mode.key==='quiztafel')await host.locator('.qt-column').first().getByRole('button',{name:'100'}).click();

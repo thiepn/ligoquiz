@@ -1,4 +1,3 @@
-import '../../styles/g15-projection.css';
 import { useEffect, useState } from 'react';
 import { BrowserStagePort, stageEventIdFromHash } from './protocol';
 import { StageViewer, type ViewerState } from './stage-viewer';
