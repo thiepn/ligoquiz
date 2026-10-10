@@ -12,12 +12,14 @@ async function signer(){
  return {privateKey:keys.privateKey,publicKey:b64(raw),fingerprint:await hash(raw)};
 }
 async function signG20(statement:CustodyStatement,key:CryptoKey){
- return {format:'ligoquiz-g20-detached-ed25519-v1' as const,statement,
-  signature:b64(new Uint8Array(await crypto.subtle.sign('Ed25519',key,bytes(new TextEncoder().encode(JSON.stringify(statement)))))};
+ const raw=new TextEncoder().encode(JSON.stringify(statement));
+ const signature=b64(new Uint8Array(await crypto.subtle.sign('Ed25519',key,bytes(raw))));
+ return {format:'ligoquiz-g20-detached-ed25519-v1' as const,statement,signature};
 }
 async function signG21(statement:G21Statement,key:CryptoKey){
- return {format:'ligoquiz-g21-detached-ed25519-v1' as const,statement,
-  signature:b64(new Uint8Array(await crypto.subtle.sign('Ed25519',key,bytes(new TextEncoder().encode(JSON.stringify(statement)))))};
+ const raw=new TextEncoder().encode(JSON.stringify(statement));
+ const signature=b64(new Uint8Array(await crypto.subtle.sign('Ed25519',key,bytes(raw))));
+ return {format:'ligoquiz-g21-detached-ed25519-v1' as const,statement,signature};
 }
 async function fixture(){
  const source=await sealTrial({},'SYNTHETIC G21 NOT A HUMAN APPROVAL');
