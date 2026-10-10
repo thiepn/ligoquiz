@@ -3,7 +3,7 @@ import {sealTrial} from '../src/features/experience/event-trial';
 import {verifyCustody,appendCustody,custodyHandoff,type CustodyStatement} from '../src/features/experience/g20-custody';
 import {readG21Parent,g21Export} from '../src/features/experience/g21-attestation';
 import {readG22Parent,parseG22,verifyG22,appendG22,g22Decision,g22Export,
- type G22Statement,type G22Parent,type G22Verified} from '../src/features/experience/g22-physical-custody';
+ type G22Statement,type G22Verified} from '../src/features/experience/g22-physical-custody';
 const buffer=(v:Uint8Array)=>Uint8Array.from(v).buffer as ArrayBuffer;
 const b64=(v:Uint8Array)=>btoa(Array.from(v,c=>String.fromCharCode(c)).join(''));
 const sha=async(v:Uint8Array)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',buffer(v))),b=>b.toString(16).padStart(2,'0')).join('');
