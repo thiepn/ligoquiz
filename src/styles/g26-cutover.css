@@ -1,0 +1,31 @@
+.g26-cutover{border:1px solid #c7d0ca;border-top:4px solid #405c54;background:#f8faf9;color:#243b33;padding:clamp(14px,2vw,22px);margin:0 0 24px;min-width:0}
+.g26-cutover>header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.g26-cutover>header div{max-width:68ch}.g26-cutover h2{font-size:clamp(20px,2.3vw,28px);margin:6px 0}
+.g26-cutover h3{font-size:15px;margin:0 0 9px}.g26-cutover p{font-size:12px;line-height:1.55;margin:4px 0 12px}
+.g26-cutover>header>strong{font-size:11px;padding:10px;border:1px solid #b76d56;background:#fff1eb;color:#793d2b}
+.g26-quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}
+.g26-quick>div{padding:12px;border:1px solid #cddcd2;background:white;display:grid;gap:5px;font-size:12px}
+.g26-quick>div span{line-height:1.55}
+.g26-files{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.g26-files>section{border:1px solid #d0ded5;background:white;min-width:0;padding:14px;display:grid;align-content:start;gap:8px}
+.g26-files label{font-size:11px;font-weight:700;display:grid;gap:8px}
+.g26-files input{max-width:100%;min-width:0;font-size:11px}
+.g26-file-state{display:grid;gap:4px;overflow-wrap:anywhere;font-size:11px}
+.g26-file-state code{font-size:10px}
+.g26-files button{justify-self:start}
+.g26-cutover button{background:#36594d;color:#fff;border:1px solid #36594d;min-height:44px;padding:10px 12px;font-size:12px;font-weight:700;border-radius:0;cursor:pointer}
+.g26-steps{margin:16px 0;border:1px solid #d0d8d2;background:#fff;padding:14px}
+.g26-steps>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.g26-step{border-bottom:1px solid #e0e8e1;padding:8px 4px;display:grid;align-content:start;gap:4px}
+.g26-step span{font-size:10px;color:#80513d;font-weight:800;letter-spacing:.05em}
+.g26-step p{margin:0;font-size:12px}
+.g26-actions{border-top:1px solid #c9d8cc;padding-top:15px;display:flex;flex-wrap:wrap;gap:10px}
+.g26-actions>h3,.g26-actions>p{flex-basis:100%}
+.g26-shortcuts{display:flex;flex-wrap:wrap;gap:7px;flex-basis:100%}
+.g26-shortcuts a{padding:10px;border:1px solid #b4c8b9;color:#1e5240;font-size:12px;min-height:44px;display:inline-flex;align-items:center}
+.g26-error,.g26-message,.g26-bottom{border-left:3px solid #a86a4c;padding:10px;background:#fff5ec;font-size:12px}
+.g26-message{background:#f0f8f3;border-color:#71927e}
+.g26-cutover :is(button,input,a):focus-visible{outline:3px solid #af873b;outline-offset:3px}
+@media(max-width:800px){.g26-files{grid-template-columns:1fr}.g26-steps>div{grid-template-columns:1fr}}
+@media(max-width:520px){.g26-quick{grid-template-columns:1fr}}
+@media print{.g26-cutover{background:white}.g26-cutover button,.g26-cutover input{display:none}}
