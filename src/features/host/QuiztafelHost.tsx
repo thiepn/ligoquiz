@@ -1,3 +1,4 @@
+import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {loadSafelyPausedQuiztafel} from './quiztafel-load';
 import {HostModerationGuide} from './HostModerationGuide';
@@ -134,6 +135,7 @@ export function QuiztafelHost(){
       <HostModerationGuide game="quiztafel" phase={qt.phase} paused={qt.paused}
       recovery={Boolean(event?.recoveryRequired)} completed={qt.usedTileIds.length} total={qt.tiles.length}
       viewers={connected} ready={ready} busy={busy}/>
+    {event&&<CorrectionProvenance event={event}/>}
     <ScoreDecisionPanel source={{game:'quiztafel',session:qt}} blocked={disabled}/>
     <div className="qt-scorebar">{teams.map(team=><div key={team.id}>
         <span>{team.name}</span><strong>{tally[team.id]??0}</strong></div>)}</div>
@@ -249,6 +251,7 @@ export function QuiztafelHost(){
       </div>}
     </>}
     {error&&<p role="alert" className="g3-tech-error">{error}</p>}
+   {error&&<SafeErrorRecovery message={String(error)}/>}
     <p className="g3-tech-footnote">Quiztafel G6 verwendet vorläufige Übungsinhalte. Keine automatische Enthüllung, Benotung oder Übernahme. Nur gleiche Browser-Origin für Beamer.</p>
   </section>;
 }

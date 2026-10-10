@@ -1,3 +1,4 @@
+import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {HostModerationGuide} from './HostModerationGuide';
 import {useEffect,useRef,useState} from 'react';
@@ -101,6 +102,7 @@ export function LogikleiterHost(){
    <HostModerationGuide game="logikleiter" phase={ll.phase} paused={ll.paused}
       recovery={Boolean(event?.recoveryRequired)} completed={ll.phase==='complete'?ll.rungs.length:ll.index} total={ll.rungs.length}
       viewers={viewers} ready={ready} busy={busy}/>
+    {event&&<CorrectionProvenance event={event}/>}
     <ScoreDecisionPanel source={{game:'logikleiter',session:ll}} blocked={Boolean(disabled)}/>
     <div className="ll-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span><strong>{totals[t.id]??0}</strong></div>)}</div>
    <div className="ll-rung-strip">{ll.rungs.map((r,i)=><div key={r.id} className={i<ll.index?'done':i===ll.index?'current':''}>
@@ -182,6 +184,7 @@ export function LogikleiterHost(){
    </div>}
   </>}
   {error&&<p className="g3-tech-error" role="alert">{error}</p>}
+   {error&&<SafeErrorRecovery message={String(error)}/>}
   <p className="exp-footnote">G8 ist ein Testmodus mit ungeprüften Beispielaufgaben. Wertungen, Abgaben und Hinweise sind Bestandteil der gespeicherten Sitzung.</p>
  </section>;
 }

@@ -1,3 +1,4 @@
+import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {HostModerationGuide} from './HostModerationGuide';
 import { useEffect, useRef, useState } from 'react';
@@ -233,6 +234,7 @@ export function RundenquizHost(){
    {rq&&<HostModerationGuide game="rundenquiz" phase={rq.phase} paused={isPaused}
      recovery={Boolean(event?.recoveryRequired)} completed={rq.phase==='complete'?rq.questions.length:rq.index}
      total={rq.questions.length} viewers={viewers} ready={sourceReady} busy={busy}/>}
+   {event&&<CorrectionProvenance event={event}/>}
    {rq&&<ScoreDecisionPanel source={{game:'rundenquiz',session:rq}} blocked={isPaused||!sourceReady||Boolean(event?.recoveryRequired)}/>}
    {rq&&<div className="rq-status">
     <strong>{rq.phase==='complete'?'Quizabend beendet':q?title(q.round)+' · Aufgabe '+(rq.index+1)+'/'+rq.questions.length:'Vorbereitung'}</strong>
@@ -329,5 +331,6 @@ export function RundenquizHost(){
    </div>}
   </div>}
   {error&&<p role="alert" className="g3-tech-error">{error}</p>}
+   {error&&<SafeErrorRecovery message={String(error)}/>}
  </section>;
 }
