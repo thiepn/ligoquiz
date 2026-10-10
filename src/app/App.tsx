@@ -1,3 +1,4 @@
+import {EventTrialReadiness} from '../features/experience/EventTrialReadiness';
 import {VisualEvidenceReview} from '../features/experience/VisualEvidenceReview';
 import { useEffect, useState } from 'react';
 import '../styles/umfrageduell.css';
@@ -110,6 +111,7 @@ export function App(){
        <OfflinePreflight/>
        <ProjectorTechCheck/>
        <VisualEvidenceReview/>
+       <EventTrialReadiness/>
        <p className="exp-footnote">Für einen echten Quizabend verbinde den Beamer über die Spielleitung des aktiven Spiels.</p>
      </section>}
    </main>
