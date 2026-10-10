@@ -44,6 +44,23 @@ async function setupSources(page){
  await g21.getByLabel('1. G18 Original-Quellenpaket (JSON)').setInputFiles(asUpload('g18.json',originalG18));
  await g21.getByLabel('2. G20 Custody-Handoff (JSON)').setInputFiles(asUpload('g20.json',originalG20));
  await expect(g21).toContainText('Root UNANCHORED');
+ const parentG20=JSON.parse(originalG20.toString('utf8'));
+ const reviewer=await signer();
+ const stmt21={format:'ligoquiz-g21-attestation-statement-v1',
+  caseId:'synthetic-g22-g21-case',sequence:1,previousDigest:null,
+  sourceG18Checksum:source.checksum,g20HandoffChecksum:parentG20.checksum,
+  qualifiedG20Head:'f066894f11dd96432bfb73e242b97aaf72cc4655',
+  actorId:'reviewer-g21-g22',role:'reviewer',action:'PIN',
+  signerFingerprint:reviewer.fingerprint,subjectFingerprint:root.fingerprint,
+  nextFingerprint:null,scenarioId:'rundenquiz-3',gateId:'rehearsals',
+  receiptSha256:null,issuedAt:'2026-10-10T15:00:30Z',
+  note:'SYNTHETIC inherited reviewer, not an authorized witness',finding:'REPORTED'};
+ const signed21=await sign(stmt21,reviewer.privateKey,'ligoquiz-g21-detached-ed25519-v1');
+ await g21.getByLabel('3. Extern signierte G21-Zeugenaussage (JSON)').setInputFiles(asUpload('g21-witness.json',
+  Buffer.from(JSON.stringify(signed21))));
+ await g21.getByLabel('4. Öffentlicher Ed25519-Schlüssel, separat erhalten (Base64)').fill(reviewer.publicKey);
+ await g21.getByRole('button',{name:'Signierte Aussage und unabhängige Rollen prüfen'}).click();
+ await expect(g21).toContainText('1 signierte Aussagen');
  const downloadG21=page.waitForEvent('download');
  await g21.getByRole('button',{name:'Separates G21 NO-GO-Trockenlaufprotokoll exportieren'}).click();
  const g21File=await downloadG21,originalG21=await readFile(await g21File.path());
