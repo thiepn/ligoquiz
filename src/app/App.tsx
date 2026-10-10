@@ -1,3 +1,4 @@
+import {CustodyHandoffReview} from '../features/experience/CustodyHandoffReview';
 import {WitnessEvidenceReview} from '../features/experience/WitnessEvidenceReview';
 import {EventTrialReadiness} from '../features/experience/EventTrialReadiness';
 import {VisualEvidenceReview} from '../features/experience/VisualEvidenceReview';
@@ -114,6 +115,7 @@ export function App(){
        <VisualEvidenceReview/>
        <EventTrialReadiness/>
        <WitnessEvidenceReview/>
+       <CustodyHandoffReview/>
        <p className="exp-footnote">Für einen echten Quizabend verbinde den Beamer über die Spielleitung des aktiven Spiels.</p>
      </section>}
    </main>
