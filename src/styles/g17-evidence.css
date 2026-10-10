@@ -1,0 +1,6 @@
+.g17-packet{margin-top:16px;padding:16px;border:1px solid #bdccc6;border-left:4px solid #69897a;background:#f5f8f6;display:grid;gap:10px;min-width:0}
+.g17-packet h3{font-size:16px;margin:0}.g17-packet p{margin:0;font-size:12px;line-height:1.6}
+.g17-packet button{padding:11px 16px;min-height:44px;justify-self:start;background:#22363b;color:white;border:1px solid #22363b;cursor:pointer}
+.g17-packet label{display:grid;gap:8px;font-size:12px;font-weight:700}
+.g17-packet input{min-height:44px;max-width:100%;font:inherit}
+.g17-packet :is(input,button):focus-visible{outline:3px solid #a37b30;outline-offset:3px}

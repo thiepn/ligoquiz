@@ -2,7 +2,6 @@ import {useState} from 'react';
 import {sealObservation,reconcileObservation} from './review-reconcile';
 import {evidenceSource,reviewPacket,type ReviewRecord,type Observation} from './visual-evidence';
 import '../../styles/g16-visual-review.css';
-import '../../styles/g17-evidence.css';
 const label:Record<Observation,string>={unreviewed:'Nicht geprüft',observed:'Screenshot gesichtet',defect:'Problem entdeckt'};
 const kind=(file:string)=>file.includes('host-200pct')?'Host bei 200 % Zoom':
  file.includes('revealed-1280x720')?'Lösung bei 1280 × 720':'Frage bei 1280 × 720';
@@ -30,8 +29,8 @@ export function VisualEvidenceReview(){
    const a=document.createElement('a');
    try{a.href=url;a.download='ligoquiz-g17-pruefnotizen-mit-sha256.json';a.click();}
    finally{window.setTimeout(()=>URL.revokeObjectURL(url),1000);}
-   setReviewStatus('SHA-256-Selbstkonsistenz exportiert. Nicht signiert oder freigegeben.');
-  }catch{setReviewStatus('Export fehlgeschlagen; keine Freigabe erteilt.');}
+   setReviewStatus('Selbstkonsistenter Prüfumschlag exportiert. Nicht signiert oder freigegeben.');
+  }catch{setReviewStatus('Export fehlgeschlagen; es wurde keine Freigabe erteilt.');}
  }
  async function importReconciled(file:File|undefined){
   if(!file)return;
@@ -40,7 +39,7 @@ export function VisualEvidenceReview(){
    const report=await reconcileObservation(JSON.parse(await file.text()) as unknown);
    setReviews(Object.fromEntries(report.records.map(r=>[r.file,{observation:r.observation,note:r.note}])));
    setNotes(report.notes);
-   setReviewStatus('15 gepinnte Bildnachweise und Prüfsumme konsistent. Nur Sichtung, keine Freigabe.');
+   setReviewStatus('Alle 15 Quellen und Prüfsummen stimmen mit G15 überein. Nur Sichtung, keine Freigabe.');
   }catch(e){setReviewStatus('Prüfung abgelehnt: '+(e instanceof Error?e.message:'ungültige JSON-Daten'));}
  }
   return <section className="g16-review" aria-label="Visuelle Evidenzprüfung">
@@ -83,12 +82,14 @@ export function VisualEvidenceReview(){
   <button type="button" onClick={exportPacket} className="g16-review-toggle">Notizen lokal als JSON exportieren</button>
   <div className="g17-packet">
    <h3>Quellengebundene Sichtungsnotizen abgleichen</h3>
-   <p>Lokale SHA-256-Selbstkonsistenz und 15 gepinnte Bildhashes prüfen.
-    Keine Signatur, unabhängige Identität oder physische Abnahme.</p>
+   <p>Lokale SHA-256-Selbstkonsistenz und 15 gepinnte Bildhashes prüfen; keine
+    Signatur, keine unabhängige Identität und keine physische Abnahme.</p>
    <button type="button" onClick={()=>void exportReconciled()}>G17-Prüfumschlag mit SHA-256 exportieren</button>
    <label>G17-Prüfumschlag importieren
     <input type="file" accept=".json,application/json" onChange={e=>{
-     const file=e.currentTarget.files?.[0];e.currentTarget.value='';void importReconciled(file);
+     const file=e.currentTarget.files?.[0];
+     e.currentTarget.value='';
+     void importReconciled(file);
     }}/>
    </label>
    {reviewStatus&&<p role="status">{reviewStatus}</p>}

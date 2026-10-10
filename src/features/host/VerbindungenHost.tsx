@@ -1,3 +1,4 @@
+import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {loadSafelyPausedVerbindungen} from './verbindungen-load';
 import {HostModerationGuide} from './HostModerationGuide';
@@ -112,6 +113,7 @@ export function VerbindungenHost(){
    <HostModerationGuide game="verbindungen" phase={vb.phase} paused={vb.paused}
       recovery={Boolean(event?.recoveryRequired)} completed={vb.phase==='complete'?vb.assignments.length:vb.index} total={vb.assignments.length}
       viewers={viewers} ready={ready} busy={busy}/>
+    {event&&<CorrectionProvenance event={event}/>}
     <ScoreDecisionPanel source={{game:'verbindungen',session:vb}} blocked={Boolean(disabled)}/>
     <div className="vb-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span>
     <strong>{totals[t.id]??0}</strong></div>)}</div>
@@ -228,6 +230,7 @@ export function VerbindungenHost(){
     <a href="#/verlauf" className="exp-primary">Abendbericht ansehen</a></div>}
   </>}
   {error&&<p className="g3-tech-error" role="alert">{error}</p>}
+   {error&&<SafeErrorRecovery message={String(error)}/>}
   <p className="exp-footnote">G7 Probeinhalte. Keine automatische Wertung, keine unbegrenzten Rateversuche und keine teilrichtigen Vierergruppen.</p>
  </section>;
 }
