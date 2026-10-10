@@ -17,7 +17,7 @@ describe('G14 shared host moderation guidance',()=>{
   expect(initial.visibility).toMatch(/verborgen/);
   const revealed=describeHostStep(props(game,'revealed'));
   expect(revealed.visibility).toMatch(/freigegeben/);
-  const graded=describeHostStep(props(game,'graded'));
+  const graded=describeHostStep(props(game,game==='quiztafel'?'awarded':'graded'));
   expect(graded.scoring).toBe('Punkte verbucht');
  });
  it('covers quiztafel board and one-time steal and Verbindungen partial-wall states',()=>{
