@@ -1,3 +1,4 @@
+import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {HostModerationGuide} from './HostModerationGuide';
 import {useEffect,useRef,useState} from 'react';
 import {EventRepository} from '../../infrastructure/db/event-repository';
@@ -100,6 +101,7 @@ export function LogikleiterHost(){
    <HostModerationGuide game="logikleiter" phase={ll.phase} paused={ll.paused}
       recovery={Boolean(event?.recoveryRequired)} completed={ll.phase==='complete'?ll.rungs.length:ll.index} total={ll.rungs.length}
       viewers={viewers} ready={ready} busy={busy}/>
+    <ScoreDecisionPanel source={{game:'logikleiter',session:ll}} blocked={Boolean(disabled)}/>
     <div className="ll-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span><strong>{totals[t.id]??0}</strong></div>)}</div>
    <div className="ll-rung-strip">{ll.rungs.map((r,i)=><div key={r.id} className={i<ll.index?'done':i===ll.index?'current':''}>
     <span>STUFE {i+1}</span><strong>{rungValue(i)}</strong></div>)}</div>

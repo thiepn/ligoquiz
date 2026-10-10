@@ -1,0 +1,12 @@
+.g16-review{margin:30px 0;padding:21px;background:#f8f9f7;border:1px solid #cbd6d2;color:#26353d;min-width:0}
+.g16-review h2{font-size:22px;margin:8px 0}.g16-review p{font-size:12px;line-height:1.65}
+.g16-review a{text-decoration:underline}
+.g16-review-denied{background:#fff8e8;border-left:4px solid #a48439;padding:13px;font-weight:700}
+.g16-review-summary{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}.g16-review-summary strong{padding:10px;border:1px solid #cbd4ce;background:white;font-size:12px}
+.g16-review-toggle{min-height:44px;padding:10px 16px;background:#233039;color:white;border:1px solid #233039;font:inherit;cursor:pointer;font-weight:700}
+.g16-review-list{display:grid;gap:10px;margin:16px 0}.g16-review-item{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(160px,.9fr) minmax(190px,1fr);gap:12px;padding:13px;background:white;border:1px solid #d5deda;min-width:0}
+.g16-review-item>div{display:grid;gap:6px;min-width:0}.g16-review-item strong{font-size:12px}.g16-review-item small{font-size:11px;color:#5c6a70}.g16-review-item code{font-size:9px;overflow-wrap:anywhere}
+.g16-review-item label,.g16-review-notes{display:grid;gap:7px;font-size:11px;font-weight:700;color:#42555c}
+.g16-review-item input,.g16-review-item select,.g16-review-notes textarea{min-height:44px;width:100%;min-width:0;padding:9px;border:1px solid #9eafaa;background:#fff;color:#26353b;font:inherit;font-size:13px}
+.g16-review-notes{margin:18px 0}.g16-review :is(button,select,input,textarea):focus-visible{outline:3px solid #aa7b1d;outline-offset:3px}
+@media(max-width:900px){.g16-review-item{grid-template-columns:1fr}}
