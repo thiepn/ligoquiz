@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
+import {Buffer} from 'node:buffer';
 const modes=[
  {name:'Rundenquiz',root:'.rq-host',start:'Teams bestätigen'},
  {name:'Quiztafel',root:'.qt-host',start:'Quiztafel auf dem Beamer vorbereiten'},
