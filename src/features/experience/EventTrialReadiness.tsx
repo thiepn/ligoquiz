@@ -1,7 +1,10 @@
-import {useState} from 'react';
-import {CHECKS,SCENARIOS,RELEASE_GATES,canonicalTrial,blankTrialRow,sealTrial,reconcileTrial,fingerprint,
+import {useEffect,useRef,useState} from 'react';
+import {CHECKS,SCENARIOS,GAME_MODES,TEAM_COUNTS,RELEASE_GATES,canonicalTrial,blankTrialRow,sealTrial,reconcileTrial,fingerprint,
  type TrialRow,type Observation} from './event-trial';
 import '../../styles/g18-event-trial.css';
+import {G24_DRAFT_KEY,readPilotDraft,serializePilotDraft,clearPilotDraft,pilotVisible,pilotSummary,nextPilotScenario,pilotCard,pilotCue,
+ type PilotDraftCandidate,type PilotFilter} from './g24-pilot';
+import '../../styles/g24-operator.css';
 
 const labels:Record<Observation,string>={open:'OFFEN',reported:'Als beobachtet notiert',defect:'Problem festgestellt'};
 function download(packet:unknown){
@@ -16,11 +19,37 @@ export function EventTrialReadiness(){
  const [notes,setNotes]=useState('');
  const [status,setStatus]=useState('');
  const [busy,setBusy]=useState(false);
+ const [gameFilter,setGameFilter]=useState('all'),[teamFilter,setTeamFilter]=useState(0);
+ const [pilotFilter,setPilotFilter]=useState<PilotFilter>('all');
+ const [localCandidate,setLocalCandidate]=useState<PilotDraftCandidate|null>(null);
+ const [localWarning,setLocalWarning]=useState(''),[dirty,setDirty]=useState(false);
+ const draftGeneration=useRef(0);
+ useEffect(()=>{
+  let alive=true;
+  void readPilotDraft(window.sessionStorage).then(candidate=>{
+   if(alive)setLocalCandidate(candidate);
+  }).catch(e=>{if(alive)setLocalWarning('Vorhandene lokale Daten nicht übernommen: '+(e instanceof Error?e.message:'Speicherfehler'));});
+  return ()=>{alive=false;draftGeneration.current++;};
+ },[]);
+ useEffect(()=>{
+  if(!dirty)return;
+  const generation=++draftGeneration.current;
+  void serializePilotDraft(records,notes).then(json=>{
+   if(generation!==draftGeneration.current)return;
+   window.sessionStorage.setItem(G24_DRAFT_KEY,json);
+   setLocalWarning('');
+  }).catch(e=>{if(generation===draftGeneration.current)
+   setLocalWarning('Lokaler Zwischenstand konnte nicht gesichert werden: '+(e instanceof Error?e.message:'Speicherzugriff fehlt'));});
+  return ()=>{draftGeneration.current++;};
+ },[records,notes,dirty]);
+ const pilotCounts=pilotSummary(records);
+ const visibleScenarios=pilotVisible(records,{filter:pilotFilter,game:gameFilter,teams:teamFilter});
+ const cue=pilotCue(selected as typeof SCENARIOS[number]['id']);
  const report=canonicalTrial(records,notes),active=records[selected]??blankTrialRow(selected);
  const scenario=SCENARIOS.find(s=>s.id===selected)!;
  function change(patch:Partial<TrialRow>){
   setRecords(previous=>({...previous,[selected]:{...(previous[selected]??blankTrialRow(selected)),...patch}}));
-  setStatus('');
+  setStatus('');setDirty(true);
  }
  async function attach(file:File|undefined){
   if(!file)return;
@@ -44,7 +73,7 @@ export function EventTrialReadiness(){
   try{
    const restored=await reconcileTrial(JSON.parse(await file.text()) as unknown);
    setRecords(Object.fromEntries(restored.rows.map(x=>[x.scenarioId,x])));
-   setNotes(restored.notes);
+   setNotes(restored.notes);setDirty(true);setLocalCandidate(null);
    setStatus('15 Szenarien und G17-Quellenanker konsistent. Keine externe Unterschrift oder Abnahme.');
   }catch(e){setStatus('Prüfpaket ABGELEHNT: '+(e instanceof Error?e.message:'ungültig'));}
   finally{setBusy(false);}
@@ -57,6 +86,54 @@ export function EventTrialReadiness(){
     fest. Synthetische CI-Läufe und lokal notierte Beobachtungen ersetzen keine unabhängige Abnahme.</p></div>
    <strong className="g18-nogo">NO-GO · KEINE FREIGABE</strong>
   </header>
+  <section className="g24-pilot" aria-label="G24 Spielabend-Operator">
+   <header><div><p className="eyebrow">G24 · SPIELABEND / ABLAUFKARTE</p>
+    <h3>Probeabend schneller durchführen</h3>
+    <p>Spielmodus und Teamzahl auswählen, den nächsten offenen Fall finden und eine Laufkarte drucken.
+     Änderungen werden nur in dieser Browser-Registerkarte gesichert; kein Server und keine Abnahme.</p>
+    </div><strong>NO-GO · EIGENE BEOBACHTUNGEN</strong></header>
+   <div className="g24-counts" aria-label="Status der 15 Proben">
+    <span><b>{pilotCounts.open}</b> ungeöffnet</span><span><b>{pilotCounts.partial}</b> teilweise notiert</span>
+    <span><b>{pilotCounts.defect}</b> Problem</span><span><b>{pilotCounts.reported}</b> selbst notiert vollständig</span>
+   </div>
+   <div className="g24-filters">
+    <label>Spieltyp<select aria-label="G24 Spieltyp" value={gameFilter} onChange={e=>setGameFilter(e.target.value)}>
+      <option value="all">Alle fünf Spiele</option>{GAME_MODES.map(m=><option key={m.id} value={m.id}>{m.label}</option>)}
+     </select></label>
+    <label>Teams<select aria-label="G24 Teamzahl" value={teamFilter} onChange={e=>setTeamFilter(Number(e.target.value))}>
+      <option value={0}>3–5 Teams</option>{TEAM_COUNTS.map(n=><option key={n} value={n}>{n} Teams</option>)}
+     </select></label>
+    <label>Bearbeitungsstand<select aria-label="G24 Statusfilter" value={pilotFilter} onChange={e=>setPilotFilter(e.target.value as PilotFilter)}>
+      <option value="all">Alle</option><option value="attention">Noch offen oder Problem</option>
+      <option value="defect">Nur Probleme</option><option value="reported">Alle sieben notiert</option>
+     </select></label>
+    <button type="button" onClick={()=>{
+       const id=nextPilotScenario(selected,records);
+       if(id){setSelected(id);setGameFilter('all');setTeamFilter(0);setPilotFilter('all');setStatus('Nächster noch nicht vollständig dokumentierter Fall geöffnet.');}
+       else setStatus('Alle 15 Fälle sind ausschließlich als selbst beobachtet notiert. Externe Abnahme weiterhin offen.');
+     }}>Nächsten offenen Fall öffnen</button>
+   </div>
+   {localCandidate&&<div className="g24-recovery" role="group" aria-label="G24 lokalen Entwurf wiederherstellen">
+    <p>Lokaler Zwischenstand dieser Registerkarte gefunden · {new Date(localCandidate.savedAt).toLocaleString('de-DE')}.
+     Die 15 Checklisten sind nur lokale, nicht unabhängig bestätigte Angaben.</p>
+    <button type="button" onClick={()=>{
+      setRecords(Object.fromEntries(localCandidate.report.rows.map(x=>[x.scenarioId,x])));
+      setNotes(localCandidate.report.notes);setLocalCandidate(null);setDirty(true);
+      setStatus('Lokalen Entwurf nach SHA-256-Abgleich ausdrücklich übernommen; keine Freigabe.');
+     }}>Lokalen Entwurf wiederherstellen</button>
+    <button type="button" onClick={()=>{setLocalCandidate(null);setStatus('Vorhandener Zwischenstand nicht übernommen und im Speicher unverändert belassen.');}}>
+     Nicht übernehmen</button>
+   </div>}
+   <p className="g24-storage">Browser-Session-Zwischenstand: {dirty?'automatisch nach Änderungen gesichert':'noch unverändert'}.
+    Für einen dauerhaften, browserübergreifenden Nachweis immer das G18-JSON gesondert exportieren.
+    <button type="button" onClick={()=>{
+      draftGeneration.current++;
+      try{clearPilotDraft(window.sessionStorage);setDirty(false);setLocalCandidate(null);setLocalWarning('');
+        setStatus('Nur G24-Session-Zwischenstand verworfen; offene Checkliste und originale G18-Dateien unverändert.');}
+      catch{setLocalWarning('Lokaler Speicher verweigert das Entfernen; Daten unverändert belassen.');}
+    }}>Nur lokalen Zwischenstand verwerfen</button></p>
+   {localWarning&&<p className="g24-warning" role="alert">{localWarning}</p>}
+  </section>
   <div className="g18-metrics" aria-live="polite">
    <strong>15 Szenarien</strong><span>{report.summary.reported} beobachtet notierte Prüfschritte</span>
    <span>{report.summary.defects} Probleme</span><span>{report.summary.open} offene Prüfschritte</span>
@@ -68,7 +145,7 @@ export function EventTrialReadiness(){
   </nav>
   <div className="g18-scenario-layout">
    <div className="g18-scenarios" role="group" aria-label="15 Probeszenarien">
-    {SCENARIOS.map(s=>{
+    {visibleScenarios.map(s=>{
      const row=records[s.id]??blankTrialRow(s.id);
      const defects=CHECKS.filter(c=>row.checks[c.id]==='defect').length;
      const observed=CHECKS.filter(c=>row.checks[c.id]==='reported').length;
@@ -81,6 +158,18 @@ export function EventTrialReadiness(){
    </div>
    <div className="g18-active" role="group" aria-label="Ausgewähltes Probeszenario">
     <h3>{scenario.label} · {scenario.teams} Teams</h3>
+    <section className="g24-cue" aria-label="G24 Laufkarte für gewählten Fall">
+     <h4>Operativer Ablauf · {cue.teams} Teams</h4>
+     <p><b>Start</b> {cue.opening}</p><p><b>Wertung</b> {cue.scoring}</p><p><b>Ausfall</b> {cue.failure}</p>
+     <div><a href="#/setup">Testspiel starten</a><a href="#/host">Spielleitung</a>
+      <a href="#/technik">Beamer / Offline</a><a href="#/einstellungen">Sicherung</a></div>
+     <button type="button" onClick={()=>{
+      const name='ligoquiz-g24-laufkarte-'+scenario.id+'.txt';
+      const url=URL.createObjectURL(new Blob([pilotCard(selected as typeof SCENARIOS[number]['id'],active)],{type:'text/plain;charset=utf-8'}));
+      const a=document.createElement('a');try{a.href=url;a.download=name;a.click();}
+      finally{window.setTimeout(()=>URL.revokeObjectURL(url),1000);}
+     }}>Laufkarte als Text speichern</button>
+    </section>
     <p>Jeden Prüfschritt real ausführen. „Beobachtet“ ist eine unbestätigte Notiz, **keine Freigabe**.</p>
     {CHECKS.map((item,i)=><div className="g18-check" key={item.id}>
      <div><strong>{i+1}. {item.title}</strong><p>{item.instruction}</p></div>
@@ -125,7 +214,7 @@ export function EventTrialReadiness(){
   <section className="g18-export" aria-label="Prüfnotizen exportieren und abgleichen">
    <h3>Prüfnotizen übernehmen / abgleichen</h3>
    <label>Allgemeine Notizen (keine erfundene Signatur)
-    <textarea rows={2} maxLength={1200} value={notes} onChange={e=>{setNotes(e.target.value);setStatus('');}}/>
+    <textarea rows={2} maxLength={1200} value={notes} onChange={e=>{setNotes(e.target.value);setStatus('');setDirty(true);}}/>
    </label>
    <div className="g18-actions">
     <button type="button" disabled={busy} onClick={()=>void save()}>G18-Protokoll als JSON exportieren</button>
