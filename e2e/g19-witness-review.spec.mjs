@@ -14,7 +14,7 @@ async function syntheticWitness(checksum){
   note:'SYNTHETIC BROWSER TEST — NOT HUMAN OR PHYSICAL EVIDENCE',attachment:null
  };
  const sig=Buffer.from(await webcrypto.subtle.sign({name:'Ed25519'},keys.privateKey,
-  new TextEncoder().encode(JSON.stringify(statement))));
+  Buffer.from(JSON.stringify(statement),'utf8')));
  return {publicKey:raw.toString('base64'),
   envelope:{format:'ligoquiz-g19-detached-ed25519-v1',statement,signature:sig.toString('base64')}};
 }
@@ -56,7 +56,7 @@ test('G19 keyboard and 200 percent mobile witness preparation cannot claim trust
  await mkdir(evidence,{recursive:true});
  await page.setViewportSize({width:640,height:800});
  await page.goto('/#/technik');
- await page.evaluate(()=>{document.documentElement.style.zoom='2';});
+ await page.evaluate(()=>{globalThis.document.documentElement.style.zoom='2';});
  const panel=page.getByRole('region',{name:'G19 Externe Zeugennachweise prüfen'});
  const control=panel.getByLabel('3. Separat bezogenen Ed25519-öffentlichen Schlüssel (Base64) eingeben');
  await control.focus();await expect(control).toBeFocused();
