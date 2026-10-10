@@ -1,3 +1,4 @@
+import {loadSafelyPausedLogikleiter} from './logikleiter-load';
 import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {HostModerationGuide} from './HostModerationGuide';
@@ -38,11 +39,7 @@ export function LogikleiterHost(){
   const controller=new HostSessionController(db,identity.eventId,identity.hostId,
    ()=>{void publisher.refresh();});
   controllerRef.current=controller;
-  void controller.load().then(async saved=>{
-   if(!saved.logikleiter||saved.hostId!==identity.hostId)
-    throw Error('Keine Logikleiter-Sitzung für diese Spielleitung');
-   if(saved.lifecycle==='active'&&!saved.logikleiter.paused)
-    saved=await controller.submit({type:'LL_ACTION',action:{type:'PAUSE'}},saved,crypto.randomUUID());
+  void loadSafelyPausedLogikleiter(controller).then(saved=>{
    if(!disposed){setEvent(saved);setReady(true);}
   }).catch(e=>{if(!disposed)setError(errorText(e));});
   const interval=window.setInterval(()=>{void publisher.refresh();},1600);
