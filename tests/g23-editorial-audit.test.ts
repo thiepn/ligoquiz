@@ -39,8 +39,9 @@ describe('G23 source-rights and content-only editor checks',()=>{
   expect(scan.originalHumanApprovalConfirmed).toBe(false);
  });
  it('detects duplicate normalized prompts and near-identical rephrasings but excludes independent genres',()=>{
-  const one=make('g23-one'),same=make('g23-two','Welches chemische Element hat das Symbol Au?');
-  const similar=make('g23-three','Welches chemische Element hat das Symbol Au !');
+  const one=make('g23-one','Welches chemische Element hat im Periodensystem das Symbol Au und die Ordnungszahl 79?'),
+   same=make('g23-two','Welches chemische Element hat im Periodensystem das Symbol Au und die Ordnungszahl 79?');
+  const similar=make('g23-three','Welches chemische Element hat im Periodensystem das Symbol Au und die Ordnungszahl 79 !');
   const scan=auditLibrary([one,same,similar]);
   expect(scan.issues.filter(x=>x.code==='EXACT_DUPLICATE').length).toBe(1);
   expect(scan.issues.filter(x=>x.code==='POSSIBLE_DUPLICATE').length).toBeGreaterThan(0);
