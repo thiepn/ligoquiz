@@ -25,3 +25,9 @@
  [data-host-game] :is(.ud-entry,.rq-teamfields){grid-template-columns:1fr}
  [data-host-game] :is(.g3-tech-primary,button){white-space:normal}
 }
+
+/* Existing host button rules vary per game. Keep the G14 focus action legible in all five. */
+[data-host-game] .g14-guide button.g14-focus{
+ background:#233039!important;color:#fff!important;border-color:#233039!important;
+}
+[data-host-game] .g14-guide button.g14-focus .g14-shortcut{color:#f6dea0!important}

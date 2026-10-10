@@ -55,6 +55,34 @@ for(const mode of modes){
   expect(stageSize.contentOverflowX,'stage content horizontal overflow').toBe(false);
   expect(stageSize.contentOverflowY,'stage content vertical overflow').toBe(false);
   await stage.screenshot({path:`${evidence}/${mode.key}-projector-1280x720.png`,fullPage:true});
+  // A solution may appear ONLY after the moderator invokes its existing explicit reveal command.
+  if(mode.key==='rundenquiz'){
+   await host.getByRole('button',{name:'Antwortphase schließen'}).click();
+   await host.getByRole('button',{name:'Lösung auf Beamer zeigen'}).click();
+  }else if(mode.key==='quiztafel'){
+   await host.getByRole('button',{name:'Erstantwort richtig'}).click();
+   await host.getByRole('button',{name:'Lösung ausdrücklich zeigen'}).click();
+  }else if(mode.key==='verbindungen'){
+   await host.getByRole('button',{name:'Richtige Antwort'}).click();
+   await host.getByRole('button',{name:'Lösung veröffentlichen'}).click();
+  }else if(mode.key==='logikleiter'){
+   await host.getByRole('button',{name:'Alle Antworten schließen'}).click();
+   await host.getByRole('button',{name:'Lösung und Begründung veröffentlichen'}).click();
+  }else{
+   await host.getByRole('button',{name:'Alle Antworten schließen'}).click();
+   for(let i=0;i<3;i++){
+    const team=host.locator('.ud-team').nth(i);
+    if(i===0)await team.getByRole('textbox',{name:'Antwort 1'}).fill('Snacks');
+    await team.getByRole('button',{name:'Antwort erfassen'}).click();
+   }
+   await host.getByRole('button',{name:'Kategorien und Rangfolge veröffentlichen'}).click();
+  }
+  await expect(stage.locator('.stage-center')).toContainText(mode.privateText);
+  const revealedSize=await metrics(stage);
+  expect(revealedSize.overflowX,'revealed page horizontal overflow').toBe(false);
+  expect(revealedSize.overflowY,'revealed page vertical overflow').toBe(false);
+  expect(revealedSize.contentOverflowY,'revealed answer must fit in 720px without inner scrolling').toBe(false);
+  await stage.screenshot({path:`${evidence}/${mode.key}-revealed-1280x720.png`,fullPage:true});
   await page.setViewportSize({width:640,height:800});
   await page.evaluate(()=>{globalThis.document.documentElement.style.zoom='2';});
   await expect(host.getByRole('region',{name:'Moderationsübersicht'})).toBeVisible();
@@ -66,6 +94,7 @@ for(const mode of modes){
   expect(hostSize.fullWidth,'host causes horizontal page overflow under 200% zoom').toBeLessThanOrEqual(hostSize.viewport+3);
   const focus=host.getByRole('button',{name:/Nächste Aktion fokussieren/});
   await expect(focus).toBeVisible();
+  await expect(focus).toHaveCSS('background-color','rgb(35, 48, 57)');
   await focus.focus();
   await expect(focus).toBeFocused();
   await page.screenshot({path:`${evidence}/${mode.key}-host-200pct.png`,fullPage:true});
