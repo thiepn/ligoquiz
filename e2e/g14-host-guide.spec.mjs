@@ -33,7 +33,7 @@ for(const game of games){
   await expect(panel).not.toContainText('Wertung abgeschlossen');
   // At 200% CSS scale, panel controls remain reachable in a small moderator viewport.
   await page.setViewportSize({width:640,height:800});
-  await page.evaluate(()=>{document.documentElement.style.zoom='2';});
+  await page.evaluate(()=>{globalThis.document.documentElement.style.zoom='2';});
   await expect(panel).toBeVisible();
   await expect(host.getByRole('button',{name:/Nächste Aktion fokussieren/})).toBeVisible();
  });
