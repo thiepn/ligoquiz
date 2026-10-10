@@ -1,0 +1,27 @@
+.g22-review{margin:24px 0;padding:clamp(14px,2.2vw,24px);min-width:0;border:1px solid #b6c6c1;border-top:4px solid #4d716c;background:#f7faf8;color:#233d38}
+.g22-review header{display:flex;gap:18px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+.g22-review header>div{max-width:70ch}
+.g22-review h2{font-size:clamp(22px,2.6vw,28px);margin:4px 0}
+.g22-review h3{font-size:18px;margin:8px 0}
+.g22-review p{font-size:12px;line-height:1.65}
+.g22-review header>strong{font-size:11px;padding:11px;border:1px solid #bd6650;background:#fff0e9;color:#893b2b}
+.g22-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
+.g22-fields label,.g22-export label{display:grid;min-width:0;gap:9px;padding:13px;background:white;border:1px solid #c8d6d0;font-size:12px;font-weight:700}
+.g22-fields :is(input,textarea),.g22-export textarea{width:100%;min-width:0;max-width:100%;min-height:44px;border:1px solid #98aaa2;color:#203b36;background:white;padding:9px;font:inherit;font-size:13px}
+.g22-fields small{font-size:11px;font-weight:400;color:#516b60;overflow-wrap:anywhere}
+.g22-action{min-height:44px;padding:11px 15px;border:1px solid #315b55;background:#315b55;color:#fff;font-size:12px;font-weight:700;cursor:pointer}
+.g22-action:disabled{background:#d4ded9;color:#334d42;border-color:#d4ded9;cursor:not-allowed}
+.g22-ledger,.g22-gates,.g22-export{border-top:1px solid #c6d4cf;margin-top:20px;padding-top:14px}
+.g22-ledger ol{display:grid;gap:8px;list-style:none;padding:0}
+.g22-ledger li{display:grid;gap:4px;padding:12px;border:1px solid #c9d8d3;background:white;overflow-wrap:anywhere;font-size:12px}
+.g22-ledger li small{color:#6e583a}
+.g22-gates [role=table]{border:1px solid #cedbd5;background:white}
+.g22-gates [role=row]{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:12px;padding:10px;align-items:center;border-bottom:1px solid #e1e9e5}
+.g22-gates [role=row]:last-child{border-bottom:0}.g22-gates [role=cell]{font-size:12px;overflow-wrap:anywhere}
+.g22-gates [role=cell] p{margin:3px 0}.g22-gates [role=cell]:last-child{color:#873c29;text-align:right}
+.g22-error,.g22-notice{padding:13px;background:#eaf4ef;border-left:4px solid #547f72}
+.g22-error{background:#fff0e9;border-color:#bb614a}.g22-export{display:grid;gap:13px}
+.g22-export label{max-width:72ch}.g22-export .g22-action{justify-self:start}
+.g22-denied{background:#fff0e9;border-left:4px solid #bd6146;padding:14px;font-weight:750}
+.g22-review :is(button,input,textarea):focus-visible{outline:3px solid #aa843d;outline-offset:3px}
+@media(max-width:720px){.g22-fields{grid-template-columns:1fr}.g22-gates [role=row]{grid-template-columns:1fr}.g22-gates [role=cell]:last-child{text-align:left}}
