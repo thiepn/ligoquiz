@@ -1,0 +1,18 @@
+# G19 — Independently verifiable witness-contract intake, untrusted-root containment
+
+## Qualified base
+G18 stacked draft PR #16 at `42b219563f8391d3b54947e939fde7592d07e582`. Successful exact-head Verify `38061968146` and Browser/Offline `38061968192`, complete logs. Four ZIP archives `11673911087`, `11673561555`, `11673976302`, `11673961251` independently SHA256+CRC verified; contained 7 build files, 1 evidence manifest, 2 G18 screenshots and 15 G15 screenshots. G12–G18 draft ancestry preserved.
+
+## Product-integrated G19 evidence preparation
+- In **Technikcheck**, operators can import a self-consistent G18 packet, a separately furnished detached Ed25519 witness statement, independently obtained **public** raw Ed25519 key (Base64), and optional actual original evidence file (local-only, 12 MiB maximum). No local private key creation, upload or saving, trust root enrollment, automated approval or release.
+- G19's witness statement is strictly schema validated and cryptographically verified over the exact canonical statement JSON. SHA256 fingerprint of the supplied raw public key must match the signed statement. G18 packet must pass the existing strict canonical 15-row, all-denial-flags checks and match the statement's G18 SHA256. Optional original file bytes must match signed length and digest.
+- Verifiable chronology per witness+scenario+gate: unique digest, sequence starts 1, each next sequence advances 1 with exact previous digest, nondecreasing timestamps, consistent G18 source. Key rotation is a signature by the outgoing key naming the next fingerprint, next statement must verify with that key, and signed revocation forbids further messages. Missing predecessor, rewrites, replay, conflicting keys/roots and revived revoked chains fail closed. In-memory only; changing the base G18 packet resets previously imported chain.
+- **Critical trust distinction:** cryptographic validity with a user-supplied public key is **not** independent verification of the witness's identity/authority. There is no independently governed trust-root registration or owner authorization connected to this UI. Every report remains NO_GO, with exactly zero externally trusted witnesses and six OPEN release gates. Device, accessibility, venue, content rights, recovery and owner approvals require genuine external human processes. Synthetic disposable keys appear only within the adversarial unit and browser tests.
+- Exact-head unit tests check legitimate synthetic detached signatures and original bytes, tampering, wrong keys, wrong G18, collision, monotonicity, rotation, signed revocation and immutable NO_GO.
+- Chromium tests verify positive signatures **without** authority, forged message and replay rejection, real UI 1280×720 and simulated 200%-zoom plus keyboard focus. Inherited G12–G18 browser, five games × three/four/five team rehearsals, G15 projector and offline tests unchanged. G19 adds only synthetic non-golden screenshot artifacts.
+
+## Not release approval
+No signature/key/witness is fabricated to count as a real review. Physical hardware, venue/projector reading distance, owner-controlled release, independent signer custody, editorial rights and device accessibility remain OPEN. Do not merge, deploy, migrate, edit screenshot goldens or override safety gates.
+
+## G20 — Independent Custody Root & Recovery Witness Handoff
+**Status: NOT STARTED.** Introduce real owner-approved external trust-root handoff contracts and conflicts/compromise containment, out-of-band verified signer rotation/revocation, external receipts and independent recovery witness readiness with explicit NO_GO until actual authorized evidence arrives.
