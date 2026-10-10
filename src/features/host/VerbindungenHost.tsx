@@ -1,3 +1,4 @@
+import {HostModerationGuide} from './HostModerationGuide';
 import {useEffect,useRef,useState} from 'react';
 import {EventRepository} from '../../infrastructure/db/event-repository';
 import {HostSessionController} from '../../application/host-controller/host-session';
@@ -101,7 +102,7 @@ export function VerbindungenHost(){
  const sectionName=task?.puzzle.kind==='clues'?'Vier Hinweise':
    task?.puzzle.kind==='sequence'?'Folge ergänzen':'Verbindungswand';
  const activeTeam=teams.find(t=>t.id===task?.assignment.teamId);
- return <section className="vb-host" aria-label="Verbindungen Spielleitung">
+ return <section className="vb-host" data-host-game="verbindungen" aria-label="Verbindungen Spielleitung">
   <header className="vb-host-head"><div><span className="eyebrow">G7 · SPIELMODUS IM TEST</span>
    <h2>Verbindungen</h2><p>Gemeinsam Zusammenhänge erkennen – mit fairen Teamaufgaben und einer Verbindungswand.</p></div>
    <span className="g3-tech-tag">PROBEINHALTE</span></header>
@@ -110,22 +111,25 @@ export function VerbindungenHost(){
    <span>{viewers} Beamer bestätigt</span><span>Revision {event?.revision??0}</span>
    <a href="#/spielen">Zur Übersicht</a></div>
   {!vb?<p role="status">Sitzung wird geprüft …</p>:<>
-   <div className="vb-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span>
+   <HostModerationGuide game="verbindungen" phase={vb.phase} paused={vb.paused}
+      recovery={Boolean(event?.recoveryRequired)} completed={vb.phase==='complete'?vb.assignments.length:vb.index} total={vb.assignments.length}
+      viewers={viewers} ready={ready} busy={busy}/>
+    <div className="vb-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span>
     <strong>{totals[t.id]??0}</strong></div>)}</div>
    <div className="vb-active-row"><div><small>TEIL / AUFGABE</small><strong>{task?sectionName:'Endstand'} · {Math.min(vb.index+1,vb.assignments.length)}/{vb.assignments.length}</strong></div>
     <div><small>AKTIVES TEAM</small><strong>{activeTeam?.name??'Alle Teams'}</strong></div>
     <div><small>SPIELSTATUS</small><strong>{vb.paused?'PAUSIERT':vb.phase.toUpperCase()}</strong></div></div>
    {event?.recoveryRequired&&<div className="rq-recovery" role="alert"><strong>Wiederhergestellten Spielstand prüfen</strong>
     <p>Kontrolliere Wertungen, Hinweise und Gruppen. Die Projektion bleibt bis zur Bestätigung ausgeblendet.</p>
-    <button disabled={!ready||busy} className="g3-tech-primary" onClick={()=>void reviewRecovery()}>Prüfung bestätigen — pausiert bleiben</button>
+    <button disabled={!ready||busy} data-host-next className="g3-tech-primary" onClick={()=>void reviewRecovery()}>Prüfung bestätigen — pausiert bleiben</button>
    </div>}
    {vb.phase!=='complete'&&vb.phase!=='setup'&&<div className="vb-pause">
-    {vb.paused?<button disabled={!ready||busy||event?.recoveryRequired} onClick={()=>void send({type:'RESUME'})}>Spiel ausdrücklich fortsetzen</button>
+    {vb.paused?<button data-host-resume disabled={!ready||busy||event?.recoveryRequired} onClick={()=>void send({type:'RESUME'})}>Spiel ausdrücklich fortsetzen</button>
       :<button disabled={disabled} onClick={()=>void send({type:'PAUSE'})}>Pausieren</button>}
    </div>}
    {vb.phase==='setup'&&<div className="vb-card"><h3>Verbindungen vorbereiten</h3>
     <p>{NEEDS[vb.profile].clues}× Vier Hinweise und {NEEDS[vb.profile].sequences}× Folge ergänzen pro Team; anschließend eine gemeinsame Wand.</p>
-    <button className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void send({type:'START'})}>Aufgabenreihenfolge bestätigen</button></div>}
+    <button data-host-next className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void send({type:'START'})}>Aufgabenreihenfolge bestätigen</button></div>}
    {task&&vb.phase!=='setup'&&vb.phase!=='complete'&&<div className="vb-card">
     <div className="eyebrow">{sectionName} · {task.assignment.teamId?activeTeam?.name:'Alle Teams'}</div>
     {task.puzzle.kind==='clues'&&<>
@@ -179,41 +183,41 @@ export function VerbindungenHost(){
      <button disabled={disabled} onClick={()=>{setClock(false);setSeconds(timerLimit);}}>Zurücksetzen</button>
     </div>}
     <div className="vb-actions">
-     {vb.phase==='ready'&&<button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'PUBLISH'})}>Aufgabe veröffentlichen</button>}
+     {vb.phase==='ready'&&<button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'PUBLISH'})}>Aufgabe veröffentlichen</button>}
      {vb.phase==='clue-open'&&<>
       {!vb.judgement&&vb.clueIndex<4&&<button disabled={disabled} onClick={()=>void send({type:'NEXT_CLUE'})}>Nächster Hinweis</button>}
-      {!vb.judgement&&<><button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'correct'})}>Richtige Antwort</button>
+      {!vb.judgement&&<><button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'correct'})}>Richtige Antwort</button>
        <button disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'wrong'})}>Falsche Antwort</button>
        <button disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'none'})}>Keine Antwort</button></>}
-      {vb.judgement&&<button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'REVEAL'})}>Lösung veröffentlichen</button>}
+      {vb.judgement&&<button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'REVEAL'})}>Lösung veröffentlichen</button>}
      </>}
      {vb.phase==='sequence-open'&&<>
-      {!vb.judgement&&<><button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'correct'})}>Richtig (+20)</button>
+      {!vb.judgement&&<><button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'correct'})}>Richtig (+20)</button>
        <button disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'wrong'})}>Falsch (0)</button>
        <button disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'none'})}>Keine Antwort (0)</button></>}
-      {vb.judgement&&<button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'REVEAL'})}>Lösung veröffentlichen</button>}
+      {vb.judgement&&<button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'REVEAL'})}>Lösung veröffentlichen</button>}
      </>}
-     {vb.phase==='wall-open'&&<button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'CLOSE_WALL'})}>Alle Antworten schließen</button>}
+     {vb.phase==='wall-open'&&<button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'CLOSE_WALL'})}>Alle Antworten schließen</button>}
      {(vb.phase==='wall-closed'||vb.phase==='wall-reveal')&&vb.revealedGroups<4&&
-       <button className="g3-tech-primary" disabled={disabled||!canRevealNext} onClick={()=>void send({type:'REVEAL_WALL_GROUP'})}>
+       <button data-host-next className="g3-tech-primary" disabled={disabled||!canRevealNext} onClick={()=>void send({type:'REVEAL_WALL_GROUP'})}>
         Gruppe {vb.revealedGroups+1} bewusst auflösen
        </button>}
      {vb.phase==='revealed'&&<><p>Antwort: {task.puzzle.kind==='clues'?task.puzzle.target:task.puzzle.kind==='sequence'?task.puzzle.answer:''}</p>
       <p>Punktevorschau: {vb.judgement==='correct'?(task.puzzle.kind==='clues'?(5-vb.clueIndex)*10:20):0} Punkte.</p>
-      <button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'CONFIRM'})}>Wertung verbindlich bestätigen</button></>}
+      <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'CONFIRM'})}>Wertung verbindlich bestätigen</button></>}
      {vb.phase==='wall-reveal'&&vb.revealedGroups===4&&<>
       <div className="vb-preview">{teams.map(t=>{
        const marks=vb.wallMarks[t.id]??{};
        const pts=wall?.groups.reduce((sum,g)=>sum+(marks[g.id]?.group?5+(marks[g.id]?.link?5:0):0),0)??0;
        return <span key={t.id}>{t.name}: {pts} / 40</span>;
       })}</div>
-      <button className="g3-tech-primary" disabled={disabled||!canConfirmWall}
+      <button data-host-next className="g3-tech-primary" disabled={disabled||!canConfirmWall}
        onClick={()=>void send({type:'CONFIRM'})}>Alle Gruppenwertungen bestätigen</button>
       {!canConfirmWall&&<small>Für jedes Team und jede Gruppe eine Wertung erfassen.</small>}
      </>}
      {vb.phase==='graded'&&<>
       {!vb.awards.some(a=>a.puzzleId===task.puzzle.id&&a.annulled)&&<button disabled={disabled} onClick={()=>void send({type:'CORRECT'})}>Letzte Wertung korrigieren</button>}
-      <button className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'NEXT'})}>
+      <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'NEXT'})}>
         {vb.index===vb.assignments.length-1?'Verbindungen abschließen':'Nächste Aufgabe'}
       </button>
      </>}

@@ -1,3 +1,4 @@
+import {HostModerationGuide} from './HostModerationGuide';
 import { useEffect, useRef, useState } from 'react';
 import { createEvent } from '../../domain/event/transition';
 import { EventRepository } from '../../infrastructure/db/event-repository';
@@ -204,7 +205,7 @@ export function RundenquizHost(){
  const disabled=busy||!sourceReady||!event||event.recoveryRequired;
  const title=(round:string)=>({wissen:'Wissen',hinweise:'Hinweise',schaetzen:'Schätzen',finale:'Finale'} as Record<string,string>)[round]??round;
 
- return <section className="rq-host" aria-label="Rundenquiz Spielleitung">
+ return <section className="rq-host" data-host-game="rundenquiz" aria-label="Rundenquiz Spielleitung">
   <div className="rq-head"><div><div className="eyebrow">G4 · SPIELMODUS IM TEST</div>
    <h2>Rundenquiz</h2><p>Quizabend mit Teams, vier Runden und separater Beameransicht.</p></div>
    <span className="g3-tech-tag">PROBEINHALTE</span>
@@ -220,7 +221,7 @@ export function RundenquizHost(){
    <div className="rq-teamfields">{names.slice(0,count).map((name,i)=><label key={i}>
     Team {i+1} <input value={name} maxLength={40} onChange={e=>setNames(prev=>prev.map((v,j)=>i===j?e.target.value:v))}/>
    </label>)}</div>
-   <button className="g3-tech-primary" disabled={busy} onClick={()=>void prepare()}>Quizabend vorbereiten</button>
+   <button data-host-next className="g3-tech-primary" disabled={busy} onClick={()=>void prepare()}>Quizabend vorbereiten</button>
    <p className="g3-tech-footnote">G4 verwendet vorläufige Übungsfragen; diese sind nicht als redaktionell freigegebener Fragenkatalog gekennzeichnet.</p>
   </div>:<div className="rq-live">
    <div className="rq-utility">
@@ -228,6 +229,9 @@ export function RundenquizHost(){
     <a href={stageUrl(identity.eventId)} target="_blank" rel="noopener noreferrer" className="g3-tech-link">Beamer öffnen ↗</a>
     <button onClick={newEvent}>Neuer Quizabend</button>
    </div>
+   {rq&&<HostModerationGuide game="rundenquiz" phase={rq.phase} paused={isPaused}
+     recovery={Boolean(event?.recoveryRequired)} completed={rq.phase==='complete'?rq.questions.length:rq.index}
+     total={rq.questions.length} viewers={viewers} ready={sourceReady} busy={busy}/>}
    {rq&&<div className="rq-status">
     <strong>{rq.phase==='complete'?'Quizabend beendet':q?title(q.round)+' · Aufgabe '+(rq.index+1)+'/'+rq.questions.length:'Vorbereitung'}</strong>
     <span>{isPaused?'Pausiert':rq.phase} · {rq.profile}</span>
@@ -236,7 +240,7 @@ export function RundenquizHost(){
    {event?.recoveryRequired && <div className="rq-recovery" role="alert">
       <strong>Wiederherstellung prüfen</strong>
       <p>Die Sitzung wurde aus einem gesicherten Stand wiederhergestellt. Die Beameransicht bleibt ausgeblendet. Kontrolliere Teamnamen, Punktestand und aktuelle Frage, bevor du die Wiederherstellung bestätigst.</p>
-      <button className="g3-tech-primary" disabled={busy||!sourceReady} onClick={()=>void confirmRecovery()}>
+      <button data-host-next className="g3-tech-primary" disabled={busy||!sourceReady} onClick={()=>void confirmRecovery()}>
         Spielstand geprüft — weiterhin pausiert übernehmen
       </button>
    </div>}
@@ -265,10 +269,10 @@ export function RundenquizHost(){
       }}>+15 s</button>
       <small>Nach Neuladen pausiert. Keine automatische Enthüllung.</small>
      </div>}
-    {isPaused ? <button className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'RESUME'})}>Spiel fortsetzen</button>
+    {isPaused ? <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'RESUME'})}>Spiel fortsetzen</button>
     :<div className="rq-actions">
-      {rq.phase==='setup' && <button className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'START'})}>Teams bestätigen</button>}
-      {rq.phase==='ready' && <button className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'PUBLISH'})}>Frage auf Beamer zeigen</button>}
+      {rq.phase==='setup' && <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'START'})}>Teams bestätigen</button>}
+      {rq.phase==='ready' && <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'PUBLISH'})}>Frage auf Beamer zeigen</button>}
       {rq.phase==='open' && <>
         {q?.round==='hinweise'&&<>
          <div className="rq-teamfields">{rq.teams.map(t=><button key={t.id} disabled={disabled||Boolean(rq.entries[t.id])}
@@ -282,9 +286,9 @@ export function RundenquizHost(){
           <button disabled={disabled} onClick={()=>void action({type:'ESTIMATE',teamId:t.id,value:null})}>Keine Antwort</button>
           <span>{Object.hasOwn(rq.entries[t.id]??{},'estimate') ? ' Erfasst' : ' Offen'}</span>
          </div>)}</div>}
-        <button className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'CLOSE'})}>Antwortphase schließen</button>
+        <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'CLOSE'})}>Antwortphase schließen</button>
       </>}
-      {rq.phase==='closed' && <button className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'REVEAL'})}>Lösung auf Beamer zeigen</button>}
+      {rq.phase==='closed' && <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'REVEAL'})}>Lösung auf Beamer zeigen</button>}
       {rq.phase==='revealed' && <>
         {q?.round!=='schaetzen'&&<div className="rq-teamfields">{rq.teams.map(t=><div key={t.id} className="rq-judge">
          <span>{t.name}{rq.entries[t.id]?.judgement?' · '+rq.entries[t.id]?.judgement:''}</span>
@@ -304,11 +308,11 @@ export function RundenquizHost(){
             </div>;
           })}</div>}
         </div>
-        <button className="g3-tech-primary" disabled={disabled||!preview}
+        <button data-host-next className="g3-tech-primary" disabled={disabled||!preview}
           onClick={()=>void action({type:'CONFIRM'})}>Punkte verbindlich bestätigen</button>
       </>}
       {rq.phase==='graded'&&<>
-        <button className="g3-tech-primary" disabled={disabled}
+        <button data-host-next className="g3-tech-primary" disabled={disabled}
           onClick={()=>void action(rq.index===rq.questions.length-1?{type:'FINISH'}:{type:'NEXT'})}>
             {rq.index===rq.questions.length-1?'Endstand zeigen':'Nächste Aufgabe'}
         </button>

@@ -1,0 +1,25 @@
+/* G14 — intentionally compact host-only workflow guide; no projector/answer surfaces. */
+.g14-guide{margin:14px 0 19px;border:1px solid #c7d1d0;border-left:4px solid #c39944;background:#f5f7f6;color:#26323a;padding:15px 18px;min-width:0}
+.g14-guide-head{display:flex;align-items:start;justify-content:space-between;gap:14px}
+.g14-guide-head>div:first-child{min-width:0;flex:1}
+.g14-eyebrow{font-size:10px;font-weight:800;letter-spacing:.1em;color:#75613a}
+.g14-guide h3{font-size:19px;letter-spacing:-.45px;line-height:1.25;margin:5px 0}
+.g14-guide p{margin:3px 0 0;color:#53616b;font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+.g14-connect{display:grid;text-align:right;justify-items:end;align-content:center;gap:3px;min-width:122px}
+.g14-connect strong{font-size:22px;font-variant-numeric:tabular-nums;line-height:1}
+.g14-connect span{font-size:10px;color:#63717a}
+.g14-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin-top:13px;background:#cbd4d2;border:1px solid #cbd4d2}
+.g14-facts>div{padding:11px 12px;background:#fff;min-width:0;display:grid;align-content:start;gap:6px}
+.g14-facts small{font-size:9px;letter-spacing:.08em;font-weight:800;color:#64727b}
+.g14-facts strong{font-size:12px;line-height:1.45;font-weight:720;overflow-wrap:anywhere}
+.g14-guide-foot{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-top:13px}
+.g14-progress{display:grid;gap:8px;flex:1;min-width:0;max-width:360px}
+.g14-progress span{font-size:11px;color:#4b5a64;font-variant-numeric:tabular-nums}
+.g14-progress progress{width:100%;height:8px;accent-color:#ad873b}
+.g14-guide button.g14-focus{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:9px 13px;border:1px solid #233039;background:#233039;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:normal}
+.g14-guide button.g14-focus:disabled{opacity:.5;cursor:not-allowed}
+.g14-shortcut{font-size:10px;font-weight:500;color:#e5d7a8}
+.g14-guide button.g14-focus:focus-visible,[data-host-next]:focus-visible,[data-host-resume]:focus-visible,.qt-cell:focus-visible{outline:3px solid #d2a13e;outline-offset:3px}
+@media(max-width:650px){.g14-facts{grid-template-columns:1fr}.g14-guide-foot{align-items:stretch;flex-direction:column}.g14-progress{max-width:none;width:100%}.g14-guide button.g14-focus{width:100%}}
+@media(max-width:380px){.g14-guide{padding:12px}.g14-guide-head{flex-direction:column;gap:8px}.g14-connect{text-align:left;display:flex;align-items:baseline;min-width:0;justify-items:start}}
+@media(prefers-reduced-motion:reduce){.g14-guide *{transition:none!important;animation:none!important}}
