@@ -4,6 +4,7 @@ import {ContentRepository,type Receipt,type StoredQuarantine} from '../../conten
 import {createDraft,coverage,validatePayload,selectReviewedPack,findDuplicates,type ContentItem} from '../../content/contracts';
 import {legacyBackup,previewFile,exportLibrary,type Preview} from '../../content/migration';
 import '../../styles/content-studio.css';
+import {EditorialAuditPanel} from './EditorialAuditPanel';
 
 const LABELS:Record<GameType,string>={
  rundenquiz:'Rundenquiz',quiztafel:'Quiztafel',verbindungen:'Verbindungen',
@@ -43,6 +44,7 @@ export function ContentStudio(){
  const [receipts,setReceipts]=useState<Receipt[]>([]);
  const [current,setCurrent]=useState<ContentItem|null>(null);
  const [json,setJson]=useState('');
+ const [rightsDraft,setRightsDraft]=useState('');
  const [search,setSearch]=useState(''),[filter,setFilter]=useState<GameType|'alle'>('alle');
  const [statusFilter,setStatusFilter]=useState<'alle'|ContentItem['status']>('alle');
  const [templateGame,setTemplateGame]=useState<GameType>('rundenquiz');
@@ -94,6 +96,7 @@ export function ContentStudio(){
  },[items,profile,teamCount]);
  function choose(item:ContentItem){
   setCurrent(item);setJson(JSON.stringify(item.payload,null,2));
+  setRightsDraft(item.provenance.rights??'');
   setReviewNote('');setChecklist([false,false,false,false]);setError('');setMessage('');
  }
  async function act(fn:()=>Promise<void>){
@@ -121,7 +124,8 @@ export function ContentStudio(){
    const payload=JSON.parse(json) as unknown;
    const issues=validatePayload(current.game,payload);
    if(issues.length)throw Error(issues.join(' | '));
-   const item=await repo.saveDraft({...current,payload});
+   const item=await repo.saveDraft({...current,payload,
+    provenance:{...current.provenance,rights:rightsDraft.trim().slice(0,600)||undefined}});
    choose(item);setMessage('Entwurf gespeichert. Frühere Freigabe wurde bei Änderungen zurückgesetzt.');
   });
  }
@@ -211,6 +215,7 @@ export function ContentStudio(){
        disabled={busy||!importConsent}>Vorschau ausdrücklich importieren</button>
      <button className="exp-secondary" onClick={()=>{setPreview(null);setImportConsent(false);}}>Abbrechen</button></div>
    </section>}
+  <EditorialAuditPanel items={items} preview={preview} onChoose={choose}/>
   <div className="cx-main">
    <section className="cx-catalog" aria-label="Aufgabenbestand">
     <div className="cx-catalog-top"><h2>Aufgabenbestand</h2><span>{chosen.length} Treffer</span></div>
@@ -250,6 +255,11 @@ export function ContentStudio(){
        <input value={String(basic?.answer??'')} onChange={e=>changeBasic('answer',e.target.value)}/></label>}
      {'reference' in (basic??{})&&<label className="cx-field">Quelle
        <input value={String(basic?.reference??'')} onChange={e=>changeBasic('reference',e.target.value)}/></label>}
+     <label className="cx-field">Nutzungsrechte und externe Freigabegrundlage
+      <textarea rows={2} value={rightsDraft} maxLength={600}
+       placeholder="Rechteinhaber, Lizenz oder Erlaubnis, Dokument, Datum (extern prüfen)"
+       onChange={e=>setRightsDraft(e.target.value)}/></label>
+     <p className="cx-origin">Rechteangaben sind Selbstangaben und keine unabhängige Autorisierung. Speichern setzt den Prüfstatus auf Entwurf.</p>
      <details className="cx-structured" open={current.game==='verbindungen'||current.game==='umfrageduell'}>
       <summary>Strukturierte Aufgabe · Kategorien, Hinweise und Antwortvarianten</summary>
       <label className="cx-field">JSON-Datensatz <textarea rows={15} spellCheck={false} value={json}
