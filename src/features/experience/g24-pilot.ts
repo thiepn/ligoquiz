@@ -27,12 +27,17 @@ export async function readPilotDraft(storage:Pick<Storage,'getItem'>,now=Date.no
  const report=await reconcileTrial(value.envelope);
  return {savedAt:value.savedAt as number,report};
 }
-export async function savePilotDraft(storage:Pick<Storage,'setItem'>,
- records:Readonly<Record<string,TrialRow>>,notes:string,at=Date.now()):Promise<number>{
+export async function serializePilotDraft(records:Readonly<Record<string,TrialRow>>,
+ notes:string,at=Date.now()):Promise<string>{
  const envelope=await sealTrial(records,notes);
  const packet:PilotDraft={format:'ligoquiz-g24-local-draft-v1',savedAt:at,envelope};
  const json=JSON.stringify(packet);
  if(enc.encode(json).byteLength>MAX_DRAFT_BYTES)throw Error('Lokaler Entwurf größer als 256 KiB');
+ return json;
+}
+export async function savePilotDraft(storage:Pick<Storage,'setItem'>,
+ records:Readonly<Record<string,TrialRow>>,notes:string,at=Date.now()):Promise<number>{
+ const json=await serializePilotDraft(records,notes,at);
  storage.setItem(G24_DRAFT_KEY,json);
  return json.length;
 }
