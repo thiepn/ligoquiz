@@ -67,7 +67,7 @@ test('G22 real signed synthetic original-byte intake, tampering and NO-GO custod
   role:'technician',signerFingerprint:operator.fingerprint,kind:'venue-projector',gateId:'venue',
   scenarioId:null,originalSha256:createHash('sha256').update(original).digest('hex'),
   issuedAt:'2026-10-10T15:01:00Z',action:'observe',targetFingerprint:null,
-  finding:'REPORTED',note:'SYNTHETIC ONLY - no actual venue';
+  finding:'REPORTED',note:'SYNTHETIC ONLY - no actual venue',
  };
  const signed=await sign(stmt,operator.privateKey,'ligoquiz-g22-detached-ed25519-v1');
  const input=g22.getByLabel('3. Extern signierter G22-Originalbeleg (JSON)');
