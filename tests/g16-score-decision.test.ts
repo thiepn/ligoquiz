@@ -27,7 +27,6 @@ describe('G16 point decisions, no state mutation',()=>{
   try{
    const id=await createPreparedRundenquiz(db,newSetupDraft());
    const e=await db.get(id.eventId),s=e!.rundenquiz!;
-   const first=rq.currentQuestion(s)!;
    const entries=Object.fromEntries(s.teams.map(t=>[t.id,{
     judgement:'richtig' as const,lockLevel:1,estimate:null
    }]));
