@@ -1,0 +1,25 @@
+.g19-review{margin:26px 0;border:1px solid #b6c8c5;border-top:4px solid #9a764a;padding:clamp(13px,2vw,23px);background:#f7f9f7;color:#27393b;min-width:0}
+.g19-review header{display:flex;flex-wrap:wrap;gap:15px;align-items:start;justify-content:space-between}
+.g19-review header>div{max-width:67ch}.g19-review h2{font-size:clamp(21px,2.4vw,27px);margin:5px 0}
+.g19-review h3{font-size:17px;margin:8px 0}.g19-review p,.g19-review li{font-size:12px;line-height:1.65}
+.g19-review header>strong{padding:10px;border:1px solid #b85c4b;background:#fff1ec;color:#7a3429;font-size:11px}
+.g19-steps{padding-left:21px;margin:17px 0;background:#f1f5f2;border-left:3px solid #8da8a1}
+.g19-steps li{padding:5px}
+.g19-inputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.g19-inputs label{display:grid;align-content:start;gap:7px;border:1px solid #cbdbd6;background:#fff;padding:13px;min-width:0;font-size:12px;font-weight:700}
+.g19-inputs small{overflow-wrap:anywhere;font-size:11px;font-weight:400;color:#526562}
+.g19-inputs input,.g19-inputs textarea{width:100%;max-width:100%;min-width:0;min-height:44px;border:1px solid #a3b4af;padding:8px;background:white;color:#213837;font:inherit;font-size:13px}
+.g19-check-button{min-height:44px;padding:12px;margin:13px 0;background:#263f43;border:1px solid #263f43;color:#fff;font-size:13px;font-weight:700;cursor:pointer}
+.g19-check-button:disabled{background:#b9c2c0;border-color:#b9c2c0;color:#283b38;cursor:not-allowed}
+.g19-notice,.g19-error{padding:12px;background:#edf5ed;border-left:3px solid #63825e}
+.g19-error{background:#fff2ed;border-color:#bb6047}
+.g19-history,.g19-release{border-top:1px solid #c4d5cf;margin-top:20px;padding-top:12px}
+.g19-history ol{display:grid;gap:8px;padding:0;list-style:none}
+.g19-history li{padding:12px;border:1px solid #c8d7cd;background:white;display:grid;gap:4px;overflow-wrap:anywhere}
+.g19-release [role=table]{border:1px solid #c7d6cf;background:white}
+.g19-release [role=row]{padding:12px;display:grid;grid-template-columns:minmax(0,1fr) 70px;gap:10px;border-bottom:1px solid #dce5df;font-size:12px}
+.g19-release [role=row]:last-child{border-bottom:0}
+.g19-release [role=cell]:last-child{color:#8d352b}
+.g19-restriction{padding:12px;border-left:4px solid #a75440;background:#fff2eb;font-weight:700}
+.g19-review :is(button,input,textarea):focus-visible{outline:3px solid #af823a;outline-offset:3px}
+@media(max-width:680px){.g19-inputs{grid-template-columns:1fr}}

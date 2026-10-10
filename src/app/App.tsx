@@ -1,3 +1,4 @@
+import {WitnessEvidenceReview} from '../features/experience/WitnessEvidenceReview';
 import {EventTrialReadiness} from '../features/experience/EventTrialReadiness';
 import {VisualEvidenceReview} from '../features/experience/VisualEvidenceReview';
 import { useEffect, useState } from 'react';
@@ -112,6 +113,7 @@ export function App(){
        <ProjectorTechCheck/>
        <VisualEvidenceReview/>
        <EventTrialReadiness/>
+       <WitnessEvidenceReview/>
        <p className="exp-footnote">Für einen echten Quizabend verbinde den Beamer über die Spielleitung des aktiven Spiels.</p>
      </section>}
    </main>
