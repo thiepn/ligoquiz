@@ -3,6 +3,7 @@ import {IndependentReleaseDryRun} from '../features/experience/IndependentReleas
 import {CustodyHandoffReview} from '../features/experience/CustodyHandoffReview';
 import {WitnessEvidenceReview} from '../features/experience/WitnessEvidenceReview';
 import {EventTrialReadiness} from '../features/experience/EventTrialReadiness';
+import {ReleaseCandidateDesk} from '../features/experience/ReleaseCandidateDesk';
 import {VisualEvidenceReview} from '../features/experience/VisualEvidenceReview';
 import { useEffect, useState } from 'react';
 import '../styles/umfrageduell.css';
@@ -112,6 +113,7 @@ export function App(){
      {route==='technik'&&<section className="exp-page">
        <div className="exp-heading"><div><p className="eyebrow">GERÄTE</p><h1>Technikcheck</h1>
        <p>Hostfenster auf dem Laptop, öffentliche Beameransicht auf dem erweiterten Bildschirm.</p></div></div>
+       <ReleaseCandidateDesk/>
        <OfflinePreflight/>
        <ProjectorTechCheck/>
        <VisualEvidenceReview/>
