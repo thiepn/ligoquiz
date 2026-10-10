@@ -94,7 +94,7 @@ test('G22 real signed synthetic original-byte intake, tampering and NO-GO custod
  await pub.fill(operator.publicKey);
  await bytes.setInputFiles({name:'synthetic-original.txt',mimeType:'text/plain',buffer:original});
  await g22.getByRole('button',{name:'Signatur, Originalhash, Rollen und Custody-Reihenfolge prüfen'}).click();
- await expect(g22).toContainText('Originalhash, Ed25519 und Belegfolge konsistent');
+ await expect(g22).toContainText('SHA-256 Originalbytes, Ed25519 und Belegfolge konsistent');
  await expect(g22).toContainText('1 lokal signierte Belege');
  await expect(g22).toContainText('0 extern bestätigte Identitäten');
  await g22.screenshot({path:evidencePath+'/g22-original-hash-unanchored-1280.png'});
