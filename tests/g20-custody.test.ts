@@ -101,7 +101,8 @@ describe('G20 external root and recovery custody',()=>{
   expect(custodyDecision(ledger).compromised).toBe(1);
   const resume:CustodyStatement={...revoke,sequence:4,previousDigest:compromised.digest,
    action:'root-proposal',decision:'PROPOSED',issuedAt:'2026-10-10T15:03:00Z'};
-  expect(()=>parseCustody({...await sign(f.stmt,f.root.key),statement:resume})).toThrow(/Root proposal/);
+  const resumeEnvelope=await sign(f.stmt,f.root.key);
+  expect(()=>parseCustody({...resumeEnvelope,statement:resume})).toThrow(/Root proposal/);
   const again={...compromised,digest:'f'.repeat(64),statement:{...revoke,sequence:4,
    previousDigest:compromised.digest,issuedAt:'2026-10-10T15:04:00Z'}};
   expect(()=>appendCustody(ledger,again)).toThrow(/Duplicate revocation/);
