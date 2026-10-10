@@ -1,7 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {sealTrial} from '../src/features/experience/event-trial';
 import {verifyCustody,appendCustody,custodyHandoff,type CustodyStatement} from '../src/features/experience/g20-custody';
-import {readG21Parent,g21Export} from '../src/features/experience/g21-attestation';
+import {readG21Parent,g21Export,verifyG21Envelope,appendG21Ledger,type G21Statement} from '../src/features/experience/g21-attestation';
 import {readG22Parent,parseG22,verifyG22,appendG22,g22Decision,g22Export,
  type G22Statement,type G22Verified} from '../src/features/experience/g22-physical-custody';
 const buffer=(v:Uint8Array)=>Uint8Array.from(v).buffer as ArrayBuffer;
@@ -17,6 +17,11 @@ async function signG20(statement:CustodyStatement,key:CryptoKey){
  return {format:'ligoquiz-g20-detached-ed25519-v1' as const,statement,
   signature:b64(new Uint8Array(await crypto.subtle.sign('Ed25519',key,buffer(data))))};
 }
+async function signG21(statement:G21Statement,key:CryptoKey){
+ const data=new TextEncoder().encode(JSON.stringify(statement));
+ return {format:'ligoquiz-g21-detached-ed25519-v1' as const,statement,
+  signature:b64(new Uint8Array(await crypto.subtle.sign('Ed25519',key,buffer(data))))};
+}
 async function signG22(statement:G22Statement,key:CryptoKey){
  const data=new TextEncoder().encode(JSON.stringify(statement));
  return {format:'ligoquiz-g22-detached-ed25519-v1' as const,statement,
@@ -24,7 +29,7 @@ async function signG22(statement:G22Statement,key:CryptoKey){
 }
 async function fixture(){
  const source=await sealTrial({},'SYNTHETIC G22 test source, not acceptance');
- const custodian=await signer(),witness=await signer(),witness2=await signer(),owner=await signer();
+ const custodian=await signer(),reviewer=await signer(),witness=await signer(),witness2=await signer(),owner=await signer();
  const sourceStatement:CustodyStatement={
   format:'ligoquiz-g20-custody-statement-v1',custodyId:'synthetic-g22-root',
   sequence:1,previousDigest:null,sourceG18Checksum:source.checksum,
@@ -36,7 +41,18 @@ async function fixture(){
  };
  const root=await verifyCustody(await signG20(sourceStatement,custodian.secret),custodian.publicKey,source);
  const g20=await custodyHandoff(appendCustody([],root),'synthetic');
- const g21Parent=await readG21Parent(g20,source),g21=await g21Export([],g21Parent,'synthetic');
+ const g21Parent=await readG21Parent(g20,source);
+ const stmt21:G21Statement={
+  format:'ligoquiz-g21-attestation-statement-v1',caseId:'synthetic-g21-g22-case',
+  sequence:1,previousDigest:null,sourceG18Checksum:source.checksum,
+  g20HandoffChecksum:g20.checksum,qualifiedG20Head:'f066894f11dd96432bfb73e242b97aaf72cc4655',
+  actorId:'reviewer-g21-g22',role:'reviewer',action:'PIN',signerFingerprint:reviewer.fingerprint,
+  subjectFingerprint:custodian.fingerprint,nextFingerprint:null,
+  scenarioId:'rundenquiz-3',gateId:'rehearsals',receiptSha256:null,
+  issuedAt:'2026-10-10T15:00:30Z',note:'SYNTHETIC inherited reviewer',finding:'REPORTED',
+ };
+ const g21Receipt=await verifyG21Envelope(await signG21(stmt21,reviewer.secret),reviewer.publicKey,g21Parent);
+ const g21=await g21Export(appendG21Ledger([],g21Receipt,g21Parent),g21Parent,'synthetic');
  const parent=await readG22Parent(g21,source);
  const original=new TextEncoder().encode('SYNTHETIC original file only, NOT A REAL HARDWARE WITNESS');
  const statement:G22Statement={
@@ -49,7 +65,7 @@ async function fixture(){
   issuedAt:'2026-10-10T15:01:00Z',action:'observe',targetFingerprint:null,
   finding:'REPORTED',note:'SYNTHETIC ONLY, not a physical acceptance',
  };
- return {source,g20,g21,parent,custodian,witness,witness2,owner,original,statement};
+ return {source,g20,g21,parent,custodian,reviewer,witness,witness2,owner,original,statement};
 }
 describe('G22 source-backed physical/original review and release quarantine',()=>{
  it('verifies real synthetic Ed25519 bytes and original file SHA without creating human approvals',async()=>{
@@ -105,7 +121,7 @@ describe('G22 source-backed physical/original review and release quarantine',()=
    g21PacketChecksum:'a'.repeat(64)}};
   expect(()=>appendG22(ledger,source,f.parent)).toThrow(/source drift/);
   const inherited={...bad,statement:{...bad.statement,previousDigest:first.digest,
-   actorId:'custodian-g22',signerFingerprint:f.custodian.fingerprint}};
+   actorId:'reviewer-g21-g22',signerFingerprint:f.reviewer.fingerprint}};
   expect(()=>appendG22(ledger,inherited,f.parent)).toThrow(/inherited custody/);
   const fakeOwner={...bad,statement:{...bad.statement,previousDigest:first.digest,
    actorId:f.statement.actorId,role:'owner' as const,kind:'owner-custody' as const,gateId:'release'}};
