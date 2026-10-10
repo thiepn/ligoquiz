@@ -1,3 +1,4 @@
+import {PhysicalCustodyReview} from '../features/experience/PhysicalCustodyReview';
 import {IndependentReleaseDryRun} from '../features/experience/IndependentReleaseDryRun';
 import {CustodyHandoffReview} from '../features/experience/CustodyHandoffReview';
 import {WitnessEvidenceReview} from '../features/experience/WitnessEvidenceReview';
@@ -118,6 +119,7 @@ export function App(){
        <WitnessEvidenceReview/>
        <CustodyHandoffReview/>
        <IndependentReleaseDryRun/>
+       <PhysicalCustodyReview/>
        <p className="exp-footnote">Für einen echten Quizabend verbinde den Beamer über die Spielleitung des aktiven Spiels.</p>
      </section>}
    </main>
