@@ -96,7 +96,7 @@ test('G21 real browser two-party signed attestations, forged signature denial an
 test('G21 zoomed keyboard, mobile layout and denied release are visibly accessible',async({page})=>{
  await mkdir(evidencePath,{recursive:true});
  await page.setViewportSize({width:640,height:800});await page.goto('/#/technik');
- await page.evaluate(()=>{document.documentElement.style.zoom='2';});
+ await page.evaluate(()=>{globalThis.document.documentElement.style.zoom='2';});
  const panel=page.getByRole('region',{name:'G21 Unabhängige Root-Attestierung und Release-Trockenlauf'});
  const key=panel.getByLabel('4. Öffentlicher Ed25519-Schlüssel, separat erhalten (Base64)');
  await key.focus();await expect(key).toBeFocused();
