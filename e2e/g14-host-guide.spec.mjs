@@ -19,7 +19,8 @@ for(const game of games){
   const panel=host.getByRole('region',{name:'Moderationsübersicht'});
   await expect(panel).toBeVisible();
   await expect(panel).toContainText('Wertung offen');
-  await expect(panel).toContainText('0 Beamerfenster bestätigt');
+  await expect(panel.locator('.g14-connect strong')).toHaveText('0');
+  await expect(panel.locator('.g14-connect span')).toHaveText('Beamerfenster bestätigt');
   const primary=host.getByRole('button',{name:game.start});
   await expect(primary).toBeEnabled();
   await page.keyboard.press('Alt+Shift+N');
