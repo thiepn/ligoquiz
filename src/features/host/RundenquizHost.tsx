@@ -1,6 +1,9 @@
 import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {HostModerationGuide} from './HostModerationGuide';
+import {HostGameplayRail} from './HostGameplayRail';
+import {StudioPopMotif} from '../../design-system/StudioPop';
+import './u07-play.css';
 import { useEffect, useRef, useState } from 'react';
 import { createEvent } from '../../domain/event/transition';
 import { EventRepository } from '../../infrastructure/db/event-repository';
@@ -207,11 +210,16 @@ export function RundenquizHost(){
  const disabled=busy||!sourceReady||!event||event.recoveryRequired;
  const title=(round:string)=>({wissen:'Wissen',hinweise:'Hinweise',schaetzen:'Schätzen',finale:'Finale'} as Record<string,string>)[round]??round;
 
- return <section className="rq-host" data-host-game="rundenquiz" aria-label="Rundenquiz Spielleitung">
-  <div className="rq-head"><div><div className="eyebrow">G4 · SPIELMODUS IM TEST</div>
-   <h2>Rundenquiz</h2><p>Quizabend mit Teams, vier Runden und separater Beameransicht.</p></div>
-   <span className="g3-tech-tag">PROBEINHALTE</span>
-  </div>
+ return <section className="rq-host u07-rq" data-host-game="rundenquiz" data-host-phase={rq?.phase??"loading"} aria-label="Rundenquiz Spielleitung">
+  <header className="rq-head u07-mode-head u07-mode-head--rq">
+   <div className="u07-mode-copy">
+    <span className="u07-overline">01 / MODERATION <span aria-hidden="true">✳</span> WISSEN IM RAMPENLICHT</span>
+    <h2>Rundenquiz<span aria-hidden="true">.</span></h2>
+    <p>Vier Runden, echte Teamentscheidungen und kontrollierte Veröffentlichung.</p>
+    <span className="g3-tech-tag">PROBEINHALTE · NICHT REDAKTIONELL FREIGEGEBEN</span>
+   </div>
+   <span className="u07-mode-art" aria-hidden="true"><StudioPopMotif game="rundenquiz"/></span>
+  </header>
   {!identity?<div className="rq-setup">
    <label>Spielumfang <select value={profile} onChange={e=>setProfile(e.target.value as Profile)}>
     <option value="kurz">Kurz · 7 Aufgaben</option><option value="standard">Standard · 11 Aufgaben</option>
@@ -225,12 +233,15 @@ export function RundenquizHost(){
    </label>)}</div>
    <button data-host-next className="g3-tech-primary" disabled={busy} onClick={()=>void prepare()}>Quizabend vorbereiten</button>
    <p className="g3-tech-footnote">G4 verwendet vorläufige Übungsfragen; diese sind nicht als redaktionell freigegebener Fragenkatalog gekennzeichnet.</p>
-  </div>:<div className="rq-live">
+  </div>:<div className="rq-live u07-play-surface">
    <div className="rq-utility">
     <span>Revision {event?.revision??0} · {rq?.profile??profile} · {viewers} Beamer verbunden</span>
     <a href={stageUrl(identity.eventId)} target="_blank" rel="noopener noreferrer" className="g3-tech-link">Beamer öffnen ↗</a>
     <button onClick={newEvent}>Neuer Quizabend</button>
    </div>
+   {rq&&<HostGameplayRail game="rundenquiz" phase={rq.phase} paused={isPaused}
+     recovery={Boolean(event?.recoveryRequired)} completed={rq.phase==='complete'?rq.questions.length:rq.index}
+     total={rq.questions.length}/>}
    {rq&&<HostModerationGuide game="rundenquiz" phase={rq.phase} paused={isPaused}
      recovery={Boolean(event?.recoveryRequired)} completed={rq.phase==='complete'?rq.questions.length:rq.index}
      total={rq.questions.length} viewers={viewers} ready={sourceReady} busy={busy}/>}
@@ -248,22 +259,29 @@ export function RundenquizHost(){
         Spielstand geprüft — weiterhin pausiert übernehmen
       </button>
    </div>}
-   {rq && <div className="rq-scoreboard" aria-label="Punktestand">
+   {rq&&<div className="u07-block-title"><div><span className="u07-overline">LIVE AUS DEM SPIELSTAND</span><h3>Teamwertung</h3></div>
+      <span className="u07-snapshot-label">Originalpunkte · keine öffentliche Ausgabe</span></div>}
+   {rq && <div className="rq-scoreboard u07-rq-scores" aria-label="Punktestand">
     {rq.teams.map(t=><div key={t.id}><span>{t.name}</span><strong>{computed[t.id]??0}</strong></div>)}
    </div>}
    {rq && rq.phase==='complete'&&<div className="rq-end">
     <h3>Endstand</h3>{rq.teams.map(t=><p key={t.id}>{t.name}: {computed[t.id]??0} Punkte · Abendpunkte {(eveningHalfPoints(rq)[t.id]??0)/2}</p>)}
    </div>}
-   {rq && rq.phase!=='complete'&&<div className="rq-control">
-    {q&&<div className="rq-question">
-     <small>{title(q.round)} · {q.durationSeconds} Sekunden empfohlene Zeit</small>
+   {rq && rq.phase!=='complete'&&<div className="rq-control u07-rq-control">
+    {q&&<div className="rq-question u07-rq-question" aria-label="Private Fragenkarte">
+     <div className="u07-question-kicker"><span>{title(q.round)} · Aufgabe {rq.index+1} / {rq.questions.length}</span>
+      <span>{q.durationSeconds} Sekunden empfohlen</span></div>
      <h3>{q.prompt}</h3>
-     <div className="rq-private">Private Lösung: <strong>{q.answer}</strong> · Quelle: {q.reference}</div>
+     <div className="rq-private u07-private-panel">
+      <span className="u07-private-eyebrow">NUR SPIELLEITUNG · NICHT AUF DEM BEAMER</span>
+      <p>Private Lösung: <strong>{q.answer}</strong></p>
+      <small>Quelle: {q.reference}</small>
+     </div>
      {q.round==='hinweise'&&rq.phase!=='ready'&&<div className="rq-clue-list">
       {(q.clues??[]).slice(0,rq.clueCount).map((clue,i)=><p key={i}><b>{i+1}.</b> {clue}</p>)}
      </div>}
     </div>}
-    {rq.phase==='open'&&<div className="rq-timer" aria-label="Optionale Uhr">
+    {rq.phase==='open'&&<div className="rq-timer u07-rq-timer" aria-label="Optionale Uhr" data-timer-running={timerRunning} data-timer-warning={timerRemaining!==null&&timerRemaining<=10}>
       <div><span>OPTIONALER TIMER</span><strong>{timerRemaining===null?'–':String(timerRemaining)+' s'}</strong></div>
       <button disabled={disabled||isPaused||timerRemaining===null||timerRunning||timerRemaining===0}
         onClick={()=>{timerLastTick.current=Date.now();setTimerRunning(true);}}>Start</button>
@@ -271,8 +289,12 @@ export function RundenquizHost(){
       <button disabled={disabled||isPaused||timerRemaining===null} onClick={()=>{
         const next=Math.min(300,(timerRemaining??0)+15);setTimerRemaining(next);persistTimer(next);
       }}>+15 s</button>
+      <div className="u07-timer-meter" aria-hidden="true"><span style={{
+        width:timerRemaining===null?'0%':Math.max(0,Math.min(100,timerRemaining/(q?.durationSeconds??30)*100))+'%',
+      }}/></div>
       <small>Nach Neuladen pausiert. Keine automatische Enthüllung.</small>
      </div>}
+    {isPaused&&<p className="u07-pause-note" role="status">Pausiert. Die letzte öffentliche Ausgabe bleibt unter Kontrolle der Spielleitung. Fortsetzung erfolgt ausschließlich per Klick.</p>}
     {isPaused ? <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'RESUME'})}>Spiel fortsetzen</button>
     :<div className="rq-actions">
       {rq.phase==='setup' && <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'START'})}>Teams bestätigen</button>}
@@ -294,13 +316,18 @@ export function RundenquizHost(){
       </>}
       {rq.phase==='closed' && <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'REVEAL'})}>Lösung auf Beamer zeigen</button>}
       {rq.phase==='revealed' && <>
-        {q?.round!=='schaetzen'&&<div className="rq-teamfields">{rq.teams.map(t=><div key={t.id} className="rq-judge">
+        {q?.round!=='schaetzen'&&<p className="u07-judgement-count" aria-live="polite">
+          {rq.teams.filter(t=>Boolean(rq.entries[t.id]?.judgement)).length} von {rq.teams.length} Teamwertungen erfasst
+        </p>}
+        {q?.round!=='schaetzen'&&<div className="rq-teamfields u07-judge-grid">{rq.teams.map(t=><div key={t.id} className="rq-judge" role="group" aria-label={'Wertung für '+t.name}>
          <span>{t.name}{rq.entries[t.id]?.judgement?' · '+rq.entries[t.id]?.judgement:''}</span>
-         {(['richtig','falsch','keine'] as const).map(v=><button key={v} disabled={disabled||v==='richtig'&&q?.round==='hinweise'&&!rq.entries[t.id]?.lockLevel}
+         {(['richtig','falsch','keine'] as const).map(v=><button key={v}
+           data-judgement={v} aria-pressed={rq.entries[t.id]?.judgement===v}
+           disabled={disabled||v==='richtig'&&q?.round==='hinweise'&&!rq.entries[t.id]?.lockLevel}
            onClick={()=>void action({type:'JUDGE',teamId:t.id,value:v})}>{v}</button>)}
         </div>)}</div>}
         {q?.round==='schaetzen'&&<p>Schätzungen werden nach Abstand zur Zielzahl gewertet; exakte Gleichstände behalten denselben Rang.</p>}
-        <div className="rq-preview" aria-label="Punktevorschau">
+        <div className="rq-preview u07-award-preview" aria-label="Punktevorschau">
           <h4>Punkte vor Bestätigung</h4>
           {!preview?<p>Bitte zuerst alle Teamantworten bewerten bzw. Schätzungen erfassen.</p>
           :<div>{preview.map(award=>{
@@ -312,7 +339,7 @@ export function RundenquizHost(){
             </div>;
           })}</div>}
         </div>
-        <button data-host-next className="g3-tech-primary" disabled={disabled||!preview}
+        <button data-host-next className="g3-tech-primary u07-confirm-action" disabled={disabled||!preview}
           onClick={()=>void action({type:'CONFIRM'})}>Punkte verbindlich bestätigen</button>
       </>}
       {rq.phase==='graded'&&<>
@@ -320,13 +347,13 @@ export function RundenquizHost(){
           onClick={()=>void action(rq.index===rq.questions.length-1?{type:'FINISH'}:{type:'NEXT'})}>
             {rq.index===rq.questions.length-1?'Endstand zeigen':'Nächste Aufgabe'}
         </button>
-        <button disabled={disabled} onClick={()=>void action({type:'CORRECT'})}>Letzte Wertung korrigieren</button>
+        <button className="u07-revise-action" disabled={disabled} onClick={()=>void action({type:'CORRECT'})}>Letzte Wertung korrigieren</button>
       </>}
       {(rq.phase==='open'||rq.phase==='closed'||rq.phase==='revealed'||rq.phase==='graded')&&
-        <button disabled={disabled} onClick={()=>{
+        <button className="u07-danger-action" disabled={disabled} onClick={()=>{
          if(window.confirm('Diese Frage für alle Teams mit 0 Punkten annullieren?'))void action({type:'ANNUL'});
         }}>Frage annullieren</button>}
-      {rq.phase!=='setup'&&<button disabled={disabled} onClick={()=>void action({type:'PAUSE'})}>Pausieren</button>}
+      {rq.phase!=='setup'&&<button className="u07-pause-action" disabled={disabled} onClick={()=>void action({type:'PAUSE'})}>Pausieren</button>}
     </div>}
    </div>}
   </div>}
