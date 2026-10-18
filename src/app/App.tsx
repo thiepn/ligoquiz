@@ -7,6 +7,8 @@ import {ReleaseCandidateDesk} from '../features/experience/ReleaseCandidateDesk'
 import {CutoverPreflight} from '../features/experience/CutoverPreflight';
 import {VisualEvidenceReview} from '../features/experience/VisualEvidenceReview';
 import { useEffect, useState } from 'react';
+import type {EventRecord} from '../domain/event/schemas';
+import {HostCockpit} from '../features/host/HostCockpit';
 import '../styles/umfrageduell.css';
 import { parseRoute, currentEventId } from './routes';
 import { AppShell } from './AppShell';
@@ -38,33 +40,56 @@ function useCurrentHash(){
 function HostSurface(){
  const activeIdentity=readHostIdentity();
  const [mode,setMode]=useState<'rundenquiz'|'quiztafel'|'verbindungen'|'logikleiter'|'umfrageduell'|null>(null);
+ const [snapshot,setSnapshot]=useState<EventRecord|null>(null);
  const [error,setError]=useState('');
  useEffect(()=>{
-   setMode(null);setError('');
+   setMode(null);setSnapshot(null);setError('');
    if(!activeIdentity)return;
-   let cancelled=false;
+   let disposed=false,inFlight=false;
    const repo=new EventRepository();
-   void repo.get(activeIdentity.eventId).then(event=>{
-     if(cancelled)return;
-     if(!event||event.hostId!==activeIdentity.hostId)
-       throw new Error('Die Spielleitung gehört zu einer anderen Sitzung.');
-     setMode(event.umfrageduell?'umfrageduell':event.logikleiter?'logikleiter':event.verbindungen?'verbindungen':event.quiztafel?'quiztafel':event.rundenquiz?'rundenquiz':null);
-   }).catch(e=>{if(!cancelled)setError(e instanceof Error?e.message:'Sitzung ungültig');})
-     .finally(()=>{void repo.close();});
-   return ()=>{cancelled=true;};
+   // Read-only snapshot; native game hosts remain the sole writers and publishers.
+   const refresh=async()=>{
+     if(disposed||inFlight)return;
+     inFlight=true;
+     try{
+       const event=await repo.get(activeIdentity.eventId);
+       if(disposed)return;
+       if(!event||event.hostId!==activeIdentity.hostId)
+         throw new Error('Die Spielleitung gehört zu einer anderen Sitzung.');
+       const selected=event.umfrageduell?'umfrageduell':event.logikleiter?'logikleiter':
+         event.verbindungen?'verbindungen':event.quiztafel?'quiztafel':event.rundenquiz?'rundenquiz':null;
+       if(!selected)throw new Error('Kein unterstütztes Spiel in dieser Sitzung.');
+       setMode(selected);
+       setSnapshot(previous=>previous?.revision===event.revision &&
+         previous.hostEpoch===event.hostEpoch && previous.stageRevision===event.stageRevision
+         ?previous:event);
+       setError('');
+     }catch(e){
+       if(!disposed){
+         // Never retain private host UI or stale scores after failed owner verification.
+         setMode(null);setSnapshot(null);
+         setError(e instanceof Error?e.message:'Sitzung ungültig');
+       }
+     }finally{inFlight=false;}
+   };
+   void refresh();
+   const timer=window.setInterval(()=>{void refresh();},2500);
+   return ()=>{disposed=true;window.clearInterval(timer);void repo.close();};
  },[activeIdentity?.eventId,activeIdentity?.hostId]);
- return <section className="exp-host-wrapper" aria-label="Spielleitung">
-   <div className="exp-host-header"><a href="#/spielen">← Spielen</a>
+ return <section className="exp-host-wrapper sp-cockpit-wrap" aria-label="Spielleitung">
+   <div className="exp-host-header sp-cockpit-topline"><a href="#/spielen">← Spielen</a>
      <div><strong>Spielleitung</strong><small>GESPEICHERTER SPIELSTAND · NUR HOST</small></div>
      <a href="#/technik">Technikcheck</a></div>
    {error&&<div role="alert" className="exp-error">{error} <a href="#/spielen">Zur Übersicht</a></div>}
-   {activeIdentity&&!error&&mode==='umfrageduell'?<UmfrageduellHost/>:
-    activeIdentity&&!error&&mode==='logikleiter'?<LogikleiterHost/>:
-    activeIdentity&&!error&&mode==='verbindungen'?<VerbindungenHost/>:
-    activeIdentity&&!error&&mode==='quiztafel'?<QuiztafelHost/>:
-    activeIdentity&&!error&&mode==='rundenquiz'?<RundenquizHost/>:
-    activeIdentity&&!error?<div role="status" className="exp-page">Sitzung wird geladen …</div>:
-    <div className="exp-page exp-empty">
+   {snapshot&&mode&&!error&&<HostCockpit event={snapshot}/>}
+   {activeIdentity&&!error&&!snapshot&&<p role="status" className="sp-cockpit-loading">Gespeicherter Spielstand wird geprüft …</p>}
+   {activeIdentity&&!error&&mode&&<div id="sp-host-game" className="sp-host-game-region">
+     {mode==='umfrageduell'?<UmfrageduellHost/>:
+      mode==='logikleiter'?<LogikleiterHost/>:
+      mode==='verbindungen'?<VerbindungenHost/>:
+      mode==='quiztafel'?<QuiztafelHost/>:<RundenquizHost/>}
+   </div>}
+   {!activeIdentity&&<div className="exp-page exp-empty">
      <h2>Keine Spielleitung in diesem Fenster</h2>
      <p>Öffne einen gespeicherten Spielstand aus Spielen oder bereite einen neuen Quizabend vor. Das Beamerfenster benötigt keine Hostanmeldung.</p>
      <a className="exp-primary" href="#/spielen">Spielstände ansehen</a>
