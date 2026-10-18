@@ -35,8 +35,8 @@
 .sp-cockpit-scores-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(175px,100%),1fr));gap:9px}
 .sp-cockpit-scores-grid .sp-score-chip{min-width:0;max-width:none;width:100%;box-sizing:border-box}
 .sp-cockpit-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px;background:#fff;border:1px solid #DCE4F2;padding:13px}
-.sp-cockpit-actions a{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:45px;padding:10px 14px;color:#203451;border:1px solid #C8D3E5;text-decoration:none;font-size:12px;font-weight:900}
-.sp-cockpit-actions a:hover{background:#EAF0FE}
+.sp-cockpit-actions :is(a,button){display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:45px;padding:10px 14px;color:#203451;border:1px solid #C8D3E5;text-decoration:none;font-size:12px;font-weight:900}
+.sp-cockpit-actions :is(a,button):hover{background:#EAF0FE}
 .sp-cockpit-actions .sp-cockpit-primary{background:#285BFF;color:#fff;border-color:#285BFF}
 .sp-cockpit-actions .sp-cockpit-primary:hover{background:#1649DE}
 .sp-cockpit-actions .sp-cockpit-stage{background:#FFE45C;color:#101629;border-color:#E6CB3D}
@@ -48,6 +48,8 @@
 .sp-shell--spielleitung .sp-host-game-region .rq-host{max-width:none;margin:0 auto 22px}
 .sp-cockpit :where(a,button):focus-visible{outline:3px solid #285BFF;outline-offset:3px}
 @media(max-width:800px){.sp-cockpit-overview{grid-template-columns:1fr 1fr}.sp-cockpit-fact--progress{grid-column:1/-1}.sp-cockpit-art{flex-basis:145px;height:140px}}
-@media(max-width:570px){.sp-cockpit-hero{padding:22px 18px;min-height:0}.sp-cockpit-art{position:absolute;right:-12px;top:0;width:150px;height:175px;opacity:.12}.sp-cockpit-overview{grid-template-columns:1fr}.sp-cockpit-fact--progress{grid-column:auto}.sp-cockpit-fact{min-height:0}.sp-cockpit-scores-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sp-cockpit-actions a{flex:1 1 100%;justify-content:space-between}.sp-cockpit-scores-head{display:grid}}
+@media(max-width:570px){.sp-cockpit-hero{padding:22px 18px;min-height:0}.sp-cockpit-art{position:absolute;right:-12px;top:0;width:150px;height:175px;opacity:.12}.sp-cockpit-overview{grid-template-columns:1fr}.sp-cockpit-fact--progress{grid-column:auto}.sp-cockpit-fact{min-height:0}.sp-cockpit-scores-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sp-cockpit-actions :is(a,button){flex:1 1 100%;justify-content:space-between}.sp-cockpit-scores-head{display:grid}}
 @media(max-width:370px){.sp-cockpit-scores-grid{grid-template-columns:minmax(0,1fr)}}
 @media(prefers-reduced-motion:reduce){.sp-cockpit *,.sp-cockpit *::before,.sp-cockpit *::after{animation:none!important;transition:none!important;transform:none!important}}
+
+.sp-cockpit-actions button{font-family:inherit;cursor:pointer}.sp-host-game-region:focus{outline:3px solid #285BFF;outline-offset:3px}

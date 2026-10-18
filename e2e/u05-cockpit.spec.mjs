@@ -27,7 +27,8 @@ test('U05 original game scores, safe public projector link and host commands',as
  await expect(stage).toHaveAttribute('href',/#\/stage\?event=/);
  await expect(stage).toHaveAttribute('target','_blank');
  await expect(stage).toHaveAttribute('rel',/noopener/);
- await cockpit.getByRole('link',{name:/Zur Originalsteuerung/}).click();
+ await cockpit.getByRole('button',{name:/Zur Originalsteuerung/}).click();
+ await expect(page.locator('#sp-host-game')).toBeFocused();
  await expect(page).toHaveURL(/#\/host$/);
  await expect(page.getByRole('button',{name:'Teams bestätigen'})).toBeEnabled();
  await page.getByRole('button',{name:'Teams bestätigen'}).click();

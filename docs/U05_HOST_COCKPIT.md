@@ -16,3 +16,5 @@ The real #/host route wraps the five original host components in a reusable, str
 
 ## Verification
 Dedicated Chromium U05 runs through actual U04->host, authentic scores and native control, safe stage link, bad host ownership and mobile layout. Original G4 Chromium suites, TypeScript, ESLint, Vitest, production/offline PWA builds and regressions must pass. Physical venue and full U01–U10 release qualification deferred.
+
+The control-focus shortcut is a button focusing the existing host area (not an invalid hash anchor that would trigger router navigation).

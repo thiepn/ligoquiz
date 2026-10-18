@@ -83,7 +83,7 @@ function HostSurface(){
    {error&&<div role="alert" className="exp-error">{error} <a href="#/spielen">Zur Übersicht</a></div>}
    {snapshot&&mode&&!error&&<HostCockpit event={snapshot}/>}
    {activeIdentity&&!error&&!snapshot&&<p role="status" className="sp-cockpit-loading">Gespeicherter Spielstand wird geprüft …</p>}
-   {activeIdentity&&!error&&mode&&<div id="sp-host-game" className="sp-host-game-region">
+   {activeIdentity&&!error&&mode&&<div id="sp-host-game" tabIndex={-1} className="sp-host-game-region">
      {mode==='umfrageduell'?<UmfrageduellHost/>:
       mode==='logikleiter'?<LogikleiterHost/>:
       mode==='verbindungen'?<VerbindungenHost/>:

@@ -48,7 +48,7 @@ export function HostCockpit({event}:{event:EventRecord}){
    </div>
   </div>
   <nav className="sp-cockpit-actions" aria-label="Spielleitung Schnellzugriffe">
-   <a className="sp-cockpit-primary" href="#sp-host-game">Zur Originalsteuerung <span aria-hidden="true">↓</span></a>
+   <button type="button" className="sp-cockpit-primary" onClick={()=>{document.getElementById('sp-host-game')?.focus();}}>Zur Originalsteuerung <span aria-hidden="true">↓</span></button>
    <a className="sp-cockpit-stage" href={stageUrl(event.id)} target="_blank" rel="noopener noreferrer">
     Öffentliches Beamerfenster öffnen <span aria-hidden="true">↗</span></a>
    <a href="#/technik">Technikcheck</a>
