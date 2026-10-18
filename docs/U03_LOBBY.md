@@ -15,3 +15,13 @@ No alterations to session engines, `HostSurface`, `StageView`, `SetupWizard`, of
 
 ## Development checks
 Run exact-head TypeScript, ESLint and Vite plus lightweight tests / Chromium lobby checks. Full projector/physical venue acceptance is deferred until after U10.
+
+## U03 browser compatibility follow-up
+
+The original G4 browser run #39159532507 had three failed checks that referenced retired presentation selectors/copy, not demonstrated lost game behavior:
+
+- G13 session count `2 von 2 Spielständen` was renamed to a live `2 von 2` counter.
+- G13/G5 `.exp-active` and `.exp-session-row` cards were replaced by `.sp-lobby-featured` and `.sp-lobby-session-row`.
+- G5 `Demo ausprobieren` became the genuine `Demo ansehen` link in the U03 hero.
+
+Original G13 two-session creation, filter/clear/no-result assertions and original G5 setup reload, host takeover, complete disposable demo sequence, private answer reveal protection, zero IndexedDB sessions, and preferences assertions remain. Only UI-target references were updated; production host, projector, persistence and game code is untouched. Comprehensive qualification remains after U10.
