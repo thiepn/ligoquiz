@@ -92,6 +92,28 @@
 .sp-prep .sp-prep-aside-details dd{font-weight:900;color:#1A2B4B;text-align:right}
 .sp-prep .sp-prep-aside-details p{font-size:11px;line-height:1.6;color:#5A6A83;margin:0}
 .sp-prep :where(input,select,button,a):focus-visible{outline:3px solid #285BFF;outline-offset:3px}
+
+/* The older global .exp-choice-games .exp-program is a flexbox rule. The U04
+   art/card layout must outrank it on every import order to prevent mobile overflow. */
+.sp-prep .exp-choice-games .exp-program.sp-prep-game{
+  display:grid;
+  grid-template-columns:65px minmax(0,1fr);
+  width:100%;max-width:100%;min-width:0;
+  box-sizing:border-box;
+}
+.sp-prep .sp-prep-game-copy{min-width:0;overflow-wrap:anywhere}
+.sp-prep .sp-prep-game-choices,.sp-prep .sp-prep-panel,
+.sp-prep .sp-prep-sources{min-width:0;max-width:100%;box-sizing:border-box}
+.sp-prep .sp-prep-sources label{min-width:0;overflow-wrap:anywhere}
+@media(max-width:570px){
+  .sp-prep .exp-choice-games .exp-program.sp-prep-game{
+    grid-template-columns:56px minmax(0,1fr);
+    gap:8px;
+  }
+  .sp-prep .sp-prep-game-choices{grid-template-columns:minmax(0,1fr)}
+  .sp-prep .sp-prep-game>b{white-space:normal;overflow-wrap:anywhere}
+}
+
 @media(max-width:1120px){.sp-prep .sp-prep-layout{grid-template-columns:minmax(0,1fr) 230px}.sp-prep .sp-prep-game-choices{grid-template-columns:1fr}}
 @media(max-width:800px){.sp-prep .sp-prep-layout{grid-template-columns:minmax(0,1fr)}.sp-prep .sp-prep-aside{position:static;grid-template-columns:1fr 1fr}.sp-prep .sp-prep-preview{min-height:230px}}
 @media(max-width:570px){.sp-prep .sp-prep-mast{padding:22px 17px;flex-direction:column}.sp-prep .sp-prep-steps>div{display:grid;gap:6px;padding:13px 8px;font-size:11px}.sp-prep .sp-prep-steps>div b{width:28px;height:28px}.sp-prep .sp-prep-steps>div small{font-size:9px}.sp-prep .sp-prep-roster{grid-template-columns:1fr}.sp-prep .sp-prep-aside{grid-template-columns:1fr}.sp-prep .sp-prep-game{grid-template-columns:56px minmax(0,1fr);padding:12px;gap:8px}.sp-prep .sp-prep-game.chosen{padding:11px}.sp-prep .sp-prep-game-art{width:56px;height:56px}.sp-prep .sp-prep-game-art .sp-motif{width:51px;height:51px}.sp-prep .sp-prep-actions{flex-wrap:wrap}.sp-prep .sp-prep-actions button{flex:1 1 100%}.sp-prep .sp-prep-mast h1{font-size:32px}}

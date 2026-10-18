@@ -9,3 +9,7 @@ The original three-step #/setup wizard is visually redesigned without replacing 
 * Distinct responsive desktop, tablet and 375px mobile, keyboard-visible focus and reduced-motion preference, offline-safe SVG/system fonts.
 
 Kept original headings, form labels, original buttons, selectors, event IDs, IndexedDB data, original localStorage schema, consent and G26 NO_GO. No added dependency. Dedicated Chromium exercises game choice through reload, fail-closed validation/acknowledgement, mobile layout. Original G5/G23 acceptance still applies. Qualification after U10.
+
+## Mobile Chromium layout correction
+
+Exact-head browser run #39166146949 passed 96 tests but revealed real 375px horizontal overflow on the Program step. The shared old .exp-choice-games .exp-program flex rule could override the U04 card grid at equal specificity, producing minimum-content overflow. Add a specifically scoped grid override and shrink-safe columns, text and content-source fieldset sizing instead of masking scroll overflow. Keep the 375px Playwright assertion unchanged; subsequent CI determines acceptance.
