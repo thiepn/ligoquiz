@@ -8,7 +8,8 @@ import {CutoverPreflight} from '../features/experience/CutoverPreflight';
 import {VisualEvidenceReview} from '../features/experience/VisualEvidenceReview';
 import { useEffect, useState } from 'react';
 import '../styles/umfrageduell.css';
-import { parseRoute, routeHref, currentEventId, type Route } from './routes';
+import { parseRoute, currentEventId } from './routes';
+import { AppShell } from './AppShell';
 import { StageView } from '../features/stage/StageView';
 import { ProjectorTechCheck } from '../features/host/ProjectorTechCheck';
 import { RundenquizHost } from '../features/host/RundenquizHost';
@@ -25,11 +26,6 @@ import { DisposableDemo } from '../features/experience/DisposableDemo';
 import { ExperienceSettings } from '../features/experience/ExperienceSettings';
 import { applyMotionPreference, readPreferences, readHostIdentity } from '../features/experience/model';
 
-const NAV: readonly {id:Route; label:string; symbol:string}[] = [
-  {id:'spielen',label:'Spielen',symbol:'▶'},
-  {id:'inhalte',label:'Inhalte',symbol:'▤'},
-  {id:'verlauf',label:'Verlauf',symbol:'◷'},
-];
 function useCurrentHash(){
   const [hash,setHash]=useState(() => window.location.hash);
   useEffect(()=>{
@@ -82,29 +78,9 @@ export function App(){
  useEffect(()=>{document.title=route==='stage'?'LiGoQuiz — Beamer':
   route==='host'?'LiGoQuiz — Spielleitung':'LiGoQuiz — '+(route==='spielen'?'Spielen':route);},[route]);
  if(route==='stage')return <StageView/>;
- if(route==='host')return <HostSurface/>;
+ if(route==='host')return <AppShell route={route}><HostSurface/></AppShell>;
  if(route==='demo')return <div className="exp-focused"><DisposableDemo/></div>;
- return <div className="app-shell">
-   <aside className="sidebar">
-     <a href={routeHref('spielen')} className="brand" aria-label="LiGoQuiz Startseite">
-       <span className="brand-symbol" aria-hidden="true">L<span>.</span></span>
-       <span className="brand-text">LiGo<span>Quiz</span><small>GAME NIGHT SYSTEM</small></span>
-     </a>
-     <div className="nav-group-title">NAVIGATION</div>
-     <nav className="main-nav" aria-label="Hauptnavigation">
-       {NAV.map(item=><a key={item.id} href={routeHref(item.id)}
-         className={'nav-item'+(route===item.id||(route==='setup'&&item.id==='spielen')||(route==='bericht'&&item.id==='verlauf')?' active':'')}
-         aria-current={route===item.id?'page':undefined}>
-         <span className="nav-symbol" aria-hidden="true">{item.symbol}</span>{item.label}
-       </a>)}
-     </nav>
-     <div className="sidebar-bottom">
-       <a className="exp-sidebar-link" href="#/technik">Beamer / Technikcheck</a>
-       <a className="exp-sidebar-link" href="#/einstellungen">Einstellungen</a>
-       <div className="version-info">VERSION 2.0 · G11 ENTWICKLUNG</div>
-     </div>
-   </aside>
-   <main className="workspace" id="main-content">
+ return <AppShell route={route}>
      {route==='spielen'&&<OrganizerHome/>}
      {route==='setup'&&<SetupWizard/>}
      {route==='inhalte'&&<ContentStudio/>}
@@ -126,6 +102,5 @@ export function App(){
        <PhysicalCustodyReview/>
        <p className="exp-footnote">Für einen echten Quizabend verbinde den Beamer über die Spielleitung des aktiven Spiels.</p>
      </section>}
-   </main>
- </div>;
+ </AppShell>;
 }
