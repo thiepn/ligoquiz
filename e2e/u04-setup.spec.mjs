@@ -1,0 +1,47 @@
+import {test,expect} from '@playwright/test';
+test('U04 lobby game selection persists through original setup and reload',async({page})=>{
+ await page.goto('/#/spielen');
+ await page.getByRole('button',{name:/Quiztafel auswählen/}).click();
+ await expect(page).toHaveURL(/#\/setup$/);
+ await page.getByRole('textbox',{name:'Team 1'}).fill('Nord');
+ await page.getByRole('button',{name:'Weiter'}).click();
+ await expect(page.getByRole('button',{name:/Quiztafel/})).toHaveAttribute('aria-pressed','true');
+ await page.getByRole('combobox',{name:'Umfang'}).selectOption('standard');
+ await page.getByRole('radio',{name:/Redaktionell freigegebene Inhaltsbibliothek/}).check();
+ await page.reload();
+ await expect(page.getByRole('heading',{name:'Programm wählen'})).toBeVisible();
+ await expect(page.getByRole('button',{name:/Quiztafel/})).toHaveAttribute('aria-pressed','true');
+ await expect(page.getByRole('combobox',{name:'Umfang'})).toHaveValue('standard');
+ await expect(page.getByRole('radio',{name:/Redaktionell freigegebene Inhaltsbibliothek/})).toBeChecked();
+ await page.getByRole('button',{name:'Weiter'}).click();
+ await expect(page.locator('.exp-summary')).toContainText('Nord');
+ await expect(page.locator('.exp-summary')).toContainText('Quiztafel');
+ await expect(page.locator('.sp-prep-local')).toContainText('NOCH NICHT LIVE');
+});
+test('U04 retains duplicate-name rejection and safe host acknowledgement',async({page})=>{
+ await page.goto('/#/setup');
+ await page.getByRole('textbox',{name:'Team 2'}).fill('Team 1');
+ await page.getByRole('button',{name:'Weiter'}).click();
+ await expect(page.getByRole('alert')).toContainText('eindeutigen Namen');
+ await expect(page.getByRole('heading',{name:'Teams festlegen'})).toBeVisible();
+ await page.getByRole('textbox',{name:'Team 2'}).fill('Team Zwei');
+ await page.getByRole('button',{name:'Weiter'}).click();
+ await page.getByRole('button',{name:'Weiter'}).click();
+ await page.getByRole('button',{name:'Spielleitung öffnen'}).click();
+ await expect(page.getByRole('alert')).toContainText('Beamer-Hinweise');
+ await expect(page).toHaveURL(/#\/setup$/);
+});
+test('U04 375px mobile flow has five games and no horizontal overflow',async({page})=>{
+ await page.setViewportSize({width:375,height:812});
+ await page.goto('/#/setup');
+ const fits=()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth);
+ expect(await fits()).toBe(true);
+ await page.getByRole('combobox',{name:'Anzahl der Teams'}).selectOption('5');
+ await expect(page.getByRole('textbox',{name:'Team 5'})).toBeVisible();
+ await page.getByRole('button',{name:'Weiter'}).click();
+ await expect(page.locator('.sp-prep-game')).toHaveCount(5);
+ expect(await fits()).toBe(true);
+ await page.getByRole('button',{name:'Weiter'}).click();
+ await expect(page.getByRole('heading',{name:'Bereit zum Spielen'})).toBeVisible();
+ expect(await fits()).toBe(true);
+});
