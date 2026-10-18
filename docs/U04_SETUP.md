@@ -13,3 +13,7 @@ Kept original headings, form labels, original buttons, selectors, event IDs, Ind
 ## Mobile Chromium layout correction
 
 Exact-head browser run #39166146949 passed 96 tests but revealed real 375px horizontal overflow on the Program step. The shared old .exp-choice-games .exp-program flex rule could override the U04 card grid at equal specificity, producing minimum-content overflow. Add a specifically scoped grid override and shrink-safe columns, text and content-source fieldset sizing instead of masking scroll overflow. Keep the 375px Playwright assertion unchanged; subsequent CI determines acceptance.
+
+## Chromium follow-up
+
+Run #39166808003 still shows a genuine program-step 375px horizontal overflow (96 other browser tests pass). Strengthening card grid specificity alone did not resolve it. Preserve the assertion while adding client-geometry diagnostics to identify the actual overflowing element before applying any further CSS patch.

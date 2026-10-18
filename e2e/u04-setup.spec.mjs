@@ -34,14 +34,27 @@ test('U04 retains duplicate-name rejection and safe host acknowledgement',async(
 test('U04 375px mobile flow has five games and no horizontal overflow',async({page})=>{
  await page.setViewportSize({width:375,height:812});
  await page.goto('/#/setup');
- const fits=()=>page.evaluate(()=>globalThis.document.documentElement.scrollWidth<=globalThis.innerWidth);
- expect(await fits()).toBe(true);
+ const fits=()=>page.evaluate(()=>{
+  const width=globalThis.innerWidth;
+  const doc=globalThis.document;
+  const offenders=Array.from(doc.querySelectorAll('*')).map(element=>({
+   tag:element.tagName,
+   cls:typeof element.className==='string'?element.className.slice(0,110):'',
+   right:Math.round(element.getBoundingClientRect().right),
+   left:Math.round(element.getBoundingClientRect().left),
+   scroll:element.scrollWidth,
+   client:element.clientWidth,
+  })).filter(x=>x.right>width+1||x.left< -1||x.scroll>x.client+5).slice(0,18);
+  return {ok:doc.documentElement.scrollWidth<=width,width,
+   scrollWidth:doc.documentElement.scrollWidth,offenders};
+ });
+ {const measurement=await fits();expect(measurement.ok,JSON.stringify(measurement)).toBe(true);}
  await page.getByRole('combobox',{name:'Anzahl der Teams'}).selectOption('5');
  await expect(page.getByRole('textbox',{name:'Team 5'})).toBeVisible();
  await page.getByRole('button',{name:'Weiter'}).click();
  await expect(page.locator('.sp-prep-game')).toHaveCount(5);
- expect(await fits()).toBe(true);
+ {const measurement=await fits();expect(measurement.ok,JSON.stringify(measurement)).toBe(true);}
  await page.getByRole('button',{name:'Weiter'}).click();
  await expect(page.getByRole('heading',{name:'Bereit zum Spielen'})).toBeVisible();
- expect(await fits()).toBe(true);
+ {const measurement=await fits();expect(measurement.ok,JSON.stringify(measurement)).toBe(true);}
 });
