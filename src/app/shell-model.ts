@@ -40,7 +40,7 @@ export function shellShortcutsFor(route:Route):readonly ShellLink[]{
   if(route==='setup')return [PRIMARY_LINKS[0]!,BACKSTAGE_LINKS[2]!];
   if(route==='spielen')return [
     {route:'setup',label:'Neuen Quizabend',description:'Teams & Programm',symbol:'↗'},
-    {route:'demo',label:'Demo ausprobieren',description:'Ohne Spielstand',symbol:'▷'},
+    {route:'demo',label:'Demo öffnen',description:'Ohne Spielstand',symbol:'▷'},
   ];
   if(route==='technik')return [PRIMARY_LINKS[1]!,PRIMARY_LINKS[0]!];
   if(route==='verlauf'||route==='bericht')return [PRIMARY_LINKS[0]!,BACKSTAGE_LINKS[0]!];
