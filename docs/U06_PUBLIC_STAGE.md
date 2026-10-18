@@ -5,3 +5,6 @@ Rebuild the actual #/stage presentation using public-scene kinds only. New full-
 The original StageViewer BroadcastChannel protocol, strict public DTO allowlist, no IndexedDB/host identity on projector, explicit host publication, stale/conflict blanking, session IDs, engines, timers, backups and G26 NO_GO stay unchanged. No host UI/gameplay redesign. The G15 archived visual baselines and existing tests remain immutable, and U06 captures new non-golden screenshots separately.
 
 Validation: new phase and score Vitest; real browser host-to-projector publish/reveal with unpublished answers hidden, 1280×720/mobile 375px overflow and reduced-motion, original G15 privacy/screenshots, offline installed PWA, TypeScript/lint/Vite. Physical projector and human release approvals remain pending.
+
+## Initial Chromium compatibility finding
+Run #39174856113: 102 of 103 browser tests passed. The new connected-host stage assertion incorrectly required withheld, whereas the existing HostStagePublisher is allowed to supply its genuine public waiting scene before question publication. Keep both safe prepublication states in test acceptance and explicitly check private answer absence. Do not modify StageViewer, publication authority, or the rest of the scenario. Exact-head rerun required.

@@ -32,7 +32,9 @@ test('U06 original host explicitly publishes and reveals public scene',async({pa
  await stagePage.setViewportSize({width:1280,height:720});
  await stagePage.goto('http://127.0.0.1:4178/'+href);
  const stage=stagePage.locator('.stage-preview');
- await expect(stage).toHaveAttribute('data-stage-phase','withheld');
+ // A connected host may already publish the strictly public waiting frame.
+ await expect(stage).toHaveAttribute('data-stage-phase',/^(withheld|waiting)$/);
+ await expect(stagePage.locator('.stage-center')).not.toContainText('Josua');
  await stagePage.screenshot({path:evidence+'/standby-1280.png'});
  await host.getByRole('button',{name:'Teams bestätigen'}).click();
  await host.getByRole('button',{name:'Frage auf Beamer zeigen'}).click();
