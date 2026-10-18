@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { BrowserStagePort, stageEventIdFromHash } from './protocol';
 import { StageViewer, type ViewerState } from './stage-viewer';
 import type { PublicStageScene } from '../../domain/projection/public-stage';
+import {stagePresentation,publicScoreRows} from './stage-presentation';
+import './studio-stage.css';
 
 const WAIT: ViewerState = { status: 'connecting', frame: null, lastReceivedAt: null };
 
@@ -92,11 +94,18 @@ function Scene({ scene }: { scene: PublicStageScene }) {
     );
   }
   if (scene.kind === 'scores') {
-    return <div className="stage-live-question">
-      <p className="stage-kicker">ZWISCHENSTAND</p><h1>{scene.heading}</h1>
-      <div className="stage-scores">{scene.visibleScores.map((team) => (
-        <div key={team.name}><span>{team.name}</span><strong>{team.value}</strong></div>
-      ))}</div>
+    return <div className="stage-live-question sp-stage-score-scene">
+      <p className="stage-kicker">DIE PUNKTE AUF EINEN BLICK</p><h1>{scene.heading}</h1>
+      <div className="stage-scores sp-stage-scores" aria-label="Öffentlicher Punktestand">
+        {publicScoreRows(scene.visibleScores).map(team=><div key={team.name}
+          className={'sp-stage-score-row'+(team.leading?' is-leading':'')}
+          aria-label={team.name+': '+team.points+' Punkte, Platz '+team.rank}>
+          <span className="sp-stage-score-rank" aria-hidden="true">{String(team.rank).padStart(2,'0')}</span>
+          <span className="sp-stage-score-name">{team.name}</span>
+          <strong>{team.points.toLocaleString('de-DE')}<small>PUNKTE</small></strong>
+          <span className="sp-stage-score-bar" aria-hidden="true"><span style={{width:team.share+'%'}}/></span>
+        </div>)}
+      </div>
     </div>;
   }
   return <div className="stage-live-question">
@@ -139,6 +148,7 @@ export function StageView() {
   // Hash navigation can reuse this component before useEffect has reset its old state.
   // Never paint an answer belonging to a previously selected event.
   const scene = state.status === 'live' && state.frame?.eventId === eventId ? state.frame.scene : null;
+  const presentation = stagePresentation(scene,state.status);
   const status = !eventId ? 'Sitzungslink fehlt' : error
     ? 'Nicht unterstützt'
     : scene ? 'Mit Spielleitung verbunden'
@@ -146,15 +156,17 @@ export function StageView() {
     : state.status === 'conflict' ? 'Übertragung widersprüchlich'
     : 'Verbindung unterbrochen';
 
-  return <main className="stage-preview" data-public-scene={scene?.kind??'withheld'} aria-label="Beamer-Ansicht">
+  return <main className="stage-preview sp-stage" data-public-scene={scene?.kind??'withheld'}
+    data-stage-phase={presentation.phase} data-stage-tone={presentation.tone} aria-label="Beamer-Ansicht">
     <div className="stage-topline">
-      <span>LiGo<span className="stage-yellow">Quiz</span></span>
+      <span className="sp-stage-logo">LiGo<span className="stage-yellow">Quiz</span><b aria-hidden="true">!</b></span>
+      <span className="sp-stage-phase"><span className="sp-stage-phase-dot" aria-hidden="true"/>{presentation.label}</span>
       <span>LIGOQUIZ · BEAMER</span>
     </div>
     <div className="stage-center" aria-live="polite" aria-atomic="true">
       {scene ? <Scene scene={scene}/> : <>
-        <div className="stage-mark" aria-hidden="true"><span/><span/><span/></div>
-        <p className="stage-kicker">{state.status === 'stale' || state.status === 'conflict' ? 'VERBINDUNG UNTERBROCHEN' : 'BEREIT FÜR DEN QUIZABEND'}</p>
+        <div className="stage-mark sp-stage-mark" aria-hidden="true"><span>?</span><span>✳</span><span>★</span></div>
+        <p className="stage-kicker">{presentation.label}</p>
         <h1>Warte auf die<br/><span>Spielleitung</span></h1>
         <p>{!eventId ? 'Öffne diesen Bildschirm über die Spielleitung.'
           : error ?? (state.status === 'conflict'
@@ -164,7 +176,7 @@ export function StageView() {
     </div>
     <div className="stage-bottom">
       <span aria-live="polite">{status}</span>
-      <span>Nur freigegebene Spielinhalte</span>
+      <span className="sp-stage-trust"><span aria-hidden="true">◆</span> Nur freigegebene Spielinhalte</span>
     </div>
   </main>;
 }
