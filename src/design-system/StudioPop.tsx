@@ -68,7 +68,7 @@ export function PopPanel({children,title,eyebrow,className,...rest}:HTMLAttribut
   </section>;
 }
 
-export function GameTile({game,number,href,description}:{game:GameType;number?:string;href?:string;description?:string}){
+export function GameTile({game,number,href,description,onSelect}:{game:GameType;number?:string;href?:string;description?:string;onSelect?:()=>void}){
   const visual=GAME_VISUALS[game];
   const content=<>
     <span className="sp-game-top"><span>{number ?? visual.category}</span><span aria-hidden="true">{visual.symbol}</span></span>
@@ -76,7 +76,8 @@ export function GameTile({game,number,href,description}:{game:GameType;number?:s
     <span className="sp-game-bottom"><span className="sp-game-kicker">{visual.kicker}</span><strong>{visual.label}</strong><span>{description ?? visual.description}</span></span>
   </>;
   const cn=join('sp-game-tile','sp-tone--'+visual.tone);
-  return href?<a className={cn} href={href}>{content}</a>:<article className={cn}>{content}</article>;
+  return onSelect?<button type="button" className={cn} onClick={onSelect} aria-label={visual.label+' auswählen und Vorbereitung öffnen'}>{content}<span className="sp-game-select" aria-hidden="true">WÄHLEN ↗</span></button>:
+    href?<a className={cn} href={href}>{content}</a>:<article className={cn}>{content}</article>;
 }
 
 export function TeamBadge({name,tone='blue',short}:{name:string;tone?:TeamTone;short?:string}){

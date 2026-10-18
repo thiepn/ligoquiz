@@ -4,6 +4,11 @@ import type { EventRecord } from '../../domain/event/schemas';
 import { readHostIdentity, writeHostIdentity, reportFor, safeFileName, readSetupDraft } from './model';
 import { filterSessions, reportCsv, csvFileName } from './session-tools';
 import '../../styles/g13-organizer.css';
+import {GameTile} from '../../design-system/StudioPop';
+import {GAME_ORDER,GAME_VISUALS} from '../../design-system/theme';
+import type {GameType} from '../../domain/game/contracts';
+import {newSetupDraft,readPreferences,saveSetupDraft} from './model';
+import './u03-lobby.css';
 
 type Directory = { items: EventRecord[]; invalidCount: number };
 function statusFor(event: EventRecord): string {
@@ -79,40 +84,112 @@ export function OrganizerHome() {
  const matching=filterSessions(outstanding,query);
  const latest=matching[0];
  const draft=readSetupDraft();
- return <section className="exp-page">
-  <div className="exp-heading"><div><p className="eyebrow">SPIELEN</p><h1>Quizabend organisieren</h1>
-    <p>Teams zusammenstellen, Beamer vorbereiten, gemeinsam spielen.</p></div></div>
-  <div className="exp-home-choices">
-   <a className="exp-primary exp-start" href="#/setup"><span>Quizabend starten</span><span aria-hidden="true">↗</span></a>
-   <a className="exp-secondary exp-demo-action" href="#/demo">Demo ausprobieren <span aria-hidden="true">↗</span></a>
-  </div>
-  {draft&&<div className="exp-resume-note"><div><strong>Vorbereitung fortsetzen</strong>
-    <p>{draft.count} Teams · {draft.game==='quiztafel'?'Quiztafel':draft.game==='verbindungen'?'Verbindungen':draft.game==='logikleiter'?'Logikleiter':draft.game==='umfrageduell'?'Umfrageduell':'Rundenquiz'} {draft.profile} · Schritt {draft.step+1} von 3</p></div>
-    <a className="exp-secondary" href="#/setup">Fortsetzen</a></div>}
-  {outstanding.length>1&&<div className="exp-search">
-    <label>Spielstände durchsuchen<input type="search" value={query} onChange={e=>setQuery(e.target.value)}
-     placeholder="Spiel, Team oder Status" aria-label="Spielstände durchsuchen"/></label>
-    <small aria-live="polite">{matching.length} von {outstanding.length} Spielständen</small>
-  </div>}
-  {dir&&outstanding.length>0&&matching.length===0&&<p className="exp-search-empty" role="status">Keine passenden Spielstände gefunden.</p>}
-  {latest&&<div className="exp-active">
-    <div><span className="eyebrow">ZULETZT GESPEICHERT</span><h2>{statusFor(latest)}</h2>
-      <p>{eventProgress(latest)}</p><p className="exp-team-names">{latest.teams.map(t=>t.name).join(' · ')}</p><small>Letzte Änderung: {new Date(latest.updatedAt).toLocaleString('de-DE')}</small></div>
-    <ResumeButton event={latest} onError={setActionError}/>
-  </div>}
-  {matching.length>1&&<div className="exp-session-list">
-    <h2>Weitere Spielstände</h2>
-    {matching.slice(1).map(e=><div className="exp-session-row" key={e.id}>
-      <div><strong>{statusFor(e)}</strong><p>{eventProgress(e)}</p><p className="exp-team-names">{e.teams.map(t=>t.name).join(' · ')}</p></div>
+
+ function chooseGame(game:GameType) {
+  const current=readSetupDraft();
+  if(current && current.game!==game && current.step>0 &&
+   !window.confirm('Eine angefangene Vorbereitung ist gespeichert. Nur die Spielauswahl ändern und die Vorbereitung erneut prüfen?'))return;
+  try {
+   const base=current??newSetupDraft(readPreferences());
+   // Selection is an explicit user action. Reuse the existing draft schema;
+   // never create or modify a live event from the lobby.
+   saveSetupDraft({...base,game,step:current && current.game!==game && current.step===2?1:base.step});
+   window.location.hash='#/setup';
+  }catch(e){setActionError(e instanceof Error?e.message:'Spielauswahl konnte nicht gespeichert werden.');}
+ }
+
+ return <section className="sp-lobby" aria-label="LiGoQuiz Spielwelt">
+  <section className="sp-lobby-hero" aria-labelledby="sp-lobby-title">
+   <div className="sp-lobby-hero-copy">
+    <span className="sp-lobby-eyebrow"><span className="sp-lobby-spark" aria-hidden="true">✳</span> LICHT AN. TEAMS BEREIT.</span>
+    <h1 id="sp-lobby-title">Heute wird<br/><em>gespielt!</em></h1>
+    <p>Fünf Spielwelten, ein unvergesslicher Quizabend. Stelle deine Teams zusammen und bring die Show auf die Bühne.</p>
+    <div className="sp-lobby-actions">
+     <a className="sp-lobby-cta" href="#/setup">Neuen Quizabend vorbereiten <span aria-hidden="true">↗</span></a>
+     <a className="sp-lobby-demo" href="#/demo">Demo ansehen <span aria-hidden="true">▷</span></a>
+    </div>
+    <span className="sp-lobby-trial">Zum Testen stehen ausdrücklich gekennzeichnete Probeinhalte bereit. Redaktionell freigegebene Inhalte werden im Setup gesondert gewählt.</span>
+   </div>
+   <div className="sp-lobby-poster" aria-hidden="true">
+    <span className="sp-lobby-halo"/><span className="sp-lobby-poster-mark">?</span>
+    <span className="sp-lobby-poster-star">★</span><span className="sp-lobby-poster-burst">✳</span>
+    <span className="sp-lobby-poster-caption">QUIZ NIGHT<br/>SHOWTIME</span>
+   </div>
+  </section>
+
+  {draft&&<aside className="sp-lobby-draft" aria-label="Gespeicherte Vorbereitung">
+   <div className="sp-lobby-draft-mark" aria-hidden="true">↗</div>
+   <div><span className="sp-lobby-mini-label">NOCH NICHT GESTARTET</span>
+    <h2>Deine Vorbereitung liegt bereit.</h2>
+    <p>{draft.count} Teams · {GAME_VISUALS[draft.game].label} · {draft.profile} · Schritt {draft.step+1} von 3</p>
+   </div>
+   <a href="#/setup" className="sp-lobby-draft-link">Weiter vorbereiten <span aria-hidden="true">→</span></a>
+  </aside>}
+
+  <section className="sp-lobby-games" aria-labelledby="sp-lobby-games-heading">
+   <div className="sp-lobby-section-head">
+    <div><span className="sp-lobby-mini-label">DIE SPIELWELTEN</span><h2 id="sp-lobby-games-heading">Such dir dein Spiel aus.</h2>
+     <p>Tippe auf eine Spielkarte. Die Auswahl wird in der Vorbereitung gespeichert; dort legst du Teams, Umfang und Inhalte fest.</p>
+    </div>
+    <span className="sp-lobby-counter">05 <small>SPIELE</small></span>
+   </div>
+   <div className="sp-lobby-game-grid">
+    {GAME_ORDER.map((game,index)=><GameTile key={game} game={game}
+      number={String(index+1).padStart(2,'0')+' / 05'} onSelect={()=>chooseGame(game)}/>)}
+   </div>
+  </section>
+
+  <section className="sp-lobby-sessions" aria-labelledby="sp-lobby-sessions-heading">
+   <div className="sp-lobby-section-head">
+    <div><span className="sp-lobby-mini-label">DEINE SPIELSTÄNDE</span><h2 id="sp-lobby-sessions-heading">Weiterspielen.</h2>
+     <p>Nur lokale Spielstände aus diesem Browser. Die Wiederaufnahme prüft die Berechtigung der Spielleitung.</p></div>
+    {dir&&<span className="sp-lobby-session-count">{outstanding.length} {outstanding.length===1?'offener Abend':'offene Abende'}</span>}
+   </div>
+   {!dir&&!error&&<div className="sp-lobby-empty" role="status">Lokale Spielstände werden geladen …</div>}
+   {dir&&outstanding.length===0&&<div className="sp-lobby-empty">
+    <span className="sp-lobby-empty-icon" aria-hidden="true">✦</span>
+    <div><h3>Die Bühne ist frei.</h3><p>Noch kein offener Quizabend gespeichert. Starte mit einem neuen Spiel oder probiere die Demo.</p></div>
+    <a href="#/setup">Ersten Abend vorbereiten <span aria-hidden="true">→</span></a>
+   </div>}
+   {outstanding.length>1&&<div className="sp-lobby-search">
+    <label htmlFor="sp-lobby-session-search">Spielstände suchen</label>
+    <input id="sp-lobby-session-search" type="search" value={query} onChange={e=>setQuery(e.target.value)}
+      placeholder="Spiel, Team oder Status" aria-label="Spielstände durchsuchen"/>
+    <span aria-live="polite">{matching.length} von {outstanding.length}</span>
+   </div>}
+   {dir&&outstanding.length>0&&matching.length===0&&
+    <p className="sp-lobby-empty" role="status">Keine passenden Spielstände gefunden.</p>}
+   {latest&&<article className="sp-lobby-featured">
+    <div className="sp-lobby-featured-copy"><span className="sp-lobby-mini-label">ZULETZT GESPEICHERT</span>
+     <h3>{statusFor(latest)}</h3>
+     <p className="sp-lobby-session-progress">{eventProgress(latest)}</p>
+     <p className="sp-lobby-team-names">{latest.teams.map(t=>t.name).join(' · ')}</p>
+     <small>Letzte Änderung: {new Date(latest.updatedAt).toLocaleString('de-DE')}</small>
+    </div>
+    <div className="sp-lobby-resume"><ResumeButton event={latest} onError={setActionError}/></div>
+   </article>}
+   {matching.length>1&&<div className="sp-lobby-other-sessions">
+    <h3>Weitere Spielstände</h3>
+    {matching.slice(1).map(e=><article className="sp-lobby-session-row" key={e.id}>
+      <div><strong>{statusFor(e)}</strong><p>{eventProgress(e)}</p>
+       <p className="sp-lobby-team-names">{e.teams.map(t=>t.name).join(' · ')}</p>
+       <small>{new Date(e.updatedAt).toLocaleString('de-DE')}</small>
+      </div>
       <ResumeButton event={e} onError={setActionError}/>
-    </div>)}
-  </div>}
+     </article>)}
+   </div>}
+  </section>
+
   {actionError&&<p role="alert" className="exp-error">{actionError}</p>}
   {error&&<p role="alert" className="exp-error">{error}</p>}
-  {dir?.invalidCount ? <p role="alert" className="exp-error">{dir.invalidCount} beschädigte Spielstände wurden erkannt und nicht verändert. Wiederherstellung erfordert eine gesonderte Prüfung.</p> : null}
-  <div className="exp-utility-line"><a href="#/technik">Beamer / Technikcheck</a>
-   <a href="#/einstellungen">Einstellungen</a><a href="#/verlauf">Vergangene Abende</a></div>
-  <p className="exp-footnote">Im Testbetrieb: Rundenquiz, Quiztafel, Verbindungen, Logikleiter und Umfrageduell mit Probeinhalten. Weitere Spiele und die geprüfte Inhaltsbibliothek folgen.</p>
+  {!!dir?.invalidCount&&<p role="alert" className="exp-error">{dir.invalidCount} beschädigte Spielstände wurden erkannt und nicht verändert. Wiederherstellung erfordert eine gesonderte Prüfung.</p>}
+
+  <nav className="sp-lobby-links" aria-label="Weitere Werkzeuge">
+   <a href="#/technik"><span aria-hidden="true">▣</span> Beamer & Technikcheck</a>
+   <a href="#/inhalte"><span aria-hidden="true">▦</span> Inhalte prüfen</a>
+   <a href="#/verlauf"><span aria-hidden="true">◷</span> Vergangene Abende</a>
+   <a href="#/einstellungen"><span aria-hidden="true">⚙</span> Einstellungen & Sicherungen</a>
+  </nav>
  </section>;
 }
 
