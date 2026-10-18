@@ -25,3 +25,5 @@ The original G4 browser run #39159532507 had three failed checks that referenced
 - G5 `Demo ausprobieren` became the genuine `Demo ansehen` link in the U03 hero.
 
 Original G13 two-session creation, filter/clear/no-result assertions and original G5 setup reload, host takeover, complete disposable demo sequence, private answer reveal protection, zero IndexedDB sessions, and preferences assertions remain. Only UI-target references were updated; production host, projector, persistence and game code is untouched. Comprehensive qualification remains after U10.
+
+- Follow-up G4 run #39160737698: **94/94 regular Chromium tests pass**, including G5 and G13. Offline G11 shell assertion still expected retired homepage heading `Quizabend organisieren` after navigating to `#/spielen` with the browser offline. Update only that heading to the real U03 headline `Heute wird gespielt!`; preserve the prerequisite service-worker activation/controller, explicit preflight, offline navigation to both Spielwelt and Technik, and original other six offline tests.
