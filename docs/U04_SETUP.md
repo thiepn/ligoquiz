@@ -17,3 +17,7 @@ Exact-head browser run #39166146949 passed 96 tests but revealed real 375px hori
 ## Chromium follow-up
 
 Run #39166808003 still shows a genuine program-step 375px horizontal overflow (96 other browser tests pass). Strengthening card grid specificity alone did not resolve it. Preserve the assertion while adding client-geometry diagnostics to identify the actual overflowing element before applying any further CSS patch.
+
+## Root cause and scoped fix
+
+Run #39167482028 geometry diagnosed 391px document width at a 375px viewport: five SVG motifs each had a bounding rectangle starting x=332 and ending x=391. U01's global Studio Pop .sp-motif assumes absolute positioning for its full-size GameTile. U04 placed those motifs inside smaller game card icon boxes without resetting position. U04-only selectors now restore static in-flow SVG positioning and remove inherited right/top offsets/rotation for game-selection and side-preview art. Original five-game lobby decorative motifs and public projector remain untouched; maintain real overflow check.

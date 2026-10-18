@@ -93,6 +93,20 @@
 .sp-prep .sp-prep-aside-details p{font-size:11px;line-height:1.6;color:#5A6A83;margin:0}
 .sp-prep :where(input,select,button,a):focus-visible{outline:3px solid #285BFF;outline-offset:3px}
 
+/* U01 motifs are absolutely positioned for full-size GameTile artwork.
+   In U04 they are content inside bounded icon boxes: reset positioning there,
+   not on shared U01 tiles or the public stage. */
+.sp-prep .sp-prep-game-art .sp-motif,
+.sp-prep .sp-prep-preview-art .sp-motif{
+  position:static;
+  inset:auto;
+  display:block;
+  transform:none;
+  color:#fff;
+  opacity:1;
+  flex:none;
+}
+
 /* The older global .exp-choice-games .exp-program is a flexbox rule. The U04
    art/card layout must outrank it on every import order to prevent mobile overflow. */
 .sp-prep .exp-choice-games .exp-program.sp-prep-game{
