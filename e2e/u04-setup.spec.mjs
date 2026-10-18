@@ -34,7 +34,7 @@ test('U04 retains duplicate-name rejection and safe host acknowledgement',async(
 test('U04 375px mobile flow has five games and no horizontal overflow',async({page})=>{
  await page.setViewportSize({width:375,height:812});
  await page.goto('/#/setup');
- const fits=()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth);
+ const fits=()=>page.evaluate(()=>globalThis.document.documentElement.scrollWidth<=globalThis.innerWidth);
  expect(await fits()).toBe(true);
  await page.getByRole('combobox',{name:'Anzahl der Teams'}).selectOption('5');
  await expect(page.getByRole('textbox',{name:'Team 5'})).toBeVisible();
