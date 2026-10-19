@@ -15,15 +15,10 @@ export function TechWorkflowNavigation(){
   element.focus({preventScroll:true});
  }
  return <nav className="u10-tech-navigation" aria-label="Regie Arbeitsablauf">
-  <div className="u10-tech-navigation-title">
-   <div><span>DEIN VOR-SHOW-ABLAUF</span><strong>Prüfen. Proben. Nachweise behalten.</strong></div>
-   <p>Die Schritte verlinken die echten vorhandenen Prüfwerkzeuge, nicht simulierte Freigaben.</p>
-  </div>
   <div className="u10-tech-step-grid">
    {sections.map(step=><button key={step.id} type="button" aria-controls={step.id}
      onClick={()=>jump(step.id)}>
-    <span>{step.number}</span><strong>{step.title}</strong><small>{step.description}</small>
-    <b aria-hidden="true">↓</b>
+    <strong>{step.title}</strong>
    </button>)}
   </div>
   <div className="u10-tech-handoffs">

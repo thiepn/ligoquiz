@@ -48,35 +48,25 @@ export function SetupWizard() {
     finally{await repo.close();setBusy(false);}
   }
 
-  const visual=GAME_VISUALS[draft.game];
   const activeNames=draft.teams.slice(0,draft.count);
   const normalized=activeNames.map(n=>n.trim().toLocaleLowerCase('de-DE'));
   const duplicateNames=new Set(normalized.filter((n,i)=>n&&normalized.indexOf(n)!==i));
-  const quantities={
-    kurz:draft.game==='quiztafel'?draft.count*3:draft.game==='logikleiter'?3:draft.game==='umfrageduell'?4:draft.game==='verbindungen'?draft.count+1:7,
-    standard:draft.game==='quiztafel'?draft.count*5:draft.game==='logikleiter'?5:draft.game==='umfrageduell'?6:draft.game==='verbindungen'?2*draft.count+1:11,
-    lang:draft.game==='quiztafel'?draft.count*6:draft.game==='logikleiter'?7:draft.game==='umfrageduell'?10:draft.game==='verbindungen'?3*draft.count+1:16,
-  };
-  const quantityUnit=draft.game==='quiztafel'?'Felder':draft.game==='logikleiter'?'Stufen':draft.game==='umfrageduell'?'Umfragen':'Aufgaben';
-  const profiles={kurz:'Kurz',standard:'Standard',lang:'Lang'} as const;
   return <section className="exp-page sp-prep" aria-label="Quizabend vorbereiten">
     <header className="sp-prep-mast">
-      <div><span className="sp-prep-overline">VOR DER SHOW ✳ DEINE BÜHNE</span>
-        <h1>Spielabend <em>vorbereiten</em></h1>
-        <p>Teams aufstellen, Spiel und Inhalte wählen und sicher zur privaten Spielleitung übergeben.</p>
-        <span className="sp-prep-local">● LOKALE VORBEREITUNG · NOCH NICHT LIVE</span>
+      <div>
+        <h1>Quizabend vorbereiten</h1>
+        <span className="sp-prep-local">LOKAL · NOCH NICHT LIVE</span>
       </div>
       <a href="#/spielen" className="sp-prep-exit">← Zur Übersicht</a>
       <span className="sp-prep-decor" aria-hidden="true">!</span>
     </header>
     <nav aria-label="Vorbereitungsschritte" className="exp-steps sp-prep-steps">
       {steps.map((name,i)=><div key={name} aria-current={draft.step===i?'step':undefined}
-        className={draft.step===i?'exp-current':i<draft.step?'sp-prep-done':''}><b>0{i+1}</b><span>{name}<small>{i===0?'Besetzung':i===1?'Spiel & Quelle':'Sicher starten'}</small></span></div>)}
+        className={draft.step===i?'exp-current':i<draft.step?'sp-prep-done':''}><b>0{i+1}</b><span>{name}</span></div>)}
     </nav>
     <div className="sp-prep-layout"><div className="sp-prep-main">
     {draft.step===0&&<div className="exp-form sp-prep-panel">
-      <span className="sp-prep-kicker">01 / DIE TEAMS</span>
-      <h2>Teams festlegen</h2><p>Vier Teams sind voreingestellt. Namen können jederzeit vor dem Start geändert werden.</p>
+      <h2>Teams festlegen</h2>
       <label className="exp-field">Anzahl der Teams
         <select value={draft.count} onChange={e=>set({count:Number(e.target.value) as SetupDraft['count']})}>
           {[3,4,5].map(n=><option key={n} value={n}>{n} Teams</option>)}</select>
@@ -87,26 +77,20 @@ export function SetupWizard() {
         </label>)}</div>
     </div>}
     {draft.step===1&&<div className="exp-form sp-prep-panel">
-      <span className="sp-prep-kicker">02 / DAS PROGRAMM</span>
       <h2>Programm wählen</h2>
-      <p>Fünf Spielmodi sind im Testbetrieb verfügbar.</p>
       <div className="exp-choice-games sp-prep-game-choices" aria-label="Spielmodus wählen">
-        {GAME_ORDER.map((game,i)=>{
+        {GAME_ORDER.map(game=>{
           const look=GAME_VISUALS[game],chosen=draft.game===game;
           return <button type="button" key={game}
             className={'exp-program sp-prep-game sp-prep-game--'+look.tone+(chosen?' chosen':'')}
             aria-pressed={chosen} onClick={()=>set({game})}>
             <span className="sp-prep-game-art" aria-hidden="true"><StudioPopMotif game={game}/></span>
-            <span className="sp-prep-game-copy"><small>{String(i+1).padStart(2,'0')} / 05 · {look.kicker}</small>
+            <span className="sp-prep-game-copy">
               <strong>{look.label}</strong><span>{look.description}</span></span>
-            <b>{chosen?'Ausgewählt ✓':'Wählen ↗'}</b>
+            <b>{chosen?'Ausgewählt':'Wählen'}</b>
           </button>;
         })}
-      </div>
-      <div className="sp-prep-profile-note" aria-live="polite">
-        <strong>{quantities[draft.profile]}</strong><span>{quantityUnit} · {profiles[draft.profile]}<small>Umfang deiner aktuellen Auswahl</small></span>
-      </div>
-      <label className="exp-field">Umfang
+      </div>      <label className="exp-field">Umfang
         <select value={draft.profile} onChange={e=>set({profile:e.target.value as SetupDraft['profile']})}>
           <option value="kurz">Kurz · {draft.game==='quiztafel'?draft.count*3+' Felder':draft.game==='logikleiter'?'3 Stufen':draft.game==='umfrageduell'?'4 Umfragen':draft.game==='verbindungen'?(draft.count+1)+' Aufgaben':'7 Aufgaben'}</option>
           <option value="standard">Standard · {draft.game==='quiztafel'?draft.count*5+' Felder':draft.game==='logikleiter'?'5 Stufen':draft.game==='umfrageduell'?'6 Umfragen':draft.game==='verbindungen'?(2*draft.count+1)+' Aufgaben':'11 Aufgaben'}</option>
@@ -126,9 +110,7 @@ export function SetupWizard() {
       <p className="exp-notice">Die Probeinhalte sind weder importiert noch redaktionell freigegeben. Quiztafel hat feste Wahlrechte; Verbindungen verteilt alle Einzelaufgaben gleichmäßig. Logikleiter bietet allen Teams dieselben Stufen. Umfrageduell nutzt ausdrücklich erfundene Beispieldaten, keine echte Befragung.</p>
     </div>}
     {draft.step===2&&<div className="exp-form sp-prep-panel">
-      <span className="sp-prep-kicker">03 / DER SICHERE START</span>
       <h2>Bereit zum Spielen</h2>
-      <p>Die nächste Aktion öffnet die private Spielleitung. Noch keine Frage wird öffentlich gezeigt.</p>
       <div className="exp-summary">
         <div><span>Teams</span><strong>{draft.count}</strong><p>{draft.teams.slice(0,draft.count).join(' · ')}</p></div>
         <div><span>Programm</span><strong>{draft.game==='quiztafel'?'Quiztafel':draft.game==='verbindungen'?'Verbindungen':draft.game==='logikleiter'?'Logikleiter':draft.game==='umfrageduell'?'Umfrageduell':'Rundenquiz'}</strong><p>{draft.game==='quiztafel'?draft.count*(draft.profile==='kurz'?3:draft.profile==='standard'?5:6):draft.game==='logikleiter'?(draft.profile==='kurz'?3:draft.profile==='standard'?5:7):draft.game==='umfrageduell'?(draft.profile==='kurz'?4:draft.profile==='standard'?6:10):draft.game==='verbindungen'?draft.count*(draft.profile==='kurz'?1:draft.profile==='standard'?2:3)+1:draft.profile==='kurz'?7:draft.profile==='standard'?11:16} {draft.game==='quiztafel'?'Felder':'Aufgaben'} · {draft.contentSource==='approved'?'freigegebene Bibliothek':'Probeinhalte'}</p></div>
@@ -148,26 +130,7 @@ export function SetupWizard() {
         {draft.step===2?'Spielleitung öffnen':'Weiter'}
       </button>
     </div>
-    <p className="exp-footnote">Die Vorbereitung wird in diesem Browser zwischengespeichert. Sie startet weder einen Timer noch zeigt sie eine Frage auf dem Beamer.</p>
     </div>
-    <aside className="sp-prep-aside" aria-label="Lokale Spielauswahl-Vorschau">
-      <div className={'sp-prep-preview sp-prep-preview--'+visual.tone}>
-        <span>DEIN SPIELABEND <b aria-hidden="true">✳</b></span>
-        <div className="sp-prep-preview-art" aria-hidden="true"><StudioPopMotif game={draft.game}/></div>
-        <small>AKTUELL GEWÄHLT</small>
-        <strong>{visual.label}</strong>
-        <p>{visual.description}</p>
-      </div>
-      <div className="sp-prep-aside-details">
-        <h3>DEINE AUSWAHL <small>· NICHT LIVE</small></h3>
-        <dl>
-          <div><dt>Teams</dt><dd>{draft.count}</dd></div>
-          <div><dt>Umfang</dt><dd>{profiles[draft.profile]}</dd></div>
-          <div><dt>Aufgaben</dt><dd>{quantities[draft.profile]} {quantityUnit}</dd></div>
-          <div><dt>Quelle</dt><dd>{draft.contentSource==='approved'?'Freigegeben':'Probe / ungeprüft'}</dd></div>
-        </dl>
-        <p>Diese lokale Vorschau zeigt keine freigegebenen Inhalte und ist keine Beameransicht.</p>
-      </div>
-    </aside></div>
+</div>
   </section>;
 }

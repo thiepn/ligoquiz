@@ -109,8 +109,8 @@ export function HostModerationGuide(props:HostGuideInput){
  const canFocus=props.ready&&!props.busy&&!state.finished;
  return <section className="g14-guide" aria-label="Moderationsübersicht">
   <div className="g14-guide-head">
-   <div><span className="g14-eyebrow">MODERATIONSÜBERSICHT</span>
-    <h3>{state.step}</h3><p>{state.warning}</p></div>
+   <div>
+    <h3>{state.step}</h3>{(props.recovery||props.paused)&&<p>{state.warning}</p>}</div>
    <div className="g14-connect"><strong>{props.viewers}</strong><span>Beamerfenster bestätigt</span></div>
   </div>
   <div className="g14-facts">

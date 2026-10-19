@@ -31,7 +31,6 @@ export function HostGameplayRail({game,phase,paused,recovery,completed,total}:Ho
  return <section className={'u07-phase-rail u07-phase-rail--'+game} data-u07-phase={phase}
    aria-label="Spielablauf" aria-roledescription="Moderationsschritte">
    <div className="u07-rail-top">
-     <span>DEIN SPIELABLAUF</span>
      <strong>{recovery?'Wiederherstellung prüfen':paused?'Spiel pausiert':guidance.step}</strong>
      <small>{safeCompleted} / {total} {game==='quiztafel'?'Felder':game==='logikleiter'?'Stufen':'Aufgaben'} abgeschlossen</small>
    </div>
@@ -39,11 +38,9 @@ export function HostGameplayRail({game,phase,paused,recovery,completed,total}:Ho
      {steps.map((step,i)=><li key={step.name} className={i===active?'is-current':i<active?'is-complete':''}
        aria-current={i===active?'step':undefined}>
        <span className="u07-phase-number" aria-hidden="true">{String(i+1).padStart(2,'0')}</span>
-       <span className="u07-phase-copy"><strong>{step.name}</strong><small>{step.hint}</small></span>
+       <span className="u07-phase-copy"><strong>{step.name}</strong></span>
        {i<active&&<span className="u07-phase-check" aria-hidden="true">✓</span>}
      </li>)}
    </ol>
-   <div className="u07-rail-next"><span>{recovery?'ZUERST PRÜFEN':paused?'BEWUSST FORTSETZEN':'NÄCHSTER SCHRITT'}</span>
-     <strong>{guidance.next}</strong><small>{guidance.visibility} · {guidance.scoring}</small></div>
  </section>;
 }
