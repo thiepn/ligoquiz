@@ -44,13 +44,13 @@ export function stepTryout(state:TryoutState,command:TryoutCommand):TryoutState{
  const metadata={id:ID+state.game+'-'+(s.revision+1),
   ownerId:s.ownerId,epoch:s.epoch,expectedRevision:s.revision,at:s.revision+1};
  if(state.game==='quiztafel'&&command.game==='quiztafel')
-  return {game:state.game,data:QT.transition(s,{...metadata,action:command.action})};
+  return {game:state.game,data:QT.transition(state.data,{...metadata,action:command.action})};
  if(state.game==='verbindungen'&&command.game==='verbindungen')
-  return {game:state.game,data:VB.transition(s,{...metadata,action:command.action})};
+  return {game:state.game,data:VB.transition(state.data,{...metadata,action:command.action})};
  if(state.game==='logikleiter'&&command.game==='logikleiter')
-  return {game:state.game,data:LL.transition(s,{...metadata,action:command.action})};
+  return {game:state.game,data:LL.transition(state.data,{...metadata,action:command.action})};
  if(state.game==='umfrageduell'&&command.game==='umfrageduell')
-  return {game:state.game,data:UD.transition(s,{...metadata,action:command.action})};
+  return {game:state.game,data:UD.transition(state.data,{...metadata,action:command.action})};
  throw new Error('Unbekannter Übungsmodus.');
 }
 
