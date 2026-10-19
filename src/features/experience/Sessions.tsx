@@ -131,8 +131,7 @@ export function OrganizerHome() {
     </div>
    </div>
    <div className="sp-lobby-game-grid">
-    {GAME_ORDER.map((game,index)=><GameTile key={game} game={game}
-      number={String(index+1).padStart(2,'0')+' / 05'} onSelect={()=>chooseGame(game)}/>)}
+    {GAME_ORDER.map(game=><GameTile key={game} game={game} onSelect={()=>chooseGame(game)}/>)}
    </div>
   </section>
 

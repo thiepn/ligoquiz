@@ -1,9 +1,9 @@
 import './u10-tech.css';
 
 const sections=[
- {id:'u10-offline-check',number:'01',title:'Offline-Start',description:'Lokaler Browser- und Speichertest'},
- {id:'u10-projector-check',number:'02',title:'Beamerprobe',description:'Getrennte öffentliche Anzeige'},
- {id:'u10-g26-evidence',number:'03',title:'Originalnachweise',description:'Rechte, Rückweg und G26 NO-GO'},
+ {id:'u10-offline-check',title:'Offline-Start'},
+ {id:'u10-projector-check',title:'Beamerprobe'},
+ {id:'u10-g26-evidence',title:'Originalnachweise'},
 ] as const;
 
 /** Navigation only: no new publisher, test authority, status flag or persistence. */

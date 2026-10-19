@@ -10,7 +10,7 @@ import {
 import './app-shell.css';
 import './ui-copy-cleanup.css';
 
-function NavLink({link,current,route}:{link:ShellLink;current:boolean;route:Route;compact?:boolean}){
+function NavLink({link,current,route}:{link:ShellLink;current:boolean;route:Route}){
  return <a className={'sp-shell-nav-link'+(current?' is-active':'')} href={routeHref(link.route)}
    aria-current={route===link.route?'page':undefined}>
    <span className="sp-shell-nav-symbol" aria-hidden="true">{link.symbol}</span>
@@ -33,7 +33,7 @@ const activePrimary=zone==='spielwelt'?'spielen':zone==='spielleitung'?'host':'i
          <StudioPopLogo/>
        </a>
        <nav className="sp-shell-mainnav" aria-label="Hauptnavigation">
-         {PRIMARY_LINKS.map(link=><NavLink key={link.route} route={route} link={link} compact
+         {PRIMARY_LINKS.map(link=><NavLink key={link.route} route={route} link={link}
             current={link.route===activePrimary}/>)}
        </nav>
        <a className="sp-shell-start" href={routeHref('setup')}>Neuen Abend <span aria-hidden="true">↗</span></a>
@@ -43,14 +43,14 @@ const activePrimary=zone==='spielwelt'?'spielen':zone==='spielleitung'?'host':'i
            {PRIMARY_LINKS.map(link=><NavLink key={link.route} route={route} link={link} current={link.route===activePrimary}/>)}
            <span className="sp-shell-mobile-label">BACKSTAGE</span>
            {BACKSTAGE_LINKS.map(link=><NavLink key={link.route} route={route} link={link} current={link.route===activeBackstage}/>)}
-           <NavLink route={route} link={{route:'setup',label:'Neuen Quizabend',description:'Teams & Programm',symbol:'↗'}} current={route==='setup'}/>
+           <NavLink route={route} link={{route:'setup',label:'Neuen Quizabend',symbol:'↗'}} current={route==='setup'}/>
          </nav>
        </details>
      </div>
    </header>
 
    {zone==='backstage'&&<nav className="sp-shell-subnav" aria-label="Backstage-Bereiche">
-     {BACKSTAGE_LINKS.map(link=><NavLink key={link.route} route={route} link={link} current={link.route===activeBackstage} compact/>)}
+     {BACKSTAGE_LINKS.map(link=><NavLink key={link.route} route={route} link={link} current={link.route===activeBackstage}/>)}
    </nav>}
 
    <main id="main-content" tabIndex={-1} className="workspace sp-shell-workspace">

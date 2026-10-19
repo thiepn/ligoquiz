@@ -68,7 +68,7 @@ export function PopPanel({children,title,eyebrow,className,...rest}:HTMLAttribut
   </section>;
 }
 
-export function GameTile({game,href,description,onSelect}:{game:GameType;number?:string;href?:string;description?:string;onSelect?:()=>void}){
+export function GameTile({game,href,description,onSelect}:{game:GameType;href?:string;description?:string;onSelect?:()=>void}){
   const visual=GAME_VISUALS[game];
   const content=<>
     <span className="sp-game-top" aria-hidden="true">{visual.symbol}</span>

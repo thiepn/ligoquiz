@@ -38,7 +38,7 @@ export function StudioPopPreview(){
 
       <section className="sp-preview-section" id="sp-preview-games">
         <div className="sp-preview-section-head"><div><span className="sp-eyebrow">FÜNF SPIELE · EIN LOOK</span><h2>Wähle die Spielwelt</h2></div><PopTag tone="positive">LOKAL · OFFLINE-FÄHIG</PopTag></div>
-        <div className="sp-preview-games">{GAME_ORDER.map((game,i)=><GameTile key={game} game={game} number={String(i+1).padStart(2,'0')}/>)}</div>
+        <div className="sp-preview-games">{GAME_ORDER.map(game=><GameTile key={game} game={game}/>)}</div>
         <p className="sp-preview-note">Spielkacheln zeigen nur den künftigen Stil. Navigation und echte Spielauswahl folgen in U02–U04.</p>
       </section>
 

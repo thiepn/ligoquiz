@@ -1,7 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {parseRoute,routeHref} from '../src/app/routes';
 import {
- PRIMARY_LINKS,BACKSTAGE_LINKS,shellZoneFor,backstageActiveRoute,shellShortcutsFor,shellHeadingFor,
+ PRIMARY_LINKS,BACKSTAGE_LINKS,shellZoneFor,backstageActiveRoute,
 } from '../src/app/shell-model';
 
 describe('U02 shell routes preserve all original path contracts',()=>{
@@ -19,12 +19,12 @@ describe('U02 shell routes preserve all original path contracts',()=>{
   }
   expect(backstageActiveRoute('bericht')).toBe('verlauf');
  });
- it('uses only known real navigation destinations and does not claim a connected stage',()=>{
-  for(const route of ['spielen','setup','host','inhalte','verlauf','bericht','technik','einstellungen'] as const){
-   expect(shellHeadingFor(route).headline.length).toBeGreaterThan(0);
-   for(const link of shellShortcutsFor(route))expect(parseRoute(routeHref(link.route))).toBe(link.route);
+ it('keeps functional route names rather than redundant zone headings',()=>{
+  expect(PRIMARY_LINKS.map(x=>x.route)).toEqual(['spielen','host','inhalte']);
+  expect(BACKSTAGE_LINKS.map(x=>x.route)).toEqual(['inhalte','verlauf','technik','einstellungen']);
+  for(const link of [...PRIMARY_LINKS,...BACKSTAGE_LINKS]){
+   expect(link.label.length).toBeGreaterThan(0);
+   expect(parseRoute(routeHref(link.route))).toBe(link.route);
   }
-  expect(shellShortcutsFor('spielen').map(x=>x.route)).toEqual(['setup','demo']);
-  expect(shellShortcutsFor('host').map(x=>x.route)).toEqual(['spielen','technik']);
  });
 });
