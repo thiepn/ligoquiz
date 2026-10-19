@@ -105,26 +105,21 @@ export function OrganizerHome() {
  return <section className="sp-lobby" aria-label="LiGoQuiz Spielwelt">
   <section className="sp-lobby-hero" aria-labelledby="sp-lobby-title">
    <div className="sp-lobby-hero-copy">
-    <span className="sp-lobby-eyebrow"><span className="sp-lobby-spark" aria-hidden="true">✳</span> LICHT AN. TEAMS BEREIT.</span>
-    <h1 id="sp-lobby-title">Heute wird<br/><em>gespielt!</em></h1>
-    <p>Fünf Spielwelten, ein unvergesslicher Quizabend. Stelle deine Teams zusammen und bring die Show auf die Bühne.</p>
+    <h1 id="sp-lobby-title">Spielen</h1>
     <div className="sp-lobby-actions">
      <a className="sp-lobby-cta" href="#/setup">Neuen Quizabend vorbereiten <span aria-hidden="true">↗</span></a>
      <a className="sp-lobby-demo" href="#/demo">Demo ansehen <span aria-hidden="true">▷</span></a>
     </div>
-    <span className="sp-lobby-trial">Zum Testen stehen ausdrücklich gekennzeichnete Probeinhalte bereit. Redaktionell freigegebene Inhalte werden im Setup gesondert gewählt.</span>
    </div>
    <div className="sp-lobby-poster" aria-hidden="true">
     <span className="sp-lobby-halo"/><span className="sp-lobby-poster-mark">?</span>
     <span className="sp-lobby-poster-star">★</span><span className="sp-lobby-poster-burst">✳</span>
-    <span className="sp-lobby-poster-caption">QUIZ NIGHT<br/>SHOWTIME</span>
    </div>
   </section>
 
   {draft&&<aside className="sp-lobby-draft" aria-label="Gespeicherte Vorbereitung">
    <div className="sp-lobby-draft-mark" aria-hidden="true">↗</div>
-   <div><span className="sp-lobby-mini-label">NOCH NICHT GESTARTET</span>
-    <h2>Deine Vorbereitung liegt bereit.</h2>
+   <div><h2>Gespeicherte Vorbereitung</h2>
     <p>{draft.count} Teams · {GAME_VISUALS[draft.game].label} · {draft.profile} · Schritt {draft.step+1} von 3</p>
    </div>
    <a href="#/setup" className="sp-lobby-draft-link">Weiter vorbereiten <span aria-hidden="true">→</span></a>
@@ -132,10 +127,8 @@ export function OrganizerHome() {
 
   <section className="sp-lobby-games" aria-labelledby="sp-lobby-games-heading">
    <div className="sp-lobby-section-head">
-    <div><span className="sp-lobby-mini-label">DIE SPIELWELTEN</span><h2 id="sp-lobby-games-heading">Such dir dein Spiel aus.</h2>
-     <p>Tippe auf eine Spielkarte. Die Auswahl wird in der Vorbereitung gespeichert; dort legst du Teams, Umfang und Inhalte fest.</p>
+    <div><h2 id="sp-lobby-games-heading">Spiele</h2>
     </div>
-    <span className="sp-lobby-counter">05 <small>SPIELE</small></span>
    </div>
    <div className="sp-lobby-game-grid">
     {GAME_ORDER.map((game,index)=><GameTile key={game} game={game}
@@ -145,14 +138,13 @@ export function OrganizerHome() {
 
   <section className="sp-lobby-sessions" aria-labelledby="sp-lobby-sessions-heading">
    <div className="sp-lobby-section-head">
-    <div><span className="sp-lobby-mini-label">DEINE SPIELSTÄNDE</span><h2 id="sp-lobby-sessions-heading">Weiterspielen.</h2>
-     <p>Nur lokale Spielstände aus diesem Browser. Die Wiederaufnahme prüft die Berechtigung der Spielleitung.</p></div>
+    <div><h2 id="sp-lobby-sessions-heading">Offene Spielstände</h2>
+</div>
     {dir&&<span className="sp-lobby-session-count">{outstanding.length} {outstanding.length===1?'offener Abend':'offene Abende'}</span>}
    </div>
    {!dir&&!error&&<div className="sp-lobby-empty" role="status">Lokale Spielstände werden geladen …</div>}
    {dir&&outstanding.length===0&&<div className="sp-lobby-empty">
-    <span className="sp-lobby-empty-icon" aria-hidden="true">✦</span>
-    <div><h3>Die Bühne ist frei.</h3><p>Noch kein offener Quizabend gespeichert. Starte mit einem neuen Spiel oder probiere die Demo.</p></div>
+    <div><h3>Keine offenen Spielstände</h3></div>
     <a href="#/setup">Ersten Abend vorbereiten <span aria-hidden="true">→</span></a>
    </div>}
    {outstanding.length>1&&<div className="sp-lobby-search">
@@ -164,7 +156,7 @@ export function OrganizerHome() {
    {dir&&outstanding.length>0&&matching.length===0&&
     <p className="sp-lobby-empty" role="status">Keine passenden Spielstände gefunden.</p>}
    {latest&&<article className="sp-lobby-featured">
-    <div className="sp-lobby-featured-copy"><span className="sp-lobby-mini-label">ZULETZT GESPEICHERT</span>
+    <div className="sp-lobby-featured-copy">
      <h3>{statusFor(latest)}</h3>
      <p className="sp-lobby-session-progress">{eventProgress(latest)}</p>
      <p className="sp-lobby-team-names">{latest.teams.map(t=>t.name).join(' · ')}</p>
@@ -239,7 +231,7 @@ export function SessionHistory({eventId}:{eventId:string|null}) {
  if(eventId)return <section className="exp-page sp-backstage-report">
   <div className="exp-heading sp-backstage-report-head"><div>
     <p className="eyebrow">VERLAUF / REGIEPROTOKOLL</p><h1>Abendbericht</h1>
-    <p>Originaler Endstand aus dem lokalen Spiel. Export und Prüfung verändern den Spielstand nicht.</p></div>
+</div>
    <a href="#/verlauf" className="exp-quiet">Alle Abende ←</a></div>
   {!dir?<p role="status">Spielbericht wird geladen …</p>:!report?<p className="exp-error" role="alert">Kein abgeschlossener Bericht für diese Sitzung vorhanden.</p>:
    <div className="exp-report">
@@ -250,7 +242,6 @@ export function SessionHistory({eventId}:{eventId:string|null}) {
     </div>
     <ResultsSpotlight report={report}/>
     <h2>Ausführliche Punkteübersicht</h2>
-    <p className="exp-report-source">{report.sourceLabel}</p>
     <div className="exp-score-table">{report.teams.map(team=>{
       const rank=1+report.teams.filter(t=>t.rawPoints>team.rawPoints).length;
       return <div key={team.id}><b>{rank}.</b><span>{team.name}</span><strong>{team.rawPoints} Spielpunkte</strong><small>{team.eveningHalfPoints/2} Abendpunkte</small></div>;
@@ -262,16 +253,14 @@ export function SessionHistory({eventId}:{eventId:string|null}) {
      <a className="exp-secondary" href={backupHref(report.id)}>Originalsicherung öffnen ↗</a>
     </div>
     {selected&&<BackstageAudit event={selected} entries={audit}/>}
-    <p className="exp-footnote">{report.sourceLabel}. Ergebnisexporte enthalten keine unveröffentlichten Lösungen.
-     Nur die vollständige Originalsicherung aus Einstellungen & Sicherungen eignet sich zur Wiederherstellung.</p>
+    <p className="exp-footnote">Ergebnisexporte sind keine vollständigen Sitzungsbackups.</p>
    </div>}
   {error&&<p role="alert" className="exp-error">{error}</p>}
  </section>;
  return <section className="exp-page sp-backstage-history">
    <div className="exp-heading sp-backstage-history-head"><div><p className="eyebrow">BACKSTAGE / ARCHIV</p>
     <h1>Vergangene Abende</h1>
-    <p>Bestätigte Ergebnisse, Herkunft, Korrekturen und vollständige lokale Sicherungen.
-     Laufende Abende werden ausschließlich im originalen Host fortgesetzt.</p></div>
+</div>
     <a className="exp-quiet" href="#/spielen">← Zur Spielwelt</a></div>
    <div className="sp-backstage-archive-summary"><strong>{completed.length}</strong><span>abgeschlossene lokale Abende</span>
      <a href="#/einstellungen">Backup & Wiederherstellung ↗</a></div>
@@ -282,7 +271,6 @@ export function SessionHistory({eventId}:{eventId:string|null}) {
    </div>}
    {!dir?<p role="status">Lokaler Verlauf wird geladen …</p>:completed.length===0?
      <div className="exp-empty"><h2>Noch kein abgeschlossener Quizabend</h2>
-      <p>Der erste vollständige Abend erscheint hier nach dem Abschluss.</p>
       <a className="exp-secondary" href="#/setup">Quizabend vorbereiten</a></div>:
      matching.length===0?<p role="status" className="exp-search-empty">Keine passenden Abende gefunden.</p>:
      <div className="exp-session-list sp-backstage-archive-list">{matching.map(e=><article className="exp-session-row sp-backstage-archive-row" key={e.id}>

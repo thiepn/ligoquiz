@@ -13,7 +13,7 @@ export function StudioPopLogo({compact = false}:{compact?:boolean}) {
       <path d="m46 13 12 7-8 12-12-8Z" fill="#285BFF"/>
       <path d="m48 47 8-6 8 9-11 8Z" fill="#DA2C70"/>
     </svg>
-    {!compact && <span className="sp-logo-word">LiGo<span>Quiz!</span><small>GAME SHOW EDITION</small></span>}
+    {!compact && <span className="sp-logo-word">LiGo<span>Quiz!</span></span>}
   </div>;
 }
 
@@ -68,15 +68,15 @@ export function PopPanel({children,title,eyebrow,className,...rest}:HTMLAttribut
   </section>;
 }
 
-export function GameTile({game,number,href,description,onSelect}:{game:GameType;number?:string;href?:string;description?:string;onSelect?:()=>void}){
+export function GameTile({game,href,description,onSelect}:{game:GameType;number?:string;href?:string;description?:string;onSelect?:()=>void}){
   const visual=GAME_VISUALS[game];
   const content=<>
-    <span className="sp-game-top"><span>{number ?? visual.category}</span><span aria-hidden="true">{visual.symbol}</span></span>
+    <span className="sp-game-top" aria-hidden="true">{visual.symbol}</span>
     <StudioPopMotif game={game}/>
-    <span className="sp-game-bottom"><span className="sp-game-kicker">{visual.kicker}</span><strong>{visual.label}</strong><span>{description ?? visual.description}</span></span>
+    <span className="sp-game-bottom"><strong>{visual.label}</strong><span>{description ?? visual.description}</span></span>
   </>;
   const cn=join('sp-game-tile','sp-tone--'+visual.tone);
-  return onSelect?<button type="button" className={cn} onClick={onSelect} aria-label={visual.label+' auswählen und Vorbereitung öffnen'}>{content}<span className="sp-game-select" aria-hidden="true">WÄHLEN ↗</span></button>:
+  return onSelect?<button type="button" className={cn} onClick={onSelect} aria-label={visual.label+' auswählen und Vorbereitung öffnen'}>{content}</button>:
     href?<a className={cn} href={href}>{content}</a>:<article className={cn}>{content}</article>;
 }
 
