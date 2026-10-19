@@ -1,3 +1,4 @@
+import {useState} from 'react';
 import type {EventRecord} from '../../domain/event/schemas';
 import {GAME_VISUALS} from '../../design-system/theme';
 import {StudioPopMotif,ScoreChip,PopProgress} from '../../design-system/StudioPop';
@@ -8,10 +9,12 @@ import './host-cockpit.css';
 
 /** Host-only read-only display. Game actions remain in the original game hosts. */
 export function HostCockpit({event}:{event:EventRecord}){
+ const [compactFor,setCompactFor]=useState<string|null>(null);
+ const compact=compactFor===event.id;
  const state=describeCockpit(event);
  if(!state)return null;
  const visual=GAME_VISUALS[state.game];
- return <section className="sp-cockpit" aria-label="Aktueller Spielstand" data-cockpit-game={state.game}>
+ return <section className={'sp-cockpit'+(compact?' is-compact':'')} aria-label="Aktueller Spielstand" data-cockpit-game={state.game}>
   <div className={'sp-cockpit-hero sp-cockpit-hero--'+visual.tone}>
    <div className="sp-cockpit-title">
     <h2>{visual.label}<span aria-hidden="true">.</span></h2>
@@ -19,6 +22,8 @@ export function HostCockpit({event}:{event:EventRecord}){
     <div className="sp-cockpit-status">
      <span className={'sp-cockpit-state'+(state.recovery?' is-warning':state.paused?' is-paused':'')}>
       <span aria-hidden="true">●</span>{state.step}</span>
+     <button type="button" className="sp-cockpit-density" aria-pressed={compact}
+      onClick={()=>setCompactFor(compact?null:event.id)}>Kompaktansicht</button>
     </div>
    </div>
    <div className="sp-cockpit-art" aria-hidden="true"><StudioPopMotif game={state.game}/></div>
