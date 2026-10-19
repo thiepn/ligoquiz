@@ -19,7 +19,7 @@ export function ResultsSpotlight({report}:{report:CompletedReport}){
   {leaders.length>0&&<div className="sp-u10-winners">
     <span>PLATZ 01 · {leaders.length>1?'GEMEINSAMER ERSTER PLATZ':'GEWINNERTEAM'}</span>
     <strong>{leaders.map(t=>t.name).join(' / ')}</strong>
-    <p>{leaders[0]?.rawPoints} Spielpunkte · {leaders[0]?.eveningHalfPoints/2} Abendpunkte</p>
+    <p>{leaders[0]?.rawPoints} Spielpunkte · {leaders[0]!.eveningHalfPoints/2} Abendpunkte</p>
    </div>}
   <ol className="sp-u10-result-lines">{results.map(t=><li key={t.id}
     className={t.leader?'is-leader':''}>
