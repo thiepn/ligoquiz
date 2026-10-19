@@ -12,6 +12,7 @@ import {GAME_ORDER,GAME_VISUALS} from '../../design-system/theme';
 import type {GameType} from '../../domain/game/contracts';
 import {newSetupDraft,readPreferences,saveSetupDraft} from './model';
 import './u03-lobby.css';
+import {ResultsSpotlight} from './ResultsSpotlight';
 
 type Directory = { items: EventRecord[]; invalidCount: number };
 function statusFor(event: EventRecord): string {
@@ -247,7 +248,8 @@ export function SessionHistory({eventId}:{eventId:string|null}) {
       <div><span>Aufgaben</span><strong>{report.questionCount}</strong></div>
       <div><span>Datum</span><strong>{new Date(report.finishedAt).toLocaleDateString('de-DE')}</strong></div>
     </div>
-    <h2>Endstand</h2>
+    <ResultsSpotlight report={report}/>
+    <h2>Ausführliche Punkteübersicht</h2>
     <p className="exp-report-source">{report.sourceLabel}</p>
     <div className="exp-score-table">{report.teams.map(team=>{
       const rank=1+report.teams.filter(t=>t.rawPoints>team.rawPoints).length;
