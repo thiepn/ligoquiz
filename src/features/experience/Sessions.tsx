@@ -290,7 +290,7 @@ export function SessionHistory({eventId}:{eventId:string|null}) {
        <p className="exp-team-names">{e.teams.map(t=>t.name).join(' · ')}</p>
        <small>{new Date(e.updatedAt).toLocaleString('de-DE')}</small></div>
        <nav aria-label="Abendaktionen">
-        <a href={'#/bericht?event='+encodeURIComponent(e.id)}>Bericht ansehen ↗</a>
+        <a href={'#/bericht?event='+encodeURIComponent(e.id)} aria-label={'Bericht '+(e.umfrageduell?'Umfrageduell':e.logikleiter?'Logikleiter':e.verbindungen?'Verbindungen':e.quiztafel?'Quiztafel':'Rundenquiz')+' ansehen'}>Bericht ansehen ↗</a>
         <a href={backupHref(e.id)}>Vollständiges Backup ↗</a>
        </nav></article>)}</div>}
    {dir?.invalidCount ? <p className="exp-error" role="alert">{dir.invalidCount} beschädigte Sitzungen wurden nicht verändert.</p> : null}
