@@ -48,8 +48,8 @@ for(const mode of ['Rundenquiz','Quiztafel','Verbindungen','Logikleiter','Umfrag
   await expect(cockpit.getByText('ÖFFENTLICHE AUSGABE')).toBeVisible();
   await expect(cockpit.getByRole('link',{name:/Öffentliches Beamerfenster öffnen/})).toHaveAttribute('href',/#\/stage\?event=/);
   const widths=await page.evaluate(()=>({
-   viewport:document.documentElement.clientWidth,
-   content:document.documentElement.scrollWidth,
+   viewport:globalThis.document.documentElement.clientWidth,
+   content:globalThis.document.documentElement.scrollWidth,
   }));
   expect(widths.content,mode+' overflow').toBeLessThanOrEqual(widths.viewport+3);
   await cockpit.getByRole('button',{name:/Zur Originalsteuerung/}).click();
