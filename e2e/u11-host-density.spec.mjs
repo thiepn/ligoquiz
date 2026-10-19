@@ -44,7 +44,7 @@ for(const mode of ['Rundenquiz','Quiztafel','Verbindungen','Logikleiter','Umfrag
   await cockpit.getByRole('button',{name:'Kompaktansicht'}).click();
   await expect(cockpit).toHaveClass(/is-compact/);
   await expect(cockpit.getByRole('heading',{name:'Punktestand'})).toBeVisible();
-  await expect(cockpit.getByRole('heading',{name:mode+'\.'})).toBeVisible();
+  await expect(cockpit.getByRole('heading',{name:mode})).toBeVisible();
   await expect(cockpit.getByText('ÖFFENTLICHE AUSGABE')).toBeVisible();
   await expect(cockpit.getByRole('link',{name:/Öffentliches Beamerfenster öffnen/})).toHaveAttribute('href',/#\/stage\?event=/);
   const widths=await page.evaluate(()=>({
