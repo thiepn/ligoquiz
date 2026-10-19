@@ -43,8 +43,8 @@ export function DisposableDemo(){
  const points=scores(session);
  return <section className="exp-page" aria-label="Disposable demo">
   <div className="exp-heading">
-   <div><p className="eyebrow">DEMO · NICHT GESPEICHERT</p><h1>Rundenquiz ausprobieren</h1>
-    <p>Eine Beispielfrage im echten Ablauf, mit drei erfundenen Teams und ohne gespeicherte Ergebnisse.</p></div>
+   <div><p className="eyebrow">Demo · nicht gespeichert</p><h1>Rundenquiz ausprobieren</h1>
+    </div>
    <a className="exp-secondary" href="#/spielen">Demo beenden</a>
   </div>
   <div className="exp-demo-grid">
@@ -84,6 +84,5 @@ export function DisposableDemo(){
      <span>BEAMER-VORSCHAU</span>{stageView(session)}
    </div>
   </div>
-  <p className="exp-footnote">Die Demo schreibt weder in IndexedDB noch in den Verlauf oder deine Einstellungen. Sie wird beim Verlassen verworfen.</p>
  </section>;
 }

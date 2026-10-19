@@ -12,10 +12,8 @@ export function BackstageAudit({event,entries}:{event:EventRecord;entries:readon
  const summary=auditView(event);
  const matching=filter==='all'?entries:entries.filter(e=>e.category===filter);
  return <section className="sp-backstage-audit" aria-labelledby="sp-backstage-audit-title">
-  <header><div><span className="sp-backstage-overline">REGIE · GESPEICHERTE NACHWEISE</span>
-   <h3 id="sp-backstage-audit-title">Korrekturen & Spielverlauf</h3>
-   <p>Revisionen aus dem lokalen Originalprotokoll. Die Anzeige enthält weder private Antworten
-    noch Befehlskennungen oder Notizen.</p></div>
+  <header><div>
+   <h3 id="sp-backstage-audit-title">Korrekturen & Spielverlauf</h3></div>
    <span className="sp-backstage-audit-count">{entries.length} lokale Nachweise</span>
   </header>
   {summary&&<div className="sp-backstage-audit-facts">
@@ -51,9 +49,6 @@ export function BackstageAudit({event,entries}:{event:EventRecord;entries:readon
      <small>{CATEGORIES[entry.category]}</small>
      <time dateTime={new Date(entry.at).toISOString()}>{new Date(entry.at).toLocaleString('de-DE')}</time>
     </li>)}</ol>}
-   <p className="sp-backstage-audit-disclaimer">Die technische Zuordnung im vollständigen Protokoll ist absichtlich neutral.
-    Details und private Quellennachweise bleiben ausschließlich in der unveränderten Originalsicherung.
-    Die Kontrolle erfolgt im ursprünglichen Spielhost.</p>
   </details>
  </section>;
 }

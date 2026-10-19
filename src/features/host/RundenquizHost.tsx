@@ -213,9 +213,8 @@ export function RundenquizHost(){
  return <section className="rq-host u07-rq" data-host-game="rundenquiz" data-host-phase={rq?.phase??"loading"} aria-label="Rundenquiz Spielleitung">
   <header className="rq-head u07-mode-head u07-mode-head--rq">
    <div className="u07-mode-copy">
-    <span className="u07-overline">01 / MODERATION <span aria-hidden="true">✳</span> WISSEN IM RAMPENLICHT</span>
+    
     <h2>Rundenquiz<span aria-hidden="true">.</span></h2>
-    <p>Vier Runden, echte Teamentscheidungen und kontrollierte Veröffentlichung.</p>
     <span className="g3-tech-tag">PROBEINHALTE · NICHT REDAKTIONELL FREIGEGEBEN</span>
    </div>
    <span className="u07-mode-art" aria-hidden="true"><StudioPopMotif game="rundenquiz"/></span>
@@ -232,7 +231,6 @@ export function RundenquizHost(){
     Team {i+1} <input value={name} maxLength={40} onChange={e=>setNames(prev=>prev.map((v,j)=>i===j?e.target.value:v))}/>
    </label>)}</div>
    <button data-host-next className="g3-tech-primary" disabled={busy} onClick={()=>void prepare()}>Quizabend vorbereiten</button>
-   <p className="g3-tech-footnote">G4 verwendet vorläufige Übungsfragen; diese sind nicht als redaktionell freigegebener Fragenkatalog gekennzeichnet.</p>
   </div>:<div className="rq-live u07-play-surface">
    <div className="rq-utility">
     <span>Revision {event?.revision??0} · {rq?.profile??profile} · {viewers} Beamer verbunden</span>
@@ -259,7 +257,7 @@ export function RundenquizHost(){
         Spielstand geprüft — weiterhin pausiert übernehmen
       </button>
    </div>}
-   {rq&&<div className="u07-block-title"><div><span className="u07-overline">LIVE AUS DEM SPIELSTAND</span><h3>Teamwertung</h3></div>
+   {rq&&<div className="u07-block-title"><div><h3>Teamwertung</h3></div>
       <span className="u07-snapshot-label">Originalpunkte · keine öffentliche Ausgabe</span></div>}
    {rq && <div className="rq-scoreboard u07-rq-scores" aria-label="Punktestand">
     {rq.teams.map(t=><div key={t.id}><span>{t.name}</span><strong>{computed[t.id]??0}</strong></div>)}
@@ -292,9 +290,8 @@ export function RundenquizHost(){
       <div className="u07-timer-meter" aria-hidden="true"><span style={{
         width:timerRemaining===null?'0%':Math.max(0,Math.min(100,timerRemaining/(q?.durationSeconds??30)*100))+'%',
       }}/></div>
-      <small>Nach Neuladen pausiert. Keine automatische Enthüllung.</small>
      </div>}
-    {isPaused&&<p className="u07-pause-note" role="status">Pausiert. Die letzte öffentliche Ausgabe bleibt unter Kontrolle der Spielleitung. Fortsetzung erfolgt ausschließlich per Klick.</p>}
+    {isPaused&&<p className="u07-pause-note" role="status">Pausiert. Fortsetzung nur über „Fortsetzen“.</p>}
     {isPaused ? <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'RESUME'})}>Spiel fortsetzen</button>
     :<div className="rq-actions">
       {rq.phase==='setup' && <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'START'})}>Teams bestätigen</button>}

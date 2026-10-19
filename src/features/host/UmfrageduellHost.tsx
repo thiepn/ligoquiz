@@ -143,9 +143,8 @@ export function UmfrageduellHost(){
  const progress=ud?recordedSurveyProgress(teams,ud.submissions):{recorded:0,total:0};
  return <section className="ud-host u09-ud" data-host-phase={ud?.phase??'loading'} data-host-game="umfrageduell" aria-label="Umfrageduell Spielleitung">
   <header className="ud-host-head u09-mode-head">
-   <div className="u09-mode-copy"><span className="u09-overline">05 / MODERATION · ANTWORTEN VERGLEICHEN</span>
+   <div className="u09-mode-copy">
     <h2>Umfrageduell<span aria-hidden="true">.</span></h2>
-    <p>Alle Teams antworten. Die Spielleitung ordnet den vorgegebenen Kategorien zu – Rangfolge und Punkte werden erst nach bewusster Freigabe öffentlich.</p>
     <span className="g3-tech-tag">PROBEINHALTE · HERKUNFT PRO AUFGABE PRÜFEN</span>
    </div>
    <span className="u09-mode-art" aria-hidden="true"><StudioPopMotif game="umfrageduell"/></span>
@@ -160,7 +159,7 @@ export function UmfrageduellHost(){
       viewers={viewers} ready={ready} busy={busy}/>
     {event&&<CorrectionProvenance event={event}/>}
     <ScoreDecisionPanel source={{game:'umfrageduell',session:ud}} blocked={Boolean(blocked)}/>
-    <div className="u09-block-title"><div><span className="u09-overline">AUTHENTISCHE PUNKTE · ORIGINAL-LEDGER</span><h3>Teamwertung</h3></div>
+    <div className="u09-block-title"><div><h3>Teamwertung</h3></div>
      <span>Nur verbindlich bestätigte Punkte</span></div>
     <div className="ud-scorebar u09-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span><strong>{raw[t.id]??0}</strong></div>)}</div>
    <div className="ud-progress u09-progress" aria-label="Aufgabenfolge">{ud.surveys.map((item,i)=><span key={item.id}
@@ -193,8 +192,7 @@ export function UmfrageduellHost(){
     {ud.phase==='ready'&&<button data-host-next className="g3-tech-primary" disabled={blocked}
      onClick={()=>void send({type:'PUBLISH'})}>Aufgabe veröffentlichen</button>}
     {ud.phase==='open'&&<>
-     <div className="ud-clock u09-clock" data-timer-warning={seconds<=10}><div><span>OPTIONALER TIMER</span><strong>{seconds} s</strong>
-      <small>Keine automatische Schließung oder Enthüllung.</small></div>
+     <div className="ud-clock u09-clock" data-timer-warning={seconds<=10}><div><span>OPTIONALER TIMER</span><strong>{seconds} s</strong></div>
       <button disabled={blocked||clock||seconds===0} onClick={()=>setClock(true)}>Start</button>
       <button disabled={!clock} onClick={()=>setClock(false)}>Stopp</button>
       <button disabled={blocked} onClick={()=>{setClock(false);setSeconds(limit);}}>Zurücksetzen</button>
@@ -205,7 +203,7 @@ export function UmfrageduellHost(){
       onClick={()=>void send({type:'CLOSE'})}>Alle Antworten schließen</button>
     </>}
     {(ud.phase==='closed'||ud.phase==='graded')&&<div className="ud-judging u09-judging">
-     <div className="u09-judging-head"><span className="u09-overline">MENSCHLICHE ZUORDNUNG · QUELLE UND REGELN BLEIBEN GÜLTIG</span>
+     <div className="u09-judging-head">
       <strong>{progress.recorded} / {progress.total} Teams gespeichert</strong></div>
      <h4>{ud.phase==='closed'?'Teamantworten und Kategorien zuordnen':'Auditierte Wertungskorrektur'}</h4>
      <p>{task.format==='popular'?'Eine Antwort pro Team – Rang 1 bis 5 oder außerhalb.':
@@ -285,6 +283,5 @@ export function UmfrageduellHost(){
   </>}
   {error&&<p role="alert" className="g3-tech-error">{error}</p>}
    {error&&<SafeErrorRecovery message={String(error)}/>}
-  <p className="exp-footnote">G9 bleibt ein Testmodus. Daten und Rangfolgen des Probeprogramms wurden nicht durch echte Befragungen ermittelt.</p>
  </section>;
 }

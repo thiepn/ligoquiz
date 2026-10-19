@@ -79,7 +79,7 @@ function HostSurface(){
  },[activeIdentity?.eventId,activeIdentity?.hostId]);
  return <section className="exp-host-wrapper sp-cockpit-wrap" aria-label="Spielleitung">
    <div className="exp-host-header sp-cockpit-topline"><a href="#/spielen">← Spielen</a>
-     <div><strong>Spielleitung</strong><small>GESPEICHERTER SPIELSTAND · NUR HOST</small></div>
+     <div><strong>Spielleitung</strong></div>
      <a href="#/technik">Technikcheck</a></div>
    {error&&<div role="alert" className="exp-error">{error} <a href="#/spielen">Zur Übersicht</a></div>}
    {snapshot&&mode&&!error&&<HostCockpit event={snapshot}/>}
@@ -114,23 +114,23 @@ export function App(){
      {route==='bericht'&&<SessionHistory eventId={currentEventId(currentHash)}/>}
      {route==='einstellungen'&&<ExperienceSettings/>}
      {route==='technik'&&<section className="exp-page u10-tech-workflow">
-       <div className="exp-heading"><div><p className="eyebrow">BACKSTAGE / BETRIEB</p><h1>Technikcheck</h1>
-       <p>Vor der Show: Browser, getrennten Beamer und die echten Originalfreigaben prüfen. Kein Test bestätigt einen produktiven Start automatisch.</p></div><a className="exp-quiet" href="#/spielen">← Spielstände</a></div>
+       <div className="exp-heading"><div><h1>Technikcheck</h1>
+</div><a className="exp-quiet" href="#/spielen">← Spielstände</a></div>
        <TechWorkflowNavigation/>
        <section className="u10-tech-section" id="u10-offline-check" tabIndex={-1} aria-label="Offline und Gerätespeicher">
-        <div className="u10-tech-section-head"><span>01 / OFFLINE</span><h2>Gerät startklar?</h2>
+        <div className="u10-tech-section-head"><h2>Gerät startklar?</h2>
          <p>Der Browsercheck belegt weder die physische Beamerverkabelung noch ein reales WLAN-Ausfallprotokoll.</p></div>
         <OfflinePreflight/>
         <p className="u10-tech-section-next"><a href="#/einstellungen">Vollständige Sitzung sichern und ggf. wiederherstellen →</a></p>
        </section>
        <section className="u10-tech-section" id="u10-projector-check" tabIndex={-1} aria-label="Originale Beamerprobe">
-        <div className="u10-tech-section-head"><span>02 / PROJEKTION</span><h2>Beamer getrennt testen</h2>
+        <div className="u10-tech-section-head"><h2>Beamer getrennt testen</h2>
          <p>Die technische Demo bleibt separat. Der echte Abend veröffentlicht nur über den ursprünglichen Host.</p></div>
         <ProjectorTechCheck/>
         <p className="u10-tech-section-next"><a href="#/spielen">Echten Abend auswählen – Beamer in der Spielleitung öffnen →</a></p>
        </section>
        <section className="u10-tech-section u10-tech-section--evidence" id="u10-g26-evidence" tabIndex={-1} aria-label="G26 Originalnachweise und Rückweg">
-        <div className="u10-tech-section-head"><span>03 / FREIGABEGRENZE</span><h2>Unabhängige Nachweise · NO-GO</h2>
+        <div className="u10-tech-section-head"><h2>Unabhängige Nachweise · NO-GO</h2>
          <p>Alle ursprünglichen Prüfmodule bleiben vollständig vorhanden. Weder diese Übersicht noch eine grüne lokale Prüfung erteilt Veranstaltungs- oder Releasefreigabe.</p></div>
         <CutoverPreflight/>
         <ReleaseCandidateDesk/>
@@ -147,7 +147,7 @@ export function App(){
         <a href="#/verlauf">Ergebnisse</a>
         <a href="#/inhalte">Quellen & Rechte</a>
        </nav>
-       <p className="exp-footnote">Private Spielleitung nie auf den Beamer spiegeln. Hardware- und Rights-Freigaben bleiben manuell und G26 NO-GO.</p>
+    
      </section>}
  </AppShell>;
 }

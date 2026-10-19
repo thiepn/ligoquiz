@@ -89,7 +89,7 @@ export function LogikleiterHost(){
  const canConfirm=ll?.phase==='revealed'&&teams.every(t=>Boolean(ll.grades[t.id]));
  return <section className="ll-host u08-ll" data-host-phase={ll?.phase??'loading'} data-host-game="logikleiter" aria-label="Logikleiter Spielleitung">
   <header className="ll-host-head u08-mode-head u08-mode-head--ll">
-   <div className="u08-mode-copy"><span className="u08-overline">04 / MODERATION · STUFE FÜR STUFE</span>
+   <div className="u08-mode-copy">
     <h2>Logikleiter<span aria-hidden="true">.</span></h2>
     <p>Alle Teams lösen dieselbe Logikaufgabe. Frühe Abgabe zählt voll, nach einem veröffentlichten Hinweis halb.</p>
     <span className="g3-tech-tag">PROBEINHALTE · NICHT REDAKTIONELL FREIGEGEBEN</span></div>
@@ -108,7 +108,7 @@ export function LogikleiterHost(){
       viewers={viewers} ready={ready} busy={busy}/>
     {event&&<CorrectionProvenance event={event}/>}
     <ScoreDecisionPanel source={{game:'logikleiter',session:ll}} blocked={Boolean(disabled)}/>
-    <div className="u08-block-title"><div><span className="u08-overline">ORIGINALWERTUNG · NUR HOST</span><h3>Teamwertung</h3></div>
+    <div className="u08-block-title"><div><h3>Teamwertung</h3></div>
      <span>Bestätigte Spielpunkte · lokal</span></div><div className="ll-scorebar u08-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span><strong>{totals[t.id]??0}</strong></div>)}</div>
    <div className="ll-rung-strip u08-rung-strip" aria-label="Leiterstufen">{ll.rungs.map((r,i)=><div key={r.id}
     className={i<ll.index?'done':i===ll.index?'current':''} aria-current={i===ll.index&&ll.phase!=='complete'?'step':undefined}>
@@ -138,8 +138,7 @@ export function LogikleiterHost(){
     {ll.phase==='ready'&&<button data-host-next className="g3-tech-primary" disabled={disabled}
       onClick={()=>void send({type:'PUBLISH'})}>Aufgabe veröffentlichen</button>}
     {ll.phase==='open'&&<>
-     <div className="ll-clock u08-ll-clock" data-timer-warning={seconds<=10}><div><span>OPTIONALER TIMER</span><strong>{seconds} s</strong>
-       <small>Kein automatischer Abschluss, keine automatische Enthüllung.</small></div>
+     <div className="ll-clock u08-ll-clock" data-timer-warning={seconds<=10}><div><span>OPTIONALER TIMER</span><strong>{seconds} s</strong></div>
        <button disabled={disabled||clock||seconds===0} onClick={()=>setClock(true)}>Start</button>
        <button disabled={!clock} onClick={()=>setClock(false)}>Stopp</button>
        <button disabled={disabled} onClick={()=>{setClock(false);setSeconds(limit);}}>Zurücksetzen</button>
@@ -195,6 +194,5 @@ export function LogikleiterHost(){
   </>}
   {error&&<p className="g3-tech-error" role="alert">{error}</p>}
    {error&&<SafeErrorRecovery message={String(error)}/>}
-  <p className="exp-footnote">G8 ist ein Testmodus mit ungeprüften Beispielaufgaben. Wertungen, Abgaben und Hinweise sind Bestandteil der gespeicherten Sitzung.</p>
  </section>;
 }

@@ -106,9 +106,8 @@ export function VerbindungenHost(){
  const activeTeam=teams.find(t=>t.id===task?.assignment.teamId);
  return <section className="vb-host u08-vb" data-host-phase={vb?.phase??'loading'} data-host-game="verbindungen" aria-label="Verbindungen Spielleitung">
   <header className="vb-host-head u08-mode-head u08-mode-head--vb">
-   <div className="u08-mode-copy"><span className="u08-overline">03 / MODERATION · FINDE DAS MUSTER</span>
+   <div className="u08-mode-copy">
     <h2>Verbindungen<span aria-hidden="true">.</span></h2>
-    <p>Vier Hinweise, fehlende Folgenglieder und eine gemeinsame Verbindungswand. Jede Freigabe bewusst steuern.</p>
     <span className="g3-tech-tag">PROBEINHALTE · NICHT REDAKTIONELL FREIGEGEBEN</span></div>
    <span className="u08-mode-art" aria-hidden="true"><StudioPopMotif game="verbindungen"/></span></header>
   <div className="vb-host-toolbar u08-utility">
@@ -123,7 +122,7 @@ export function VerbindungenHost(){
       viewers={viewers} ready={ready} busy={busy}/>
     {event&&<CorrectionProvenance event={event}/>}
     <ScoreDecisionPanel source={{game:'verbindungen',session:vb}} blocked={Boolean(disabled)}/>
-    <div className="u08-block-title"><div><span className="u08-overline">ORIGINALWERTUNG · NUR HOST</span><h3>Teamwertung</h3></div><span>Bestätigte Spielpunkte · lokal</span></div>
+    <div className="u08-block-title"><div><h3>Teamwertung</h3></div><span>Bestätigte Spielpunkte · lokal</span></div>
     <div className="vb-scorebar u08-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span>
     <strong>{totals[t.id]??0}</strong></div>)}</div>
    <div className="vb-active-row u08-status-row"><div><small>TEIL / AUFGABE</small><strong>{task?sectionName:'Endstand'} · {Math.min(vb.index+1,vb.assignments.length)}/{vb.assignments.length}</strong></div>
@@ -246,6 +245,5 @@ export function VerbindungenHost(){
   </>}
   {error&&<p className="g3-tech-error" role="alert">{error}</p>}
    {error&&<SafeErrorRecovery message={String(error)}/>}
-  <p className="exp-footnote">G7 Probeinhalte. Keine automatische Wertung, keine unbegrenzten Rateversuche und keine teilrichtigen Vierergruppen.</p>
  </section>;
 }

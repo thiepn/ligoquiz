@@ -122,9 +122,8 @@ export function QuiztafelHost(){
   return <section className="qt-host u07-qt" data-host-game="quiztafel" data-host-phase={qt?.phase??"loading"} aria-label="Quiztafel Spielleitung">
     <header className="qt-host-header u07-mode-head u07-mode-head--qt">
       <div className="u07-mode-copy">
-        <span className="u07-overline">02 / MODERATION <span aria-hidden="true">★</span> KATEGORIE WÄHLEN</span>
+        
         <h2>Quiztafel<span aria-hidden="true">.</span></h2>
-        <p>Feld wählen, Antwortrecht klären, Punkte kontrolliert bestätigen. Nur eine Übernahmechance.</p>
         <span className="g3-tech-tag">PROBEINHALTE · NICHT REDAKTIONELL FREIGEGEBEN</span>
       </div>
       <span className="u07-mode-art" aria-hidden="true"><StudioPopMotif game="quiztafel"/></span>
@@ -146,7 +145,7 @@ export function QuiztafelHost(){
       viewers={connected} ready={ready} busy={busy}/>
     {event&&<CorrectionProvenance event={event}/>}
     <ScoreDecisionPanel source={{game:'quiztafel',session:qt}} blocked={disabled}/>
-    <div className="u07-block-title"><div><span className="u07-overline">SPIELSTAND · ORIGINALWERTUNG</span><h3>Teamwertung</h3></div>
+    <div className="u07-block-title"><div><h3>Teamwertung</h3></div>
       <span className="u07-snapshot-label">Lokal · erst nach Bestätigung öffentlich</span></div>
     <div className="qt-scorebar u07-qt-scores">{teams.map(team=><div key={team.id}>
         <span>{team.name}</span><strong>{tally[team.id]??0}</strong></div>)}</div>
@@ -229,7 +228,7 @@ export function QuiztafelHost(){
           <button disabled={disabled} onClick={()=>void send({type:'STEAL',result:'declined'})}>Team verzichtet</button>
         </div>}
         {qt.phase==='adjudicated'&&<div className="qt-decision u07-qt-reveal-confirm">
-          <p>Antwortversuche abgeschlossen. Noch keine Punkte verbucht.</p>
+          <p>Antworten geschlossen · Punkte ausstehend.</p>
           <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'REVEAL'})}>Lösung ausdrücklich zeigen</button>
         </div>}
         {qt.phase==='revealed'&&<div className="qt-decision u07-qt-award">
@@ -264,6 +263,5 @@ export function QuiztafelHost(){
     </>}
     {error&&<p role="alert" className="g3-tech-error">{error}</p>}
    {error&&<SafeErrorRecovery message={String(error)}/>}
-    <p className="g3-tech-footnote">Quiztafel G6 verwendet vorläufige Übungsinhalte. Keine automatische Enthüllung, Benotung oder Übernahme. Nur gleiche Browser-Origin für Beamer.</p>
   </section>;
 }

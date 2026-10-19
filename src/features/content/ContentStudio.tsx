@@ -188,8 +188,8 @@ export function ContentStudio(){
   if(p&&typeof p==='object'&&!Array.isArray(p))basic=p as Record<string,unknown>;
  }catch{/* Raw editor displays JSON parsing problems on save. */}
  return <section className="cx-studio exp-page" aria-label="Inhaltsatelier">
-  <div className="exp-heading"><div><p className="eyebrow">INHALTE / REDAKTION</p>
-   <h1>Inhaltsatelier</h1><p>Aufgaben erfassen, Quellen prüfen, Bestand importieren und spielbare Pakete freigeben.</p></div>
+  <div className="exp-heading"><div>
+   <h1>Inhaltsatelier</h1></div>
    <div className="cx-summary"><b>{items.length} Inhalte</b><span>{summary.approved} freigegeben</span><span>{summary.review} in Prüfung</span></div></div>
   <div className="cx-warning" role="note"><strong>Getrennt von laufenden Spielabenden.</strong>
    {' '}Importiert wird nur in die v2-Inhaltsdatenbank. Bestehende v1-Spielstände, Browser-Schlüssel und veröffentlichte Spiele werden nicht geändert.</div>
@@ -202,7 +202,7 @@ export function ContentStudio(){
     onChange={e=>void loadImport(e.currentTarget.files?.[0])} disabled={busy}/></label>
   </div>
   {preview&&<section className="cx-import" aria-label="Importvorschau">
-    <div><p className="eyebrow">VOR DEM IMPORT · NICHT GESPEICHERT</p><h2>Importvorschau</h2>
+    <div><h2>Importvorschau</h2>
      <p>{preview.records} Quelldatensätze · {preview.items.length} gültige Entwürfe · {preview.quarantined.length} Quarantäne</p>
      <small>Quelltyp {preview.sourceType} · SHA-256 {preview.bundleHash}</small></div>
     {preview.warnings.map((v,i)=><p key={i} className="cx-warning">{v}</p>)}
