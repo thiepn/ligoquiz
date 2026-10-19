@@ -17,7 +17,7 @@ test('built service worker precaches install shell and loads offline after expli
  await expect(page.getByRole('group',{name:'Gerätestatus'})).toContainText('Offline-Paket gespeichert');
  await context.setOffline(true);
  await page.goto('/#/spielen');
- await expect(page.getByRole('heading',{name:/Heute wird gespielt!/})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Spielen'})).toBeVisible();
  await page.goto('/#/technik');
  await expect(page.getByRole('heading',{name:'Offline-Start und Gerätebereitschaft'})).toBeVisible();
  await context.setOffline(false);
