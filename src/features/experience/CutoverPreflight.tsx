@@ -34,7 +34,7 @@ export function CutoverPreflight(){
   finally{setBusy(false);}
  }
  return <section className="g26-cutover" aria-label="G26 Lesende Cutover- und Rückweg-Vorprüfung">
-  <header><div><p className="eyebrow">G26 / RELEASE-KANDIDAT / QUELLE STATT DEPLOYMENT</p>
+  <header><div>
    <h2>V2.0 sicher vorbereiten</h2>
    <p>Drei vorhandene Dateien prüfen, ohne eine Sitzung wiederherzustellen, den Live-Stand zu öffnen oder DNS zu verändern.
     Die Prüfung ist lokal und gibt kein Produktivsystem frei.</p>

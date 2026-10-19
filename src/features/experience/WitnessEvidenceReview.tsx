@@ -55,7 +55,7 @@ export function WitnessEvidenceReview(){
   finally{setBusy(false);}
  }
  return <section className="g19-review" aria-label="G19 Externe Zeugennachweise prüfen">
-  <header><div><p className="eyebrow">G19 · EXTERNE BELEGE · KEINE EIGENE SCHLÜSSELERZEUGUNG</p>
+  <header><div>
    <h2>Zeugennachweise kryptografisch prüfen</h2>
    <p>Importiere einen G18-Prüfumschlag, eine extern signierte Aussage und den separat erhaltenen
     öffentlichen Ed25519-Schlüssel. Jede Signatur wird gegen die unveränderte Aussage geprüft.

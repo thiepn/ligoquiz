@@ -39,7 +39,7 @@ export function OfflinePreflight(){
   finally{await repo.close();setBusy(false);}
  }
  return <section className="g11-preflight" aria-label="Offline-Vorprüfung">
-  <div className="g11-heading"><p className="eyebrow">G11 / AUSFALLSICHERHEIT</p>
+  <div className="g11-heading">
    <h2>Offline-Start und Gerätebereitschaft</h2>
    <p>Bitte vor Veranstaltungsbeginn bei aktiver Internetverbindung prüfen. Ein grüner Browserstatus ersetzt keinen echten Beamer- und Flugmodus-Test.</p></div>
   <button className="exp-secondary" disabled={busy} onClick={()=>void check()}>Offline-Vorprüfung erneut ausführen</button>
@@ -122,7 +122,7 @@ export function BackupRecovery(){
   finally{await repo.close();setBusy(false);}
  }
  return <section className="g11-backup sp-backstage-backup" id="sp-backstage-backup" aria-label="Sicherung und Wiederherstellung">
-  <div className="g11-heading"><p className="eyebrow">SICHERUNG / RÜCKKEHR</p>
+  <div className="g11-heading">
    <h2>Spielstand sichern</h2>
    <p>Vollständige Sitzungsdatei mit Aufgaben, Wertungsledger, Audit und Checkpoints. Der einfache Ergebnisbericht reicht zur Wiederherstellung nicht aus.</p>
    <p>Der Backstage-Link wählt eine vorhandene Sitzung aus; erst ein Klick auf „Exportieren“ lädt die Datei herunter.</p></div>

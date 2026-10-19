@@ -32,7 +32,7 @@ export function BackstageDesk({items,invalid}:{items:readonly EventRecord[];inva
   <div className="sp-backstage-workflows">
    <a href="#/spielen" className="sp-backstage-workflow">
     <strong>Spielstände</strong>
-    <small>{data.latestOpen?labelFor(data.latestOpen)+' · '+data.latestOpen.teams.length+' Teams':''}</small>
+    {data.latestOpen&&<small>{labelFor(data.latestOpen)} · {data.latestOpen.teams.length} Teams</small>}
     <b aria-hidden="true">↗</b>
    </a>
    <a href="#/technik" className="sp-backstage-workflow">

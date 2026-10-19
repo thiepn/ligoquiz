@@ -65,7 +65,7 @@ export function CustodyHandoffReview(){
   finally{setBusy(false);}
  }
  return <section className="g20-review" aria-label="G20 Unabhängige Schlüsselverwahrung und Recovery-Handoff">
-  <header><div><p className="eyebrow">G20 · EXTERNE CUSTODY · UNABHÄNGIGE ROLLEN</p>
+  <header><div>
    <h2>Schlüsselverwahrung und Recovery-Handoff</h2>
    <p>Nur extern vorbereitete, signierte Belege prüfen: Root-Vorschlag, unabhängige Sichtung,
     Rotation, Widerruf/Kompromittierung, Recovery, Rechte und physische Geräte.
