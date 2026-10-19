@@ -2,6 +2,10 @@ import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {loadSafelyPausedUmfrageduell} from './umfrageduell-load';
 import {HostModerationGuide} from './HostModerationGuide';
+import {HostGameplayRail} from './HostGameplayRail';
+import {StudioPopMotif} from '../../design-system/StudioPop';
+import {draftScorePreview,recordedSurveyProgress} from './umfrageduell-presentation';
+import './u09-play.css';
 import {useEffect,useRef,useState} from 'react';
 import {EventRepository} from '../../infrastructure/db/event-repository';
 import {HostSessionController} from '../../application/host-controller/host-session';
@@ -136,23 +140,33 @@ export function UmfrageduellHost(){
  const teams=ud?orderedTeams(ud):[],raw=ud?scores(ud):{};
  const blocked=!ready||busy||ud?.paused||event?.recoveryRequired;
  const readyToReveal=Boolean(ud?.phase==='closed'&&teams.every(t=>ud.submissions[t.id]));
- return <section className="ud-host" data-host-game="umfrageduell" aria-label="Umfrageduell Spielleitung">
-  <header className="ud-host-head"><div><span className="eyebrow">G9 · SPIELMODUS IM TEST</span>
-   <h2>Umfrageduell</h2><p>Alle Teams antworten. Die Spielleitung ordnet Antworten den festgelegten Kategorien zu.
-    Die Beameransicht verrät keine Rangfolge vor der Auflösung.</p></div>
-   <span className="g3-tech-tag">PROBEINHALTE</span></header>
-  <div className="ud-toolbar"><a href={stageUrl(identity.eventId)} target="_blank" rel="noopener noreferrer">Beamer öffnen ↗</a>
+ const progress=ud?recordedSurveyProgress(teams,ud.submissions):{recorded:0,total:0};
+ return <section className="ud-host u09-ud" data-host-phase={ud?.phase??'loading'} data-host-game="umfrageduell" aria-label="Umfrageduell Spielleitung">
+  <header className="ud-host-head u09-mode-head">
+   <div className="u09-mode-copy"><span className="u09-overline">05 / MODERATION · ANTWORTEN VERGLEICHEN</span>
+    <h2>Umfrageduell<span aria-hidden="true">.</span></h2>
+    <p>Alle Teams antworten. Die Spielleitung ordnet den vorgegebenen Kategorien zu – Rangfolge und Punkte werden erst nach bewusster Freigabe öffentlich.</p>
+    <span className="g3-tech-tag">ILLUSTRATIVE PROBEINHALTE · KEINE REPRÄSENTATIVE UMFRAGE</span>
+   </div>
+   <span className="u09-mode-art" aria-hidden="true"><StudioPopMotif game="umfrageduell"/></span>
+  </header>
+  <div className="ud-toolbar u09-utility"><a href={stageUrl(identity.eventId)} target="_blank" rel="noopener noreferrer">Beamer öffnen ↗</a>
    <span>{viewers} Beamer bestätigt</span><span>Revision {event?.revision??0}</span><a href="#/spielen">Übersicht</a></div>
   {!ud?<p role="status">Sitzung wird geladen …</p>:<>
+   <HostGameplayRail game="umfrageduell" phase={ud.phase} paused={ud.paused}
+     recovery={Boolean(event?.recoveryRequired)} completed={ud.phase==='complete'?ud.surveys.length:ud.index} total={ud.surveys.length}/>
    <HostModerationGuide game="umfrageduell" phase={ud.phase} paused={ud.paused}
       recovery={Boolean(event?.recoveryRequired)} completed={ud.phase==='complete'?ud.surveys.length:ud.index} total={ud.surveys.length}
       viewers={viewers} ready={ready} busy={busy}/>
     {event&&<CorrectionProvenance event={event}/>}
     <ScoreDecisionPanel source={{game:'umfrageduell',session:ud}} blocked={Boolean(blocked)}/>
-    <div className="ud-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span><strong>{raw[t.id]??0}</strong></div>)}</div>
-   <div className="ud-progress">{ud.surveys.map((item,i)=><span key={item.id}
-    className={i<ud.index?'done':i===ud.index?'current':''}>{i+1}<small>{item.format==='top3'?'TOP 3':'TOP 1'}</small></span>)}</div>
-   <div className="ud-phase"><span>AUFGABE {Math.min(ud.index+1,ud.surveys.length)} / {ud.surveys.length}</span>
+    <div className="u09-block-title"><div><span className="u09-overline">AUTHENTISCHE PUNKTE · ORIGINAL-LEDGER</span><h3>Teamwertung</h3></div>
+     <span>Nur verbindlich bestätigte Punkte</span></div>
+    <div className="ud-scorebar u09-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span><strong>{raw[t.id]??0}</strong></div>)}</div>
+   <div className="ud-progress u09-progress" aria-label="Aufgabenfolge">{ud.surveys.map((item,i)=><span key={item.id}
+    className={i<ud.index?'done':i===ud.index?'current':''}
+    aria-current={i===ud.index&&ud.phase!=='complete'?'step':undefined}>{i+1}<small>{item.format==='top3'?'TOP 3':'TOP 1'}</small></span>)}</div>
+   <div className="ud-phase u09-status"><span>AUFGABE {Math.min(ud.index+1,ud.surveys.length)} / {ud.surveys.length}</span>
     <strong>{ud.paused?'PAUSIERT':ud.phase.toUpperCase()}</strong></div>
    {event?.recoveryRequired&&<div role="alert" className="rq-recovery">
     <h3>Wiederhergestellte Sitzung prüfen</h3><p>Antworten und Zuordnungen sind erhalten. Der Beamer bleibt gesperrt.</p>
@@ -161,47 +175,57 @@ export function UmfrageduellHost(){
     {ud.paused?<button data-host-resume disabled={!ready||busy||event?.recoveryRequired}
      onClick={()=>void send({type:'RESUME'})}>Spiel ausdrücklich fortsetzen</button>:
      <button disabled={blocked} onClick={()=>void send({type:'PAUSE'})}>Pausieren</button>}</div>}
-   {ud.phase==='setup'&&<div className="ud-card"><h3>Umfragen vorbereiten</h3>
+   {ud.phase==='setup'&&<div className="ud-card u09-card"><h3>Umfragen vorbereiten</h3>
     <p>Alle enthaltenen Verteilungen sind frei erfundene Spieldaten, keine Umfrageergebnisse realer Personen.</p>
     <p>{ud.surveys.length} Aufgaben: {ud.surveys.filter(q=>q.format==='popular').length} × Beliebteste Antwort,
      {' '}{ud.surveys.filter(q=>q.format==='top3').length} × Top 3.</p>
     <button data-host-next className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void send({type:'START'})}>Aufgabenfolge bestätigen</button></div>}
-   {task&&ud.phase!=='setup'&&<div className="ud-card">
-    <div className="eyebrow">{task.format==='popular'?'BELIEBTESTE ANTWORT':'TOP 3'} · {ud.index+1} / {ud.surveys.length}</div>
-    <div className="ud-origin">{task.source.kind==='illustrative'?'BEISPIELDATEN – KEINE ECHTE UMFRAGE':
-      'Echte Umfrage: '+task.source.source+' · '+task.source.population}</div>
+   {task&&ud.phase!=='setup'&&<div className="ud-card u09-card u09-task">
+    <div className="u09-task-kicker"><span>{task.format==='popular'?'BELIEBTESTE ANTWORT':'DREI ANTWORTEN, EIN RANGLISTENSPIEL'}</span>
+     <span>AUFGABE {ud.index+1} / {ud.surveys.length}</span></div>
+    <div className="ud-origin u09-origin" role="note">{task.source.kind==='illustrative'?'BEISPIELDATEN – KEINE ECHTE UMFRAGE':
+      'Belegte Herkunft: '+task.source.source+' · '+task.source.population}</div>
     <h3>{task.prompt}</h3>
-    <div className="ud-private"><small>NUR SPIELLEITUNG · FESTE MUSTERRANGFOLGE</small>
+    <div className="ud-private u09-private"><small>STRENG PRIVAT · FESTE MUSTERRANGFOLGE · NICHT VOR FREIGABE ZEIGEN</small>
      {task.categories.map((c,i)=><div key={c.label}><b>{i+1}. {c.label}</b>
       <small>Synonyme: {c.synonyms.join(', ')||'keine'}</small></div>)}
     </div>
     {ud.phase==='ready'&&<button data-host-next className="g3-tech-primary" disabled={blocked}
      onClick={()=>void send({type:'PUBLISH'})}>Aufgabe veröffentlichen</button>}
     {ud.phase==='open'&&<>
-     <div className="ud-clock"><div><span>OPTIONALER TIMER</span><strong>{seconds} s</strong>
+     <div className="ud-clock u09-clock" data-timer-warning={seconds<=10}><div><span>OPTIONALER TIMER</span><strong>{seconds} s</strong>
       <small>Keine automatische Schließung oder Enthüllung.</small></div>
       <button disabled={blocked||clock||seconds===0} onClick={()=>setClock(true)}>Start</button>
       <button disabled={!clock} onClick={()=>setClock(false)}>Stopp</button>
       <button disabled={blocked} onClick={()=>{setClock(false);setSeconds(limit);}}>Zurücksetzen</button>
+      <div className="u09-timer-meter" aria-hidden="true"><span style={{width:(limit>0?Math.min(100,seconds/limit*100):0)+'%'}}/></div>
      </div>
      <p>Teams diskutieren und notieren ihre Antwort. Erst nach dem bewussten Schließen werden die Zuordnungen erfasst.</p>
      <button data-host-next className="g3-tech-primary" disabled={blocked}
       onClick={()=>void send({type:'CLOSE'})}>Alle Antworten schließen</button>
     </>}
-    {(ud.phase==='closed'||ud.phase==='graded')&&<div className="ud-judging">
+    {(ud.phase==='closed'||ud.phase==='graded')&&<div className="ud-judging u09-judging">
+     <div className="u09-judging-head"><span className="u09-overline">MENSCHLICHE ZUORDNUNG · QUELLE UND REGELN BLEIBEN GÜLTIG</span>
+      <strong>{progress.recorded} / {progress.total} Teams gespeichert</strong></div>
      <h4>{ud.phase==='closed'?'Teamantworten und Kategorien zuordnen':'Auditierte Wertungskorrektur'}</h4>
      <p>{task.format==='popular'?'Eine Antwort pro Team – Rang 1 bis 5 oder außerhalb.':
        'Drei geordnete Antworten – doppelte Kategorien erhalten nur bei erster Nennung Punkte.'}
       {' '}Die App schlägt genaue Synonym-Treffer vor; die Spielleitung entscheidet.</p>
      {teams.map(t=>{
       const draft=drafts[t.id]??empty(count),prior=ud.submissions[t.id];
-      const value=prior??{answers:[],mapped:[]},points=prior?pointsFor(task,value):null;
+      const points=prior?pointsFor(task,prior):null;
+      const preview=draftScorePreview(task,draft);
       const previousAward=ud.awards.find(a=>a.surveyId===task.id&&a.teamId===t.id);
-      return <div key={t.id} className="ud-team">
+      return <div key={t.id} className="ud-team u09-team" data-submission-state={prior?'saved':'pending'}>
        <div className="ud-team-head"><strong>{t.name}</strong>
         <span>{ud.phase==='graded'?'Bestätigt: '+(previousAward?.points??0)+' Punkte':
          prior?'Erfasst: '+points+' Punkte':'Noch nicht erfasst'}</span></div>
-       {Array.from({length:count},(_,i)=><div key={i} className="ud-entry">
+       <div className="u09-team-preview" aria-live="polite"><span>{preview.status==='incomplete'?'ENTWURF UNVOLLSTÄNDIG':
+         preview.status==='empty'?'ENTWURF: KEINE ANTWORT': 'ENTWURF · NICHT GESPEICHERT'}</span>
+        <strong>{preview.points===null?'—':preview.points+' Punkte'}</strong>
+        <small>{ud.phase==='graded'?'Korrektur erfordert Begründung': 'Vorschau aus Original-Punkteregel, erst nach Speichern wirksam'}</small>
+       </div>
+       {Array.from({length:count},(_,i)=><div key={i} className="ud-entry u09-entry">
         <label>Antwort {i+1}
          <input value={draft.answers[i]??''} onChange={e=>revise(t.id,i,'answers',e.target.value)}
           disabled={blocked||(ud.phase==='graded'&&Boolean(previousAward?.annulled))}
@@ -212,32 +236,48 @@ export function UmfrageduellHost(){
           <option value="">Nicht in den Top 5</option>
           {task.categories.map((cat,idx)=><option key={cat.label} value={idx+1}>
            {idx+1}. {cat.label}</option>)}</select></label>
+        <div className="u09-match-feedback">{draft.answers[i]?.trim()?
+          suggestMatch(task,draft.answers[i])===draft.mapped[i]&&draft.mapped[i]!==null?
+            'Exakter Kategorie- oder Synonymtreffer · manuell prüfbar':
+            'Zuordnung durch Spielleitung prüfen':
+          'Keine Antwort eingetragen'}</div>
        </div>)}
-       <div className="ud-team-footer">
+       <div className="ud-team-footer u09-team-footer">
         <small>Alle Felder leer = Keine Antwort · {prior?'Bereits gespeichert':'Ausstehend'}</small>
         <button disabled={blocked||(ud.phase==='graded'&&Boolean(previousAward?.annulled))}
          onClick={()=>saveTeam(t.id)}>{ud.phase==='graded'?'Begründet korrigieren':'Antwort erfassen'}</button>
        </div>
       </div>;
      })}
-     {ud.phase==='closed'&&<button data-host-next className="g3-tech-primary" disabled={blocked||!readyToReveal}
-      onClick={()=>void send({type:'REVEAL'})}>Kategorien und Rangfolge veröffentlichen</button>}
+     {ud.phase==='closed'&&<>
+      <div className="u09-reveal-gate" aria-live="polite"><strong>{progress.recorded} / {progress.total} Antworten gespeichert</strong>
+       <span>{readyToReveal?'Alle Teams wurden erfasst. Öffentliche Auflösung bleibt eine ausdrückliche Entscheidung.':
+        'Erst alle Teams speichern – auch Teams ohne Antwort.'}</span></div>
+      <button data-host-next className="g3-tech-primary" disabled={blocked||!readyToReveal}
+       onClick={()=>void send({type:'REVEAL'})}>Kategorien und Rangfolge veröffentlichen</button>
+     </>}
     </div>}
-    {ud.phase==='revealed'&&<div className="ud-reveal-preview"><h4>Rangfolge ist öffentlich</h4>
-     {task.categories.map((cat,i)=><p key={cat.label}>{i+1}. {cat.label}</p>)}
+    {ud.phase==='revealed'&&<div className="ud-reveal-preview u09-reveal-preview"><h4>Rangfolge ist öffentlich</h4>
+     <p className="u09-source-reminder">{task.source.kind==='illustrative'?'Fiktive Beispielrangfolge, keine repräsentativen Ergebnisse': 'Quellengebundene Umfrage · '+task.source.source}</p>
+     <ol className="u09-ranking">{task.categories.map((cat,i)=><li key={cat.label}><strong>{i+1}</strong><span>{cat.label}</span></li>)}</ol>
+     <div className="u09-award-summary" aria-label="Gespeicherte Teamantworten vor endgültiger Punktevergabe">
+       {teams.map(t=><div key={t.id}><strong>{t.name}</strong><span>{pointsFor(task,ud.submissions[t.id]??{answers:[],mapped:[]})} Punkte vorgemerkt</span></div>)}
+     </div>
      <button data-host-next className="g3-tech-primary" disabled={blocked}
       onClick={()=>void send({type:'CONFIRM'})}>Teamwertungen verbindlich bestätigen</button>
     </div>}
     {ud.phase==='graded'&&<>
-     <div className="ud-awards">{ud.awards.filter(a=>a.surveyId===task.id).map(a=><p key={a.teamId}>
-      {teams.find(t=>t.id===a.teamId)?.name}: <b>{a.points} Punkte</b>{a.annulled?' · Annulliert':''}</p>)}</div>
+     <div className="ud-awards u09-awards" aria-label="Verbindlich bestätigte Teamwertungen">
+      {ud.awards.filter(a=>a.surveyId===task.id).map(a=><p key={a.teamId}>
+       <span>{teams.find(t=>t.id===a.teamId)?.name}</span><b>{a.points} Punkte</b>
+       <small>{a.annulled?'Annulliert · 0 Punkte':'Im ursprünglichen Ergebnisprotokoll gespeichert'}</small></p>)}</div>
      <button data-host-next className="g3-tech-primary" disabled={blocked} onClick={()=>void send({type:'NEXT'})}>
       {ud.index===ud.surveys.length-1?'Umfrageduell abschließen':'Nächste Aufgabe'}</button>
     </>}
-    {ud.phase!=='graded'&&<button className="ud-annul" disabled={blocked} onClick={annul}>
+    {ud.phase!=='graded'&&<button className="ud-annul u09-danger-action" disabled={blocked} onClick={annul}>
      Aufgabe begründet annullieren</button>}
    </div>}
-   {ud.phase==='complete'&&<div className="ud-card ud-final"><h3>Umfrageduell abgeschlossen</h3>
+   {ud.phase==='complete'&&<div className="ud-card ud-final u09-final"><h3>Umfrageduell abgeschlossen</h3>
     {teams.map(t=><p key={t.id}>{t.name}: <b>{raw[t.id]??0} Spielpunkte</b>
      {' '}· {(eveningHalfPoints(ud)[t.id]??0)/2} Abendpunkte</p>)}
     <a href="#/verlauf" className="exp-primary">Abendbericht ansehen</a>
