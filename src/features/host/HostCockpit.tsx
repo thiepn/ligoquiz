@@ -55,6 +55,8 @@ export function HostCockpit({event}:{event:EventRecord}){
    <button type="button" className="sp-cockpit-primary" onClick={()=>{document.getElementById('sp-host-game')?.focus();}}>Zur Originalsteuerung <span aria-hidden="true">↓</span></button>
    <a className="sp-cockpit-stage" href={stageUrl(event.id)} target="_blank" rel="noopener noreferrer">
     Öffentliches Beamerfenster öffnen <span aria-hidden="true">↗</span></a>
+   <a className="sp-cockpit-accessible-stage" href={stageUrl(event.id)+'&display=accessible'}
+     target="_blank" rel="noopener noreferrer">Beamer-Lesemodus öffnen <span aria-hidden="true">↗</span></a>
    <a href="#/technik">Technikcheck</a>
    <a href={backupHref(event.id)}>Originalsicherung</a>
    <a href="#/spielen">Gespeicherte Abende</a>
