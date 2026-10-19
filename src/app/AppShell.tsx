@@ -8,6 +8,7 @@ import {
   type ShellLink,
 } from './shell-model';
 import './app-shell.css';
+import './ui-copy-cleanup.css';
 
 function NavLink({link,current,route}:{link:ShellLink;current:boolean;route:Route;compact?:boolean}){
  return <a className={'sp-shell-nav-link'+(current?' is-active':'')} href={routeHref(link.route)}
