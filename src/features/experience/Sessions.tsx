@@ -242,6 +242,7 @@ export function SessionHistory({eventId}:{eventId:string|null}) {
     </div>
     <ResultsSpotlight report={report}/>
     <h2>Ausführliche Punkteübersicht</h2>
+    <p className="exp-report-source">{report.sourceLabel}</p>
     <div className="exp-score-table">{report.teams.map(team=>{
       const rank=1+report.teams.filter(t=>t.rawPoints>team.rawPoints).length;
       return <div key={team.id}><b>{rank}.</b><span>{team.name}</span><strong>{team.rawPoints} Spielpunkte</strong><small>{team.eveningHalfPoints/2} Abendpunkte</small></div>;

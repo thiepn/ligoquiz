@@ -71,3 +71,5 @@
  .sp-shell .sp-backstage-workflow{min-height:95px}
  .sp-shell--spielleitung :is(.u07-rq,.u07-qt,.u08-vb,.u08-ll,.u09-ud) :is(button,select,input){min-width:0;max-width:100%}
 }
+
+.sp-shell .exp-report-source{font-size:14px;line-height:1.5}
