@@ -118,7 +118,7 @@ export function App(){
 </div><a className="exp-quiet" href="#/spielen">← Spielstände</a></div>
        <TechWorkflowNavigation/>
        <section className="u10-tech-section" id="u10-offline-check" tabIndex={-1} aria-label="Offline und Gerätespeicher">
-        <div className="u10-tech-section-head"><h2>Gerät startklar?</h2>
+        <div className="u10-tech-section-head"><h2>Offline und Speicher</h2>
          <p>Der Browsercheck belegt weder die physische Beamerverkabelung noch ein reales WLAN-Ausfallprotokoll.</p></div>
         <OfflinePreflight/>
         <p className="u10-tech-section-next"><a href="#/einstellungen">Vollständige Sitzung sichern und ggf. wiederherstellen →</a></p>

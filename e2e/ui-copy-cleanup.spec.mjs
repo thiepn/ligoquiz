@@ -7,7 +7,7 @@ async function fit(page,screen){
 }
 async function screenshot(page,name){
  await mkdir(output,{recursive:true});
- await page.screenshot({path:output+'/'+name+'.png',fullPage:true,animations:'disabled'});
+ await page.screenshot({path:output+'/'+name+'.png',fullPage:name.startsWith('desktop')||name==='mobile-setup-program',animations:'disabled'});
 }
 async function setup(page){
  await page.goto('/#/setup');

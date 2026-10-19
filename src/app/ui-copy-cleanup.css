@@ -73,3 +73,10 @@
 }
 
 .sp-shell .exp-report-source{font-size:14px;line-height:1.5}
+
+/* Operational evidence IDs, source metadata, dates and accessibility cues
+   must remain readable; avoid tiny technical microcopy on Backstage routes. */
+.sp-shell--backstage .sp-shell-workspace small,
+.sp-shell--backstage .sp-shell-workspace .eyebrow,
+.sp-shell--backstage .sp-shell-workspace .exp-footnote{font-size:14px;line-height:1.45;overflow-wrap:anywhere}
+.sp-shell--backstage .sp-shell-workspace :is(a,button,summary,select,input,textarea){font-size:14px;line-height:1.4}
