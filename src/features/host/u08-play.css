@@ -1,0 +1,459 @@
+/* U08: native Verbindungen + Logikleiter moderator surfaces only.
+ * No public projector selectors, engine actions, global stores or new assets.
+ * Shared U07 phase rail stays display-only. */
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll){
+ --u08-night:#152344;--u08-sun:#FFE45C;--u08-violet:#713FD2;
+ --u08-mint:#00786A;--u08-ink:#142644;--u08-border:#D2DDEF;
+ max-width:1320px;min-width:0;background:#fff;color:var(--u08-ink);
+ border:1px solid #CAD8EA;overflow-wrap:anywhere;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) :is(button,a,input,select):focus-visible{
+ outline:3px solid #285BFF;outline-offset:3px;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) button{
+ min-height:44px;font-weight:800;white-space:normal;overflow-wrap:anywhere;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) button:disabled{opacity:.58;cursor:not-allowed}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) button.g3-tech-primary{
+ background:#285BFF;color:#fff;border:2px solid #285BFF;min-height:49px;
+ font-size:13px;line-height:1.35;padding:11px 16px;border-radius:5px;font-weight:950;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) button.g3-tech-primary:hover:not(:disabled){
+ background:#1345DB;border-color:#1345DB;
+}
+.sp-shell--spielleitung .u08-mode-head{
+ position:relative;isolation:isolate;display:flex;align-items:center;
+ overflow:hidden;justify-content:space-between;gap:17px;
+ padding:clamp(20px,2.8vw,36px);background:#602DA4;color:#fff;
+ margin:0 0 15px;border-bottom:6px solid #FFE45C;
+}
+.sp-shell--spielleitung .u08-mode-head--ll{
+ background:#00695C;border-bottom-color:#84DECA;
+}
+.sp-shell--spielleitung .u08-mode-copy{position:relative;z-index:1;max-width:710px;min-width:0}
+.sp-shell--spielleitung .u08-overline{
+ display:inline-flex;align-items:center;gap:8px;font-size:10px;
+ font-weight:950;letter-spacing:.11em;line-height:1.5;color:#315EB4;
+}
+.sp-shell--spielleitung .u08-mode-head .u08-overline{color:#FFE45C}
+.sp-shell--spielleitung .u08-mode-head--ll .u08-overline{color:#A7F3DE}
+.sp-shell--spielleitung .u08-mode-head h2{
+ color:#fff;font:950 clamp(29px,4vw,50px)/1.1 "Arial Black","Trebuchet MS",system-ui,sans-serif;
+ margin:10px 0;letter-spacing:-.055em;
+}
+.sp-shell--spielleitung .u08-mode-head h2 span{color:#FFE45C}
+.sp-shell--spielleitung .u08-mode-head--ll h2 span{color:#A7F3DE}
+.sp-shell--spielleitung .u08-mode-head p{
+ color:#F2F0FF;font-size:clamp(12px,1.2vw,16px);
+ line-height:1.55;margin:0 0 15px;max-width:63ch;
+}
+.sp-shell--spielleitung .u08-mode-head .g3-tech-tag{
+ display:inline-flex;max-width:100%;white-space:normal;
+ font-size:10px;font-weight:950;letter-spacing:.03em;
+ background:#FFE45C;color:#19233A;padding:8px 10px;border:0;
+}
+.sp-shell--spielleitung .u08-mode-head--ll .g3-tech-tag{background:#C7F4E9}
+.sp-shell--spielleitung .u08-mode-art{
+ flex:0 0 clamp(100px,18vw,205px);height:clamp(90px,14vw,160px);
+ display:grid;place-items:center;pointer-events:none;color:#F6EEFF;opacity:.75;
+}
+.sp-shell--spielleitung .u08-mode-art .sp-motif{
+ position:static;inset:auto;width:100%;height:100%;transform:none;color:inherit;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-utility{
+ display:flex;flex-wrap:wrap;align-items:center;gap:9px 16px;
+ background:#EDF2FC;border:1px solid #D4DFEF;
+ padding:11px 15px;color:#485D7D;font-size:12px;font-weight:750;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-utility .g3-tech-link{
+ display:inline-flex;align-items:center;background:#FFE45C;color:#192846;
+ border:1px solid #E3CC5F;padding:9px 12px;font-weight:950;
+ text-decoration:none;margin:0;
+}
+.sp-shell--spielleitung .u08-phase-rail .u07-phase-steps>li.is-current{background:#713FD2}
+.sp-shell--spielleitung .u08-ll .u07-phase-steps>li.is-current{background:#00786A}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-block-title{
+ display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;
+ gap:8px 16px;margin:21px 0 10px;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-block-title>div{display:grid;gap:4px}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-block-title h3{
+ font:950 clamp(20px,2.5vw,28px)/1.2 "Arial Black",system-ui,sans-serif;
+ letter-spacing:-.03em;margin:0;color:#142344;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-block-title>span{
+ color:#546A86;font-size:11px;font-weight:750;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-scorebar{
+ display:grid;grid-template-columns:repeat(auto-fit,minmax(min(125px,100%),1fr));
+ gap:8px;background:#17284B;padding:10px;min-width:0;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-scorebar>div{
+ display:grid;align-content:space-between;gap:5px;padding:12px;
+ background:#F8FAFF;border-top:5px solid #713FD2;min-width:0;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-scorebar>div:nth-child(5n+2){border-top-color:#DA2C70}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-scorebar>div:nth-child(5n+3){border-top-color:#00786A}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-scorebar>div:nth-child(5n+4){border-top-color:#285BFF}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-scorebar>div:nth-child(5n+5){border-top-color:#A34C00}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-scorebar span{
+ color:#4A5B76;font-size:12px;font-weight:850;overflow-wrap:anywhere;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-scorebar strong{
+ color:#142544;font:950 clamp(23px,2.65vw,36px)/1.12 "Arial Black",system-ui,sans-serif;
+ letter-spacing:-.04em;font-variant-numeric:tabular-nums;
+}
+.sp-shell--spielleitung .u08-status-row{background:#C2C7DD;gap:2px}
+.sp-shell--spielleitung .u08-status-row>div{
+ background:#24315D;color:#fff;border-top:4px solid #BDA7FF;
+}
+.sp-shell--spielleitung .u08-status-row>div:nth-child(2){border-top-color:#FFE45C}
+.sp-shell--spielleitung .u08-status-row small{color:#DFE7FF}
+.sp-shell--spielleitung .u08-status-row strong{color:#fff}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) :is(.vb-pause,.ll-pause) button{
+ background:#FFF1D4;color:#5D3A0B;border:2px solid #D9B068;
+ border-radius:5px;font-weight:900;min-height:48px;
+}
+.sp-shell--spielleitung .u08-vb .u08-vb-card,
+.sp-shell--spielleitung .u08-ll .u08-ll-card{
+ min-width:0;max-width:100%;padding:clamp(16px,2vw,27px);
+ background:#F7F9FF;border:1px solid #D5DDEE;
+ border-top:6px solid #713FD2;gap:15px;
+}
+.sp-shell--spielleitung .u08-ll .u08-ll-card{border-top-color:#00786A}
+.sp-shell--spielleitung .u08-task-kicker{
+ display:flex;justify-content:space-between;gap:9px 18px;flex-wrap:wrap;
+ font-weight:950;font-size:11px;letter-spacing:.06em;color:#4E459B;
+}
+.sp-shell--spielleitung .u08-ll .u08-task-kicker{color:#007565}
+.sp-shell--spielleitung .u08-vb .vb-card>h3,
+.sp-shell--spielleitung .u08-ll .ll-card>h3{
+ color:#1A2848;font:950 clamp(22px,2.7vw,34px)/1.26 "Arial Black","Trebuchet MS",system-ui,sans-serif;
+ letter-spacing:-.035em;overflow-wrap:anywhere;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-private{
+ display:grid;gap:9px;border-left:6px solid #B87713;
+ border-top:1px solid #E8D09B;border-right:1px solid #E8D09B;
+ border-bottom:1px solid #E8D09B;
+ background:#FFF1D1;padding:15px 17px;color:#423110;min-width:0;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-private small{
+ color:#815000;font-size:10px;font-weight:950;letter-spacing:.09em;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-private strong{
+ color:#3B2A11;font-size:clamp(18px,2vw,25px);line-height:1.4;overflow-wrap:anywhere;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-private :is(span,p){
+ color:#664D24;font-size:12px;line-height:1.5;overflow-wrap:anywhere;
+}
+.sp-shell--spielleitung .u08-vb .u08-clue-round{
+ display:grid;gap:11px;min-width:0;
+}
+.sp-shell--spielleitung .u08-vb .u08-round-count{
+ display:inline-flex;align-items:center;gap:11px;background:#EEE8FF;
+ border-left:5px solid #713FD2;padding:11px 15px;
+}
+.sp-shell--spielleitung .u08-vb .u08-round-count strong{
+ color:#4E2A99;font-size:22px;font-variant-numeric:tabular-nums;
+}
+.sp-shell--spielleitung .u08-vb .u08-round-count span{
+ color:#4E4474;font-size:12px;font-weight:850;
+}
+.sp-shell--spielleitung .u08-vb .u08-vb-clues{display:grid;gap:8px}
+.sp-shell--spielleitung .u08-vb .u08-vb-clues p{
+ display:flex;align-items:baseline;gap:13px;padding:13px 16px;
+ border:1px solid #C9C7ED;border-left:5px solid #713FD2;
+ background:#F2EFFF;min-width:0;margin:0;color:#24234E;
+}
+.sp-shell--spielleitung .u08-vb .u08-vb-clues p b{
+ flex:none;font:950 20px "Arial Black",system-ui;color:#713FD2;
+}
+.sp-shell--spielleitung .u08-vb .u08-vb-clues p span{min-width:0;overflow-wrap:anywhere}
+.sp-shell--spielleitung .u08-vb .vb-potential{
+ background:#DFF5EC;border-left:5px solid #00786A;color:#005B4D;
+ padding:12px 15px;font-size:13px;font-weight:900;
+}
+.sp-shell--spielleitung .u08-vb .vb-potential strong{
+ font-size:20px;color:#006452;
+}
+.sp-shell--spielleitung .u08-vb .u08-sequence-items{
+ display:flex;flex-wrap:wrap;gap:8px;min-width:0;
+}
+.sp-shell--spielleitung .u08-vb .u08-sequence-items :is(span,b){
+ display:grid;place-items:center;flex:1 1 100px;min-width:0;
+ padding:13px;background:#E5ECFF;border:2px solid #9EB3EB;
+ color:#27396D;font-weight:950;font-size:clamp(18px,2vw,25px);
+}
+.sp-shell--spielleitung .u08-vb .u08-sequence-items b{
+ background:#FFE45C;border-color:#D9AE29;color:#1E2850;
+}
+.sp-shell--spielleitung .u08-vb .u08-wall-progress{
+ display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 13px;
+ background:#201D53;color:#fff;padding:14px 16px;border-radius:4px;
+}
+.sp-shell--spielleitung .u08-vb .u08-wall-progress strong{
+ color:#FFE45C;font-size:clamp(19px,2.3vw,28px);
+ font-variant-numeric:tabular-nums;font-weight:950;
+}
+.sp-shell--spielleitung .u08-vb .u08-wall-progress span{
+ color:#E6E4FF;font-weight:800;font-size:12px;
+}
+.sp-shell--spielleitung .u08-vb .u08-wall-meter,
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-timer-meter{
+ flex:1 1 100%;height:7px;background:#46577D;
+ border-radius:8px;overflow:hidden;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) :is(.u08-wall-meter,.u08-timer-meter)>span{
+ display:block;height:100%;background:#FFE45C;border-radius:8px;
+ transition:width .12s linear;
+}
+.sp-shell--spielleitung .u08-vb .u08-wall-grid{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:clamp(5px,.7vw,9px);min-width:0;
+}
+.sp-shell--spielleitung .u08-vb .u08-wall-grid>div{
+ min-height:clamp(65px,7vw,99px);padding:10px 7px;
+ background:#333173;border:2px solid #7D79C3;border-radius:4px;
+ color:#fff;min-width:0;
+}
+.sp-shell--spielleitung .u08-vb .u08-wall-grid strong{
+ font-size:clamp(11px,1.55vw,20px);line-height:1.35;
+ font-weight:950;overflow-wrap:anywhere;
+}
+.sp-shell--spielleitung .u08-vb .u08-wall-grid small{
+ color:#FFE45C;font-size:11px;overflow-wrap:anywhere;
+}
+.sp-shell--spielleitung .u08-vb .u08-wall-grid>div.solved{
+ background:#005F59;border-color:#62DDC4;
+}
+.sp-shell--spielleitung .u08-vb .u08-marking{
+ display:grid;gap:11px;padding:clamp(12px,1.5vw,20px);
+ background:#EDF1FF;border:1px solid #BBC9EF;
+ border-top:5px solid #713FD2;min-width:0;
+}
+.sp-shell--spielleitung .u08-vb .u08-marking-head{
+ display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;
+ gap:8px 14px;
+}
+.sp-shell--spielleitung .u08-vb .u08-marking-head h4{
+ font-size:clamp(17px,1.8vw,23px);font-weight:950;color:#33247A;margin:0;
+}
+.sp-shell--spielleitung .u08-vb .u08-marking-head strong{
+ color:#365392;font-size:11px;font-variant-numeric:tabular-nums;
+}
+.sp-shell--spielleitung .u08-vb .u08-marking>p{
+ color:#3A4F76;line-height:1.5;font-size:12px;
+}
+.sp-shell--spielleitung .u08-vb .u08-mark-row{
+ display:grid;grid-template-columns:minmax(90px,.85fr) repeat(4,minmax(0,1fr));
+ gap:6px;align-items:center;min-width:0;padding:10px 0;
+ border-top:1px solid #C8D2E9;
+}
+.sp-shell--spielleitung .u08-vb .u08-mark-row strong{
+ flex:none;min-width:0;font-weight:950;font-size:13px;color:#233D73;
+}
+.sp-shell--spielleitung .u08-vb .u08-mark-row button{
+ min-width:0;padding:8px;border:2px solid #B4C2DE;
+ background:#fff;border-radius:5px;color:#213457;font-size:11px;
+}
+.sp-shell--spielleitung .u08-vb .u08-mark-row button[aria-pressed=true]{
+ background:#00786A;border-color:#00786A;color:#fff;
+}
+.sp-shell--spielleitung .u08-vb .u08-wall-preview{
+ flex-basis:100%;gap:8px;
+}
+.sp-shell--spielleitung .u08-vb .u08-wall-preview span{
+ background:#E3F5ED;color:#00604F;border-left:4px solid #00786A;
+ padding:10px 12px;font-weight:900;
+}
+.sp-shell--spielleitung .u08-vb .u08-vb-actions{
+ display:flex;flex-wrap:wrap;align-items:center;gap:9px;
+ padding-top:17px;border-top:1px solid #CCD5EA;
+}
+.sp-shell--spielleitung .u08-vb .u08-vb-actions button{
+ min-height:48px;border:2px solid #C0C9DD;border-radius:5px;
+ background:#fff;color:#263851;padding:10px 14px;
+}
+.sp-shell--spielleitung .u08-vb .u08-vb-actions button.g3-tech-primary{
+ background:#713FD2;border-color:#713FD2;color:#fff;
+}
+.sp-shell--spielleitung .u08-vb .u08-vb-actions button.g3-tech-primary:hover:not(:disabled){
+ background:#5930B0;border-color:#5930B0;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) button.u08-danger-action{
+ border:2px solid #D4A0B0!important;background:#FFF0F5!important;
+ color:#9E2747!important;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-final{
+ background:#182B51;color:#fff;border-top:6px solid #FFE45C;
+ padding:clamp(18px,2vw,27px);
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-final h3{color:#FFE45C}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-final p{color:#fff}
+/* Both countdowns remain optional and local. No new timer authority. */
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) :is(.u08-vb-timer,.u08-ll-clock){
+ display:flex;flex-wrap:wrap;gap:9px;align-items:center;
+ background:#162850;border-left:6px solid #FFE45C;padding:15px;
+ border-radius:5px;color:#fff;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) :is(.u08-vb-timer,.u08-ll-clock) strong{
+ color:#FFE45C;font:950 clamp(26px,3vw,40px)/1.13 "Arial Black",system-ui;
+ font-variant-numeric:tabular-nums;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) :is(.u08-vb-timer,.u08-ll-clock)[data-timer-warning=true] strong{
+ color:#FFAAC5;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) :is(.u08-vb-timer,.u08-ll-clock) button{
+ padding:9px 12px;background:#fff;color:#17284B;
+ border:2px solid #ABBCE0;border-radius:4px;
+}
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) [data-timer-warning=true] .u08-timer-meter>span{background:#FFAAC5}
+/* Logikleiter stages, original team locks and scoring remain authoritative. */
+.sp-shell--spielleitung .u08-ll .u08-rung-strip{
+ display:grid;grid-template-columns:repeat(auto-fit,minmax(min(92px,100%),1fr));
+ gap:7px;margin-top:17px;min-width:0;
+}
+.sp-shell--spielleitung .u08-ll .u08-rung-strip>div{
+ background:#ECF1FA;border:1px solid #CCD8E6;border-top:5px solid #9FB1CA;
+ display:grid;gap:5px;padding:12px 10px;min-width:0;
+}
+.sp-shell--spielleitung .u08-ll .u08-rung-strip>div.done{
+ background:#E2F5EC;border-color:#9AD2BD;border-top-color:#00786A;
+}
+.sp-shell--spielleitung .u08-ll .u08-rung-strip>div.current{
+ background:#00786A;border-color:#00786A;border-top-color:#FFE45C;
+ color:#fff;
+}
+.sp-shell--spielleitung .u08-ll .u08-rung-strip span{
+ font-weight:950;font-size:10px;letter-spacing:.08em;color:#425F77;
+}
+.sp-shell--spielleitung .u08-ll .u08-rung-strip strong{
+ font:950 clamp(19px,2vw,29px)/1.15 "Arial Black",system-ui;
+ color:#172F4B;font-variant-numeric:tabular-nums;
+}
+.sp-shell--spielleitung .u08-ll .u08-rung-strip strong small{
+ font:800 9px system-ui;letter-spacing:.03em;
+}
+.sp-shell--spielleitung .u08-ll .u08-rung-strip>div.current :is(strong,span){color:#fff}
+.sp-shell--spielleitung .u08-ll .u08-status{
+ background:#143F3B;color:#fff;border-left:5px solid #FFE45C;
+ padding:15px 17px;flex-wrap:wrap;
+}
+.sp-shell--spielleitung .u08-ll .u08-ll-card .ll-card>h3{color:#0C554B}
+.sp-shell--spielleitung .u08-ll .ll-lock-panel{
+ display:grid;gap:12px;background:#F4F9FA;
+ border:1px solid #C9DEDE;border-top:5px solid #00786A;
+ padding:clamp(14px,1.8vw,22px);min-width:0;
+}
+.sp-shell--spielleitung .u08-ll .ll-lock-panel h4{
+ color:#075E51;font-size:19px;font-weight:950;
+}
+.sp-shell--spielleitung .u08-ll .u08-lock-count,
+.sp-shell--spielleitung .u08-ll .u08-grade-count{
+ display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+ background:#E0F6EF;border-left:5px solid #00786A;
+ color:#07594C;padding:10px 14px;font-size:12px;font-weight:850;
+}
+.sp-shell--spielleitung .u08-ll :is(.u08-lock-count,.u08-grade-count) strong{
+ font:950 23px "Arial Black",system-ui;font-variant-numeric:tabular-nums;
+}
+.sp-shell--spielleitung .u08-ll .u08-grade-count{margin-top:3px}
+.sp-shell--spielleitung .u08-ll .ll-team-row{
+ display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0;
+ padding:13px 0;border-top:1px solid #C4D9D8;
+}
+.sp-shell--spielleitung .u08-ll .ll-team-row>span{
+ flex:1 1 105px;font-weight:950;color:#20354F;overflow-wrap:anywhere;
+}
+.sp-shell--spielleitung .u08-ll .ll-team-row>strong{
+ background:#E4EEFD;color:#214C90;padding:8px 10px;
+ font-size:10px;font-weight:900;border-radius:4px;
+}
+.sp-shell--spielleitung .u08-ll .ll-team-row[data-lock-state=early]>strong{
+ background:#DDF6E8;color:#005F50;
+}
+.sp-shell--spielleitung .u08-ll .ll-team-row[data-lock-state=late]>strong{
+ background:#FFF0C9;color:#885300;
+}
+.sp-shell--spielleitung .u08-ll .ll-team-row>button{
+ margin-left:auto;background:#265DC0;color:#fff;
+ border:2px solid #265DC0;border-radius:5px;padding:9px 12px;
+}
+.sp-shell--spielleitung .u08-ll .u08-grade-panel .ll-team-row{
+ display:grid;grid-template-columns:minmax(105px,1fr) minmax(0,2.2fr);
+ gap:10px;
+}
+.sp-shell--spielleitung .u08-ll .ll-grades{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;min-width:0;
+}
+.sp-shell--spielleitung .u08-ll .ll-grades button{
+ min-height:47px;min-width:0;padding:9px 6px;
+ background:#fff;color:#233850;border:2px solid #AEC5CB;border-radius:5px;
+ font-size:12px;
+}
+.sp-shell--spielleitung .u08-ll .ll-grades button[aria-pressed=true]{
+ background:#006F5F;color:#fff;border-color:#006F5F;
+}
+.sp-shell--spielleitung .u08-ll .u08-hint{
+ background:#FFF1D3;border-left:5px solid #B98513;
+ padding:16px;color:#503C1A;
+}
+.sp-shell--spielleitung .u08-ll .u08-hint small{color:#765009;font-weight:950}
+.sp-shell--spielleitung .u08-ll .u08-hint p{
+ font-size:clamp(15px,1.7vw,21px);line-height:1.5;color:#4A3211;
+}
+.sp-shell--spielleitung .u08-ll .ll-notice{
+ background:#E1F5EB;color:#00594E;border-left:5px solid #00786A;
+}
+.sp-shell--spielleitung .u08-ll .ll-awards{
+ display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));
+ gap:9px;
+}
+.sp-shell--spielleitung .u08-ll .ll-awards p{
+ display:grid;gap:8px;background:#E8F6F0;
+ border:1px solid #AFD6C8;border-top:5px solid #00786A;
+ font-size:13px;font-weight:800;color:#203B34;padding:14px;margin:0;
+}
+.sp-shell--spielleitung .u08-ll .ll-awards strong{
+ color:#006454;font-size:19px;font-variant-numeric:tabular-nums;
+}
+@media(max-width:990px){
+ .sp-shell--spielleitung .u08-vb .u08-mark-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .sp-shell--spielleitung .u08-vb .u08-mark-row strong{grid-column:1/-1}
+ .sp-shell--spielleitung .u08-ll .u08-grade-panel .ll-team-row{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:700px){
+ .sp-shell--spielleitung :is(.u08-vb,.u08-ll){padding:12px!important}
+ .sp-shell--spielleitung .u08-mode-head{padding:19px 15px;gap:8px}
+ .sp-shell--spielleitung .u08-mode-copy{max-width:100%}
+ .sp-shell--spielleitung .u08-mode-head h2{font-size:30px}
+ .sp-shell--spielleitung .u08-mode-art{
+  position:absolute;top:0;right:-13px;width:140px;height:125px;opacity:.12;
+ }
+ .sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-scorebar{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+ }
+ .sp-shell--spielleitung .u08-vb .u08-status-row{grid-template-columns:minmax(0,1fr)}
+ .sp-shell--spielleitung .u08-vb .u08-vb-clues p{padding:11px 10px;gap:9px}
+ .sp-shell--spielleitung .u08-vb .u08-wall-grid{gap:4px}
+ .sp-shell--spielleitung .u08-vb .u08-wall-grid>div{min-height:58px;padding:6px 3px}
+ .sp-shell--spielleitung .u08-vb .u08-wall-grid strong{font-size:11px;line-height:1.3}
+ .sp-shell--spielleitung .u08-vb .u08-marking{padding:12px 10px}
+ .sp-shell--spielleitung .u08-vb .u08-mark-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .sp-shell--spielleitung .u08-vb .u08-vb-actions button{flex:1 1 100%}
+ .sp-shell--spielleitung :is(.u08-vb,.u08-ll) :is(.u08-vb-timer,.u08-ll-clock) button{flex:1 1 75px}
+ .sp-shell--spielleitung .u08-ll .ll-team-row>button{margin-left:0}
+ .sp-shell--spielleitung .u08-ll .u08-grade-panel .ll-team-row{gap:9px}
+}
+@media(max-width:390px){
+ .sp-shell--spielleitung .u08-ll .ll-grades{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .sp-shell--spielleitung .u08-ll .ll-grades button{padding:8px 4px;font-size:11px}
+ .sp-shell--spielleitung .u08-vb .u08-mark-row button{font-size:10px;padding:7px 4px}
+}
+@media(prefers-reduced-motion:reduce){
+ .sp-shell--spielleitung :is(.u08-vb,.u08-ll) *,
+ .sp-shell--spielleitung :is(.u08-vb,.u08-ll) *::before,
+ .sp-shell--spielleitung :is(.u08-vb,.u08-ll) *::after{
+  transition:none!important;animation:none!important;transform:none!important;
+ }
+}
