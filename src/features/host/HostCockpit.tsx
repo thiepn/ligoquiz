@@ -3,6 +3,7 @@ import type {EventRecord} from '../../domain/event/schemas';
 import {GAME_VISUALS} from '../../design-system/theme';
 import {StudioPopMotif,ScoreChip,PopProgress} from '../../design-system/StudioPop';
 import {stageUrl} from '../stage/protocol';
+import {playalongUrl} from '../stage/audience-playalong-model';
 import {backupHref} from '../experience/backstage-model';
 import {describeCockpit} from './host-cockpit-model';
 import './host-cockpit.css';
@@ -57,6 +58,7 @@ export function HostCockpit({event}:{event:EventRecord}){
     Öffentliches Beamerfenster öffnen <span aria-hidden="true">↗</span></a>
    <a className="sp-cockpit-accessible-stage" href={stageUrl(event.id)+'&display=accessible'}
      target="_blank" rel="noopener noreferrer">Beamer-Lesemodus öffnen <span aria-hidden="true">↗</span></a>
+   <a className="sp-cockpit-playalong" href={playalongUrl(event.id)} target="_blank" rel="noopener noreferrer">Mitspielen auf diesem Gerät öffnen</a>
    <a href="#/technik">Technikcheck</a>
    <a href={backupHref(event.id)}>Originalsicherung</a>
    <a href="#/spielen">Gespeicherte Abende</a>
