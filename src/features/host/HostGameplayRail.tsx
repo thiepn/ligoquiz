@@ -1,8 +1,10 @@
 import {describeHostStep, type HostGame} from './HostModerationGuide';
 
-const PHASES:Record<'rundenquiz'|'quiztafel',Readonly<Record<string,number>>>={
+const PHASES:Record<'rundenquiz'|'quiztafel'|'verbindungen'|'logikleiter',Readonly<Record<string,number>>>={
  rundenquiz:{setup:0,ready:0,open:1,closed:1,revealed:2,graded:3,complete:3},
  quiztafel:{setup:0,board:0,prepared:0,question:1,'steal-offer':1,steal:1,adjudicated:1,revealed:2,awarded:3,complete:3},
+ verbindungen:{setup:0,ready:0,'clue-open':1,'sequence-open':1,'wall-open':1,'wall-closed':1,'wall-reveal':2,revealed:2,graded:3,complete:3},
+ logikleiter:{setup:0,ready:0,open:1,closed:1,revealed:2,graded:3,complete:3},
 };
 const LABELS=[
  {name:'Vorbereiten',hint:'Teams & Auswahl'},
@@ -11,7 +13,7 @@ const LABELS=[
  {name:'Weiter',hint:'Nächster Schritt'},
 ] as const;
 export type HostGameplayRailProps={
- game:Extract<HostGame,'rundenquiz'|'quiztafel'>;
+ game:Extract<HostGame,'rundenquiz'|'quiztafel'|'verbindungen'|'logikleiter'>;
  phase:string;paused:boolean;recovery:boolean;completed:number;total:number;
 };
 /** Display-only rail. Action labels come from original G14 guide; no dispatching or new phase transitions. */
@@ -19,15 +21,19 @@ export function HostGameplayRail({game,phase,paused,recovery,completed,total}:Ho
  const active=PHASES[game][phase]??0;
  const guidance=describeHostStep({game,phase,paused,recovery,completed,total,viewers:0,ready:true,busy:false});
  const safeCompleted=Math.max(0,Math.min(total,completed));
+ const steps=game==='verbindungen'?
+  [{name:'Vorbereiten',hint:'Teams & Aufgaben'},{name:'Antworten',hint:'Hinweis / Folge / Wand'},{name:'Werten',hint:'Gruppen & Lösung'},{name:'Weiter',hint:'Nächste Aufgabe'}]:
+  game==='logikleiter'?
+  [{name:'Vorbereiten',hint:'Stufen & Teams'},{name:'Antworten',hint:'Sperren & Hinweis'},{name:'Werten',hint:'Teampunkte'},{name:'Weiter',hint:'Nächste Stufe'}]:LABELS;
  return <section className={'u07-phase-rail u07-phase-rail--'+game} data-u07-phase={phase}
    aria-label="Spielablauf" aria-roledescription="Moderationsschritte">
    <div className="u07-rail-top">
      <span>DEIN SPIELABLAUF</span>
      <strong>{recovery?'Wiederherstellung prüfen':paused?'Spiel pausiert':guidance.step}</strong>
-     <small>{safeCompleted} / {total} {game==='quiztafel'?'Felder':'Aufgaben'} abgeschlossen</small>
+     <small>{safeCompleted} / {total} {game==='quiztafel'?'Felder':game==='logikleiter'?'Stufen':'Aufgaben'} abgeschlossen</small>
    </div>
    <ol className="u07-phase-steps">
-     {LABELS.map((step,i)=><li key={step.name} className={i===active?'is-current':i<active?'is-complete':''}
+     {steps.map((step,i)=><li key={step.name} className={i===active?'is-current':i<active?'is-complete':''}
        aria-current={i===active?'step':undefined}>
        <span className="u07-phase-number" aria-hidden="true">{String(i+1).padStart(2,'0')}</span>
        <span className="u07-phase-copy"><strong>{step.name}</strong><small>{step.hint}</small></span>
