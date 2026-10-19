@@ -7,6 +7,12 @@ import './studio-stage.css';
 
 const WAIT: ViewerState = { status: 'connecting', frame: null, lastReceivedAt: null };
 
+/** Extra controls are opt-in on the public stage URL, never on legacy projector links. */
+export function stageAccessibleDisplayFromHash(hash:string):boolean{
+  const match = /^#\/stage\?(.+)$/.exec(hash);
+  return Boolean(match && new URLSearchParams(match[1]).get('display') === 'accessible');
+}
+
 function Scene({ scene }: { scene: PublicStageScene }) {
   if(scene.kind==='ud-prompt'||scene.kind==='ud-reveal')return <section className="ud-stage" aria-label="Umfrageduell">
     <p className="stage-kicker">UMFRAGEDUELL · {scene.step} / {scene.total} · {scene.format==='popular'?'BELIEBTESTE ANTWORT':'TOP 3'}</p>
@@ -116,8 +122,18 @@ function Scene({ scene }: { scene: PublicStageScene }) {
 
 export function StageView() {
   const eventId = stageEventIdFromHash(window.location.hash);
+  const accessibleDisplay = stageAccessibleDisplayFromHash(window.location.hash);
+  const [displaySize,setDisplaySize] = useState<'normal'|'large'|'largest'>('normal');
+  const [highContrast,setHighContrast] = useState(false);
+  const [settingsOpen,setSettingsOpen] = useState(false);
   const [state, setState] = useState<ViewerState>(WAIT);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDisplaySize('normal');
+    setHighContrast(false);
+    setSettingsOpen(false);
+  },[eventId,accessibleDisplay]);
 
   useEffect(() => {
     setState(WAIT);
@@ -157,6 +173,9 @@ export function StageView() {
     : 'Verbindung unterbrochen';
 
   return <main className="stage-preview sp-stage" data-public-scene={scene?.kind??'withheld'}
+    data-stage-display={accessibleDisplay?'accessible':undefined}
+    data-stage-size={accessibleDisplay?displaySize:undefined}
+    data-stage-contrast={accessibleDisplay&&highContrast?'high':undefined}
     data-stage-phase={presentation.phase} data-stage-tone={presentation.tone} aria-label="Beamer-Ansicht">
     <div className="stage-topline">
       <span className="sp-stage-logo">LiGo<span className="stage-yellow">Quiz</span><b aria-hidden="true">!</b></span>
@@ -176,6 +195,23 @@ export function StageView() {
     </div>
     <div className="stage-bottom">
       <span aria-live="polite">{status}</span>
+      {accessibleDisplay && <div className="stage-access-area">
+        <button id="stage-access-trigger" type="button" className="stage-access-trigger"
+          aria-expanded={settingsOpen} aria-controls="stage-access-controls"
+          onClick={()=>setSettingsOpen(open=>!open)}>Anzeige</button>
+        {settingsOpen && <div id="stage-access-controls" className="stage-access-controls"
+          role="group" aria-label="Beameranzeige einstellen">
+          <span>Schriftgröße</span>
+          {([
+            ['normal','Normal'],['large','Groß'],['largest','Sehr groß'],
+          ] as const).map(([value,label])=><button key={value} type="button"
+            aria-pressed={displaySize===value} onClick={()=>setDisplaySize(value)}>{label}</button>)}
+          <button type="button" aria-pressed={highContrast}
+            onClick={()=>setHighContrast(v=>!v)}>Hoher Kontrast</button>
+          <button type="button" onClick={()=>{setSettingsOpen(false);
+            document.getElementById('stage-access-trigger')?.focus();}}>Schließen</button>
+        </div>}
+      </div>}
       <span className="sp-stage-trust"><span aria-hidden="true">◆</span> Nur freigegebene Spielinhalte</span>
     </div>
   </main>;
