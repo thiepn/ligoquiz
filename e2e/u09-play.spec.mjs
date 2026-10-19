@@ -17,7 +17,7 @@ async function setup(page,count=3,profile=null){
 }
 const phase=host=>host.locator('.u07-phase-steps [aria-current="step"]');
 async function noOverflow(page){
- const dims=await page.evaluate(()=>({width:innerWidth,actual:document.documentElement.scrollWidth}));
+ const dims=await page.evaluate(()=>({width:globalThis.innerWidth,actual:globalThis.document.documentElement.scrollWidth}));
  expect(dims.actual).toBeLessThanOrEqual(dims.width+3);
 }
 test('U09 actual draft estimate stays private, only recorded teams permit rank reveal',async({page})=>{

@@ -146,7 +146,7 @@ export function UmfrageduellHost(){
    <div className="u09-mode-copy"><span className="u09-overline">05 / MODERATION · ANTWORTEN VERGLEICHEN</span>
     <h2>Umfrageduell<span aria-hidden="true">.</span></h2>
     <p>Alle Teams antworten. Die Spielleitung ordnet den vorgegebenen Kategorien zu – Rangfolge und Punkte werden erst nach bewusster Freigabe öffentlich.</p>
-    <span className="g3-tech-tag">ILLUSTRATIVE PROBEINHALTE · KEINE REPRÄSENTATIVE UMFRAGE</span>
+    <span className="g3-tech-tag">PROBEINHALTE · HERKUNFT PRO AUFGABE PRÜFEN</span>
    </div>
    <span className="u09-mode-art" aria-hidden="true"><StudioPopMotif game="umfrageduell"/></span>
   </header>
