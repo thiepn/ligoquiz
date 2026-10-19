@@ -114,7 +114,7 @@ export function App(){
      {route==='bericht'&&<SessionHistory eventId={currentEventId(currentHash)}/>}
      {route==='einstellungen'&&<ExperienceSettings/>}
      {route==='technik'&&<section className="exp-page u10-tech-workflow">
-       <div className="exp-heading"><div><p className="eyebrow">BACKSTAGE / BETRIEB</p><h1>Regie & Technik</h1>
+       <div className="exp-heading"><div><p className="eyebrow">BACKSTAGE / BETRIEB</p><h1>Technikcheck</h1>
        <p>Vor der Show: Browser, getrennten Beamer und die echten Originalfreigaben prüfen. Kein Test bestätigt einen produktiven Start automatisch.</p></div><a className="exp-quiet" href="#/spielen">← Spielstände</a></div>
        <TechWorkflowNavigation/>
        <section className="u10-tech-section" id="u10-offline-check" tabIndex={-1} aria-label="Offline und Gerätespeicher">
