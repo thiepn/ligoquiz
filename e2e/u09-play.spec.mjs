@@ -25,9 +25,10 @@ test('U09 actual draft estimate stays private, only recorded teams permit rank r
  await page.setViewportSize({width:1365,height:850});
  const host=await setup(page);
  await expect(phase(host)).toContainText('Vorbereiten');
- await expect(host.locator('.u09-origin')).toContainText('BEISPIELDATEN – KEINE ECHTE UMFRAGE');
+ await expect(host.locator('.u09-mode-head')).toContainText('HERKUNFT PRO AUFGABE PRÜFEN');
  await expect(host.locator('.ud-scorebar strong')).toHaveText(['0','0','0']);
  await host.getByRole('button',{name:'Aufgabenfolge bestätigen'}).click();
+ await expect(host.locator('.u09-origin')).toContainText('BEISPIELDATEN – KEINE ECHTE UMFRAGE');
  await host.getByRole('button',{name:'Aufgabe veröffentlichen'}).click();
  await expect(phase(host)).toContainText('Antworten');
  await host.getByRole('button',{name:'Alle Antworten schließen'}).click();
@@ -101,8 +102,9 @@ test('U09 375px five-team original survey works with reduced motion and no overf
 });
 test('U09 Top 3 source disclosure and original rule stay guarded before explicit reveal',async({page})=>{
  const host=await setup(page,3,'standard');
- await expect(host.locator('.u09-origin')).toContainText('BEISPIELDATEN');
+ await expect(host.locator('.u09-mode-head')).toContainText('HERKUNFT PRO AUFGABE PRÜFEN');
  await host.getByRole('button',{name:'Aufgabenfolge bestätigen'}).click();
+ await expect(host.locator('.u09-origin')).toContainText('BEISPIELDATEN');
  await expect(host.locator('.u09-progress>span')).toHaveCount(6);
  await expect(host.locator('.u09-progress>span').last()).toContainText('TOP 3');
  await expect(host.locator('.ud-phase')).toContainText('READY');
