@@ -3,7 +3,7 @@ import {test,expect} from '@playwright/test';
 test('U03 desktop lobby shows five real game types and selects using existing setup draft',async({page})=>{
  await page.setViewportSize({width:1440,height:900});
  await page.goto('/#/spielen');
- await expect(page.getByRole('heading',{name:/Heute wird gespielt!/})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Spielen'})).toBeVisible();
  const gameCards=page.locator('.sp-lobby-game-grid button.sp-game-tile');
  await expect(gameCards).toHaveCount(5);
  await page.getByRole('button',{name:/Quiztafel auswählen/}).click();
