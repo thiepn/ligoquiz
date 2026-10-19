@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import {GAME_ORDER,GAME_VISUALS} from '../../design-system/theme';
+import type {GameType} from '../../domain/game/contracts';
+import {FourGameTryout} from './FourGameTryout';
+import './u13-rehearsal.css';
 import { createSession, transition, currentQuestion, publicScene, scores, type Action, type Session } from '../../games/rundenquiz/engine';
 import { RQ_TRIAL_BANK } from '../../games/rundenquiz/trial-bank';
 
@@ -27,7 +31,7 @@ function stageView(s:Session){
 }
 
 /** No repository, storage, session IDs, or public BroadcastChannel. */
-export function DisposableDemo(){
+function RundenquizDemo(){
  const [session,setSession]=useState<Session>(firstDemo);
  const [error,setError]=useState('');
  const q=currentQuestion(session);
@@ -85,4 +89,19 @@ export function DisposableDemo(){
    </div>
   </div>
  </section>;
+}
+
+export function DisposableDemo(){
+ const [game,setGame]=useState<GameType>('rundenquiz');
+ return <div className="u13-demo" data-u13-selected={game}>
+  <header className="u13-demo-header">
+   <h1>Spielmodi ausprobieren</h1>
+   <a href="#/spielen">← Zur Spielwelt</a>
+  </header>
+  <nav className="u13-mode-picker" aria-label="Spielmodus für die Übung wählen">
+   {GAME_ORDER.map(item=><button type="button" key={item} aria-pressed={game===item}
+    onClick={()=>setGame(item)}>{GAME_VISUALS[item].label}</button>)}
+  </nav>
+  {game==='rundenquiz'?<RundenquizDemo/>:<FourGameTryout key={game} game={game}/>}
+ </div>;
 }
