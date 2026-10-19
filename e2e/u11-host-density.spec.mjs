@@ -29,7 +29,7 @@ test('U11 optional compact cockpit saves space without replacing real host or st
  await cockpit.getByRole('button',{name:/Zur Originalsteuerung/}).click();
  await expect(page.locator('#sp-host-game')).toBeFocused();
  await page.getByRole('button',{name:'Teams bestätigen'}).click();
- await expect(page.getByRole('button',{name:'Frage veröffentlichen'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Frage auf Beamer zeigen'})).toBeVisible();
  await expect(toggle).toHaveAttribute('aria-pressed','true');
  await toggle.click();
  await expect(toggle).toHaveAttribute('aria-pressed','false');
