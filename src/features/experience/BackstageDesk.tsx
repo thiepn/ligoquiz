@@ -41,7 +41,7 @@ export function BackstageDesk({items,invalid}:{items:readonly EventRecord[];inva
     <small>Erweiterten Bildschirm, Empfang und installierte Offline-Dateien prüfen</small>
     <b aria-hidden="true">↗</b>
    </a>
-   <a href={data.latestOpen?backupHref(data.latestOpen.id):'#/einstellungen'} className="sp-backstage-workflow">
+   <a href={data.latestOpen?backupHref(data.latestOpen.id):'#/einstellungen'} className="sp-backstage-workflow sp-backstage-backup-link">
     <span>03 / DATENSICHERHEIT</span><strong>Sitzung sichern</strong>
     <small>Originales vollständiges Backup, mit Prüfsumme und ohne Überschreiben</small>
     <b aria-hidden="true">↗</b>
