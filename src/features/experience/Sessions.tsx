@@ -3,6 +3,9 @@ import { EventRepository } from '../../infrastructure/db/event-repository';
 import type { EventRecord } from '../../domain/event/schemas';
 import { readHostIdentity, writeHostIdentity, reportFor, safeFileName, readSetupDraft } from './model';
 import { filterSessions, reportCsv, csvFileName } from './session-tools';
+import {BackstageDesk} from './BackstageDesk';
+import {BackstageAudit} from './BackstageAudit';
+import {backupHref,safeBackstageAudit,type BackstageAuditItem} from './backstage-model';
 import '../../styles/g13-organizer.css';
 import {GameTile} from '../../design-system/StudioPop';
 import {GAME_ORDER,GAME_VISUALS} from '../../design-system/theme';
@@ -166,7 +169,10 @@ export function OrganizerHome() {
      <p className="sp-lobby-team-names">{latest.teams.map(t=>t.name).join(' · ')}</p>
      <small>Letzte Änderung: {new Date(latest.updatedAt).toLocaleString('de-DE')}</small>
     </div>
-    <div className="sp-lobby-resume"><ResumeButton event={latest} onError={setActionError}/></div>
+    <div className="sp-lobby-resume">
+     <ResumeButton event={latest} onError={setActionError}/>
+     <a className="sp-backstage-backup-link" href={backupHref(latest.id)}>Sitzung sichern ↗</a>
+    </div>
    </article>}
    {matching.length>1&&<div className="sp-lobby-other-sessions">
     <h3>Weitere Spielstände</h3>
@@ -175,10 +181,15 @@ export function OrganizerHome() {
        <p className="sp-lobby-team-names">{e.teams.map(t=>t.name).join(' · ')}</p>
        <small>{new Date(e.updatedAt).toLocaleString('de-DE')}</small>
       </div>
-      <ResumeButton event={e} onError={setActionError}/>
+      <div className="sp-backstage-row-actions">
+       <ResumeButton event={e} onError={setActionError}/>
+       <a href={backupHref(e.id)}>Sichern ↗</a>
+      </div>
      </article>)}
    </div>}
   </section>
+
+  {dir&&<BackstageDesk items={dir.items} invalid={dir.invalidCount}/>}
 
   {actionError&&<p role="alert" className="exp-error">{actionError}</p>}
   {error&&<p role="alert" className="exp-error">{error}</p>}
@@ -195,7 +206,7 @@ export function OrganizerHome() {
 
 export function SessionHistory({eventId}:{eventId:string|null}) {
  const {dir,error}=useDirectory();
- const [audit,setAudit]=useState<{kind:string;detail:string;revision:number}[]>([]);
+ const [audit,setAudit]=useState<BackstageAuditItem[]>([]);
  const [query,setQuery]=useState('');
  const selected=dir?.items.find(e=>e.id===eventId);
  const completed=dir?.items.filter(e=>e.lifecycle==='complete'&&!!reportFor(e))??[];
@@ -205,9 +216,8 @@ export function SessionHistory({eventId}:{eventId:string|null}) {
   if(!eventId){setAudit([]);return;}
   let disposed=false;
   const repo=new EventRepository();
-  void repo.getAudit(eventId).then(rows=>{if(!disposed)setAudit(rows.map(r=>({
-    kind:r.kind,detail:r.detail,revision:r.revision,
-  })));}).catch(()=>{if(!disposed)setAudit([]);}).finally(()=>{void repo.close();});
+  void repo.getAudit(eventId).then(rows=>{if(!disposed)setAudit(safeBackstageAudit(rows));})
+   .catch(()=>{if(!disposed)setAudit([]);}).finally(()=>{void repo.close();});
   return ()=>{disposed=true;};
  },[eventId]);
  function downloadText(filename:string,content:string,mime:string){
@@ -225,10 +235,11 @@ export function SessionHistory({eventId}:{eventId:string|null}) {
  function downloadCsv(){
   if(report)downloadText(csvFileName(report.id),reportCsv(report),'text/csv;charset=utf-8');
  }
- if(eventId)return <section className="exp-page">
-  <div className="exp-heading"><div><p className="eyebrow">VERLAUF / BERICHT</p><h1>Abendbericht</h1>
-   <p>Ergebnisse aus der abgeschlossenen, lokal gespeicherten Sitzung.</p></div>
-   <a href="#/verlauf" className="exp-quiet">Zurück</a></div>
+ if(eventId)return <section className="exp-page sp-backstage-report">
+  <div className="exp-heading sp-backstage-report-head"><div>
+    <p className="eyebrow">VERLAUF / REGIEPROTOKOLL</p><h1>Abendbericht</h1>
+    <p>Originaler Endstand aus dem lokalen Spiel. Export und Prüfung verändern den Spielstand nicht.</p></div>
+   <a href="#/verlauf" className="exp-quiet">Alle Abende ←</a></div>
   {!dir?<p role="status">Spielbericht wird geladen …</p>:!report?<p className="exp-error" role="alert">Kein abgeschlossener Bericht für diese Sitzung vorhanden.</p>:
    <div className="exp-report">
     <div className="exp-summary">
@@ -242,21 +253,26 @@ export function SessionHistory({eventId}:{eventId:string|null}) {
       const rank=1+report.teams.filter(t=>t.rawPoints>team.rawPoints).length;
       return <div key={team.id}><b>{rank}.</b><span>{team.name}</span><strong>{team.rawPoints} Spielpunkte</strong><small>{team.eveningHalfPoints/2} Abendpunkte</small></div>;
     })}</div>
-    <div className="exp-report-actions">
+    <div className="exp-report-actions sp-backstage-report-actions">
      <button className="exp-secondary" onClick={download}>Bericht als JSON exportieren</button>
      <button className="exp-secondary" onClick={downloadCsv}>Ergebnisse als CSV exportieren</button>
      <button className="exp-secondary" onClick={()=>window.print()}>Ergebnisliste drucken / PDF</button>
+     <a className="exp-secondary" href={backupHref(report.id)}>Originalsicherung öffnen ↗</a>
     </div>
-    <details><summary>Änderungsprotokoll ({audit.length})</summary>
-      <div className="exp-audit">{audit.map(entry=><p key={entry.revision}>#{entry.revision} · {entry.kind} · {entry.detail}</p>)}</div>
-    </details>
-    <p className="exp-footnote">{report.sourceLabel}. Der Export enthält Ergebnisse, keine unveröffentlichten Lösungsdaten.</p>
+    {selected&&<BackstageAudit event={selected} entries={audit}/>}
+    <p className="exp-footnote">{report.sourceLabel}. Ergebnisexporte enthalten keine unveröffentlichten Lösungen.
+     Nur die vollständige Originalsicherung aus Einstellungen & Sicherungen eignet sich zur Wiederherstellung.</p>
    </div>}
   {error&&<p role="alert" className="exp-error">{error}</p>}
  </section>;
- return <section className="exp-page">
-   <div className="exp-heading"><div><p className="eyebrow">VERLAUF</p><h1>Vergangene Abende</h1>
-    <p>Abgeschlossene Sitzungen aus diesem Browser. Laufende Abende sind unter Spielen.</p></div></div>
+ return <section className="exp-page sp-backstage-history">
+   <div className="exp-heading sp-backstage-history-head"><div><p className="eyebrow">BACKSTAGE / ARCHIV</p>
+    <h1>Vergangene Abende</h1>
+    <p>Bestätigte Ergebnisse, Herkunft, Korrekturen und vollständige lokale Sicherungen.
+     Laufende Abende werden ausschließlich im originalen Host fortgesetzt.</p></div>
+    <a className="exp-quiet" href="#/spielen">← Zur Spielwelt</a></div>
+   <div className="sp-backstage-archive-summary"><strong>{completed.length}</strong><span>abgeschlossene lokale Abende</span>
+     <a href="#/einstellungen">Backup & Wiederherstellung ↗</a></div>
    {completed.length>1&&<div className="exp-search">
      <label>Abende durchsuchen<input type="search" value={query} onChange={e=>setQuery(e.target.value)}
        placeholder="Spiel oder Team" aria-label="Abende durchsuchen"/></label>
@@ -267,11 +283,14 @@ export function SessionHistory({eventId}:{eventId:string|null}) {
       <p>Der erste vollständige Abend erscheint hier nach dem Abschluss.</p>
       <a className="exp-secondary" href="#/setup">Quizabend vorbereiten</a></div>:
      matching.length===0?<p role="status" className="exp-search-empty">Keine passenden Abende gefunden.</p>:
-     <div className="exp-session-list">{matching.map(e=><a className="exp-session-row" key={e.id}
-        href={'#/bericht?event='+encodeURIComponent(e.id)}>
+     <div className="exp-session-list sp-backstage-archive-list">{matching.map(e=><article className="exp-session-row sp-backstage-archive-row" key={e.id}>
        <div><strong>{e.umfrageduell?'Umfrageduell':e.logikleiter?'Logikleiter':e.verbindungen?'Verbindungen':e.quiztafel?'Quiztafel':'Rundenquiz'} · {e.umfrageduell?.profile??e.logikleiter?.profile??e.verbindungen?.profile??e.quiztafel?.profile??e.rundenquiz?.profile}</strong><p>{e.teams.length} Teams · {e.umfrageduell?.surveys.length??e.logikleiter?.rungs.length??e.verbindungen?.assignments.length??e.quiztafel?.tiles.length??e.rundenquiz?.questions.length} {e.quiztafel?'Felder':'Aufgaben'}</p>
        <p className="exp-team-names">{e.teams.map(t=>t.name).join(' · ')}</p>
-       <small>{new Date(e.updatedAt).toLocaleString('de-DE')}</small></div><span>Bericht ansehen ↗</span></a>)}</div>}
+       <small>{new Date(e.updatedAt).toLocaleString('de-DE')}</small></div>
+       <nav aria-label="Abendaktionen">
+        <a href={'#/bericht?event='+encodeURIComponent(e.id)}>Bericht ansehen ↗</a>
+        <a href={backupHref(e.id)}>Vollständiges Backup ↗</a>
+       </nav></article>)}</div>}
    {dir?.invalidCount ? <p className="exp-error" role="alert">{dir.invalidCount} beschädigte Sitzungen wurden nicht verändert.</p> : null}
    {error&&<p role="alert" className="exp-error">{error}</p>}
  </section>;
