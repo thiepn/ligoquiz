@@ -2,6 +2,7 @@ import type {EventRecord} from '../../domain/event/schemas';
 import {GAME_VISUALS} from '../../design-system/theme';
 import {StudioPopMotif,ScoreChip,PopProgress} from '../../design-system/StudioPop';
 import {stageUrl} from '../stage/protocol';
+import {backupHref} from '../experience/backstage-model';
 import {describeCockpit} from './host-cockpit-model';
 import './host-cockpit.css';
 
@@ -52,6 +53,7 @@ export function HostCockpit({event}:{event:EventRecord}){
    <a className="sp-cockpit-stage" href={stageUrl(event.id)} target="_blank" rel="noopener noreferrer">
     Öffentliches Beamerfenster öffnen <span aria-hidden="true">↗</span></a>
    <a href="#/technik">Technikcheck</a>
+   <a href={backupHref(event.id)}>Originalsicherung</a>
    <a href="#/spielen">Gespeicherte Abende</a>
    {state.finished&&<a href={'#/bericht?event='+encodeURIComponent(event.id)}>Abendbericht</a>}
   </nav>
