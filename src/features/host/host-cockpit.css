@@ -53,3 +53,15 @@
 @media(prefers-reduced-motion:reduce){.sp-cockpit *,.sp-cockpit *::before,.sp-cockpit *::after{animation:none!important;transition:none!important;transform:none!important}}
 
 .sp-cockpit-actions button{font-family:inherit;cursor:pointer}.sp-host-game-region:focus{outline:3px solid #285BFF;outline-offset:3px}
+
+/* U10 long game-title zoom: G15 evidence showed clipping of Verbindungen
+   and Umfrageduell at 200% despite a page-width pass. Preserve the actual
+   Studio Pop font while making the private cockpit heading reflowable. */
+.sp-shell--spielleitung .sp-cockpit-hero h2{
+ max-width:100%;min-width:0;overflow-wrap:anywhere;hyphens:auto;
+}
+@media(max-width:800px){
+ .sp-shell--spielleitung .sp-cockpit-hero h2{
+  font-size:clamp(23px,4vw,38px);
+ }
+}
