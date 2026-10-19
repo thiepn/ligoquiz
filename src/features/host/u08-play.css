@@ -457,3 +457,15 @@
   transition:none!important;animation:none!important;transform:none!important;
  }
 }
+
+/* G15 200%-zoom screenshot evidence: U08-only steps were too narrow in a
+   two-column track at effective 320px. Auto-fit uses one readable column
+   under extreme zoom, two at normal mobile, four on moderator desktop. */
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u07-phase-steps{
+ grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr));
+}
+@media(max-width:700px){
+ .sp-shell--spielleitung :is(.u08-vb,.u08-ll) .u08-mode-head h2{
+  font-size:clamp(22px,4vw,28px);
+ }
+}

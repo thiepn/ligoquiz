@@ -61,9 +61,11 @@ test('U08 wall marks distinguish missing link judgment from explicit false',asyn
  const mark=host.locator('.u08-marking').first();
  const row=mark.getByRole('group',{name:/Gruppenwertung für Team 1/});
  await row.getByRole('button',{name:'Vierergruppe richtig'}).click();
- await expect(row.getByRole('button',{name:'Verbindung nicht richtig'})).toHaveAttribute('aria-pressed','false');
+ // MARK_GROUP stores a canonical link:false default until MARK_LINK changes it.
+ await expect(row.getByRole('button',{name:'Verbindung nicht richtig'})).toHaveAttribute('aria-pressed','true');
  await row.getByRole('button',{name:'Verbindung richtig'}).click();
  await expect(row.getByRole('button',{name:'Verbindung richtig'})).toHaveAttribute('aria-pressed','true');
+ await expect(row.getByRole('button',{name:'Verbindung nicht richtig'})).toHaveAttribute('aria-pressed','false');
  await mark.getByRole('group',{name:/Gruppenwertung für Team 2/}).getByRole('button',{name:'Nicht richtig'}).click();
  await mark.getByRole('group',{name:/Gruppenwertung für Team 3/}).getByRole('button',{name:'Nicht richtig'}).click();
  await expect(mark.locator('.u08-marking-head')).toContainText('3 / 3 Teams bewertet');
