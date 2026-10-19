@@ -65,3 +65,21 @@
   font-size:clamp(23px,4vw,38px);
  }
 }
+
+
+/* U10 G15 200%-zoom evidence: at 640px CSS viewport, decorative art still
+ * consumed a column of the private cockpit and fragmented game names.
+ * Treat art as non-interactive decoration and preserve the full text column. */
+@media(max-width:800px){
+ .sp-shell--spielleitung .sp-cockpit-hero{position:relative;min-width:0}
+ .sp-shell--spielleitung .sp-cockpit-title{width:100%;max-width:none;min-width:0}
+ .sp-shell--spielleitung .sp-cockpit-art{
+  position:absolute;inset:0 0 auto auto;right:-12px;top:0;
+  width:150px;height:160px;flex-basis:auto;opacity:.13;pointer-events:none;
+ }
+ .sp-shell--spielleitung .sp-cockpit-hero h2{
+  font-size:clamp(24px,3.35vw,40px);
+  line-height:1.12;overflow-wrap:normal;word-break:normal;hyphens:auto;
+  max-width:100%;
+ }
+}
