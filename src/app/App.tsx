@@ -14,6 +14,7 @@ import '../styles/umfrageduell.css';
 import { parseRoute, currentEventId } from './routes';
 import { AppShell } from './AppShell';
 import { StageView } from '../features/stage/StageView';
+import { AudiencePlayalong } from '../features/stage/AudiencePlayalong';
 import { ProjectorTechCheck } from '../features/host/ProjectorTechCheck';
 import { RundenquizHost } from '../features/host/RundenquizHost';
 import { QuiztafelHost } from '../features/host/QuiztafelHost';
@@ -102,8 +103,10 @@ export function App(){
  const route=parseRoute(currentHash);
  useEffect(()=>{applyMotionPreference(readPreferences().motion);},[]);
  useEffect(()=>{document.title=route==='stage'?'LiGoQuiz — Beamer':
+  route==='mitspielen'?'LiGoQuiz — Mitspielen':
   route==='host'?'LiGoQuiz — Spielleitung':'LiGoQuiz — '+(route==='spielen'?'Spielen':route);},[route]);
  if(route==='stage')return <StageView/>;
+ if(route==='mitspielen')return <AudiencePlayalong/>;
  if(route==='host')return <AppShell route={route}><HostSurface/></AppShell>;
  if(route==='demo')return <div className="exp-focused"><DisposableDemo/></div>;
  return <AppShell route={route}>
