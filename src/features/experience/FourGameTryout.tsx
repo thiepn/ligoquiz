@@ -159,7 +159,7 @@ export function FourGameTryout({game}:{game:TryoutGame}){
  const privateTask=finished?null:privateTryout(state);
  function send(command:TryoutCommand){
   try{
-   setState(previous=>stepTryout(previous,command));
+   setState(stepTryout(state,command));
    setError('');
   }catch(e){setError(e instanceof Error?e.message:'Übungsschritt nicht zulässig.');}
  }
