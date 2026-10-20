@@ -82,3 +82,38 @@ export function spectatorPromptPreview(game:GameType,raw:unknown):{
  return {heading:'Umfrageduell · '+string('format'),
   lines:[string('prompt')],unsafe:editorialIssues(game,raw).length>0};
 }
+
+
+/** Manage author-written optional answer variants without touching task identities. */
+export function editAnswerVariants(game:GameType,raw:unknown,path:readonly Field[],
+ action:'add'|'remove',index?:number):unknown{
+ const last=path.at(-1);
+ const allowed=game==='rundenquiz'&&last==='choices'&&path.length===1||
+  game==='umfrageduell'&&last==='synonyms'&&path.length===3&&path[0]==='categories'||
+  game==='verbindungen'&&last==='acceptedLinks'&&path.length===3&&path[0]==='groups';
+ if(!allowed||!record(raw))throw Error('Antwortvarianten sind hier nicht editierbar');
+ const descend=(node:unknown,depth:number):unknown=>{
+  const key=path[depth];
+  if(depth===path.length-1){
+   if(typeof key!=='string'||!record(node))throw Error('Liste ungültig');
+   const existing=node[key];if(existing!==undefined&&!Array.isArray(existing))throw Error('Liste beschädigt');
+   const list=[...(existing??[])];
+   if(action==='add'){
+    if(list.length>=(last==='choices'?6:15))throw Error('Maximale Anzahl erreicht');
+    list.push('');
+   }else{
+    if(index===undefined||index<0||index>=list.length)throw Error('Antwortindex ungültig');
+    list.splice(index,1);
+   }
+   if(last==='choices'&&list.length===0){const copy={...node};delete copy.choices;return copy;}
+   return {...node,[key]:list};
+  }
+  if(typeof key==='number'){
+   if(!Array.isArray(node)||!node[key])throw Error('Feldindex ungültig');
+   const copy=[...node];copy[key]=descend(copy[key],depth+1);return copy;
+  }
+  if(!record(node)||!Object.hasOwn(node,key))throw Error('Feld existiert nicht');
+  return {...node,[key]:descend(node[key],depth+1)};
+ };
+ return descend(raw,0);
+}
