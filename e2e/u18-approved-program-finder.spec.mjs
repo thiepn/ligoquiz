@@ -18,14 +18,14 @@ async function seedActualOriginalLadder(page,{tamper=false}={}){
  await page.getByRole('button',{name:'Spielleitung öffnen'}).click();
  await expect(page).toHaveURL(/#\/host$/);
  const eventId=await page.evaluate(()=>{
-  const data=JSON.parse(sessionStorage.getItem('ligoquiz.v2.g4.rundenquiz.host'));
+  const data=JSON.parse(globalThis.sessionStorage.getItem('ligoquiz.v2.g4.rundenquiz.host'));
   return data.eventId;
  });
  await page.goto('/#/inhalte');
  await expect(page.getByRole('heading',{name:'Inhaltsatelier'})).toBeVisible();
  const result=await page.evaluate(async({eventId,tamper})=>{
   const open=(name)=>new Promise((resolve,reject)=>{
-   const req=indexedDB.open(name);
+   const req=globalThis.indexedDB.open(name);
    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
   });
   const read=(db,store,id)=>new Promise((resolve,reject)=>{
@@ -40,8 +40,8 @@ async function seedActualOriginalLadder(page,{tamper=false}={}){
   const now=Date.now(),ids=[],rungs=event.logikleiter.rungs;
   for(let i=0;i<rungs.length;i++){
    const payload=rungs[i];
-   const encoded=new TextEncoder().encode(JSON.stringify(payload));
-   const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',encoded)))
+   const encoded=new globalThis.TextEncoder().encode(JSON.stringify(payload));
+   const hash=Array.from(new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256',encoded)))
     .map(b=>b.toString(16).padStart(2,'0')).join('');
    const item={id:payload.id,game:'logikleiter',payload,status:'approved',
     createdAt:now,updatedAt:now,revision:1,
@@ -102,9 +102,9 @@ test('U18 chooses real original SHA-qualified ladder profile and prepares review
  await page.getByRole('button',{name:'Spielleitung öffnen'}).click();
  await expect(page).toHaveURL(/#\/host$/);
  const frozen=await page.evaluate(async()=>{
-  const host=JSON.parse(sessionStorage.getItem('ligoquiz.v2.g4.rundenquiz.host'));
+  const host=JSON.parse(globalThis.sessionStorage.getItem('ligoquiz.v2.g4.rundenquiz.host'));
   const db=await new Promise((resolve,reject)=>{
-   const req=indexedDB.open('ligoquiz.v2.sessions');
+   const req=globalThis.indexedDB.open('ligoquiz.v2.sessions');
    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
   });
   const event=await new Promise((resolve,reject)=>{
@@ -130,6 +130,6 @@ test('U18 mobile planner rejects tampered approved source hashes with precise mi
  await page.getByRole('button',{name:/Logikleiter/}).click();
  await expect(finder.getByLabel('Aktuelle Programmauswahl')).toContainText('rungs: 2 / 3');
  await expect(finder.getByRole('button',{name:/Teams auswählen/})).toHaveCount(0);
- const dims=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:innerWidth}));
+ const dims=await page.evaluate(()=>({scroll:globalThis.document.documentElement.scrollWidth,width:globalThis.innerWidth}));
  expect(dims.scroll).toBeLessThanOrEqual(dims.width+3);
 });
