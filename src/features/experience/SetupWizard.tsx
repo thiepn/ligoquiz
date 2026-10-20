@@ -7,6 +7,7 @@ import {
 } from './model';
 
 import {StudioPopMotif} from '../../design-system/StudioPop';
+import {ApprovedProgramFinder} from './ApprovedProgramFinder';
 import {GAME_ORDER,GAME_VISUALS} from '../../design-system/theme';
 import './u04-prep.css';
 
@@ -107,6 +108,8 @@ export function SetupWizard() {
        {draft.contentSource==='approved'&&<p>Nur vollständig geeignete Pakete sind spielbar. Bestand unter
         {' '}<a href="#/inhalte">Inhalte</a> prüfen.</p>}
       </fieldset>
+      {draft.contentSource==='approved'&&<ApprovedProgramFinder draft={draft}
+       onSelect={choice=>set({...choice})}/>}
       <p className="exp-notice">Die Probeinhalte sind weder importiert noch redaktionell freigegeben. Quiztafel hat feste Wahlrechte; Verbindungen verteilt alle Einzelaufgaben gleichmäßig. Logikleiter bietet allen Teams dieselben Stufen. Umfrageduell nutzt ausdrücklich erfundene Beispieldaten, keine echte Befragung.</p>
     </div>}
     {draft.step===2&&<div className="exp-form sp-prep-panel">
