@@ -22,6 +22,7 @@ async function seedActualOriginalLadder(page,{tamper=false}={}){
   return data.eventId;
  });
  await page.goto('/#/inhalte');
+ await expect(page.getByRole('heading',{name:'Inhaltsatelier'})).toBeVisible();
  const result=await page.evaluate(async({eventId,tamper})=>{
   const open=(name)=>new Promise((resolve,reject)=>{
    const req=indexedDB.open(name);
