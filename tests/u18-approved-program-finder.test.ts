@@ -21,7 +21,7 @@ async function reviewed(game:ContentItem['game'],payload:unknown):Promise<Conten
 }
 async function originals():Promise<ContentItem[]>{
  const board=sampleQuiztafel('kurz',roster);
- const items:[ContentItem['game'],unknown][]=[
+ const items:ReadonlyArray<readonly [ContentItem['game'],unknown]>=[
   ...RQ_TRIAL_BANK.map(payload=>['rundenquiz',payload] as const),
   ...board.tiles.map(t=>['quiztafel',{...t,
    categoryName:board.categories.find(c=>c.id===t.categoryId)!.name}] as const),
