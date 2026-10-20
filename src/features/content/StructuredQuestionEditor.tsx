@@ -162,10 +162,10 @@ export function StructuredQuestionEditor({game,value,onChange}:EditProps){
   {issues.length>0&&<div className="u16-errors" role="alert">
    <strong>Noch nicht speicherbar</strong><ul>{issues.slice(0,6).map((issue,i)=><li key={i}>{issue}</li>)}</ul>
   </div>}
-  <div className="u16-preview" aria-label="Vorschau nur freigegebener Fragefelder">
+  <section className="u16-preview" aria-label="Vorschau nur freigegebener Fragefelder">
    <strong>Publikumsvorschau · lokal, nicht veröffentlicht</strong>
    <h4>{preview.heading}</h4>
    {preview.lines.length>0&&<ul>{preview.lines.map((line,i)=><li key={i}>{line||'—'}</li>)}</ul>}
-  </div>
+  </section>
  </section>;
 }
