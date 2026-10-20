@@ -31,3 +31,5 @@
 .u16-preview li{margin:6px 0;overflow-wrap:anywhere}
 .cx-studio .u16-editor :is(input,select,textarea,button):focus-visible{outline:3px solid #f3a42a;outline-offset:2px}
 @media(max-width:540px){.u16-editor-head{padding:12px}.u16-fields{padding:12px}.u16-four-grid{grid-template-columns:minmax(0,1fr)}.u16-choice{align-items:stretch;flex-direction:column}.cx-studio .u16-editor button{min-height:44px;width:100%}}
+
+.u16-invalid-json{padding:17px;margin:0;background:#fff0ea;color:#7b331d;font:750 16px/1.5 system-ui}
