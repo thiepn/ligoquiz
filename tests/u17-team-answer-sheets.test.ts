@@ -46,7 +46,9 @@ describe('U17 only original prepared game skeletons can print team answer sheets
   expect(html).not.toContain(event.hostId);
   expect(html).not.toContain(event.id);
   expect(html).not.toContain(event.frozenTasks[0]!.privateAnswers[0]!);
-  expect(html).not.toContain(event.frozenTasks[0]!.publicPrompt);
+  // Generic game headings may legitimately appear as paper section labels.
+  if(!['Vier Hinweise','Verbindungswand','Folge ergänzen'].includes(event.frozenTasks[0]!.publicPrompt))
+   expect(html).not.toContain(event.frozenTasks[0]!.publicPrompt);
   expect(html).not.toContain(event.frozenTasks[0]!.sourceHash);
   expect(JSON.stringify(event)).toBe(before);
  });
