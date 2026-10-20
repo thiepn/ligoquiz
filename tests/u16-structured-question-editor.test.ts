@@ -16,7 +16,7 @@ describe('U16 original authoring fields without a second content engine',()=>{
   expect((v as {id:string}).id).toBe(rq.id);
   expect(editorialIssues('rundenquiz',v)).toEqual([]);
   expect(spectatorPromptPreview('rundenquiz',v).lines).toEqual([
-   'Was ist das Symbol für Gold?','Au','Ag','Fe','']);
+   'Was ist das Symbol für Gold?','Au','Ag','Fe']);
   expect(JSON.stringify(rq)).toBe(copy);
  });
  it('switches original Rundenquiz rounds using EMPTY authored fields, not made-up solutions',()=>{
