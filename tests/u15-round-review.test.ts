@@ -9,7 +9,7 @@ import {completedRoundReview} from '../src/features/experience/round-review-mode
 
 const draft={teams:['Nord','Mitte','Süd','Vier','Fünf'],count:3 as const,profile:'kurz' as const};
 async function prepared(
- fn:(repo:EventRepository,draft:typeof draft)=>Promise<unknown>,
+ fn:(repo:EventRepository,input:typeof draft)=>Promise<unknown>,
 ):Promise<EventRecord>{
  let original:EventRecord|null=null;
  const repo={create:async(event:EventRecord)=>{original=event;}} as unknown as EventRepository;
