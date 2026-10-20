@@ -22,6 +22,10 @@ type TaskSeed={id:string;type:string;prompt:string;answer:string;evidence:string
 /** The finished archive is the ONLY surface allowed to create a debrief.
  * No stage DTO, active event, guessed award, or new scoring calculation is used. */
 export function completedRoundReview(event:EventRecord):RoundReview|null{
+ try{return completedRoundReviewUnsafe(event);}
+ catch{return null;}
+}
+function completedRoundReviewUnsafe(event:EventRecord):RoundReview|null{
  if(event.lifecycle!=='complete'||event.recoveryRequired)return null;
  const teams=[...event.teams].sort((a,b)=>a.order-b.order).map(t=>({id:t.id,name:t.name}));
  const every=teams.map(t=>t.id);
