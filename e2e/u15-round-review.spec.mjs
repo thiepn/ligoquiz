@@ -112,12 +112,14 @@ for(const mode of MODES){
   await expect(review.getByRole('button',{name:'Lösung und Quelle prüfen'})).toBeVisible();
   await expect(review.locator('.u15-review-solution')).toHaveCount(0);
 
-  await review.getByRole('combobox',{name:'Team im Rückblick'}).selectOption({label:'Nord'});
+  const teamOptions=await review.getByRole('combobox',{name:'Team im Rückblick'}).locator('option').allTextContents();
+  expect(teamOptions.length).toBeGreaterThanOrEqual(4);
+  await review.getByRole('combobox',{name:'Team im Rückblick'}).selectOption({index:1});
   await review.getByRole('combobox',{name:'Aufgaben filtern'}).selectOption('scored');
   await expect(review.locator('.u15-review-task-list button')).toHaveCount(1);
   await expect(review.locator('.u15-review-points-row')).toHaveCount(1);
-  await expect(review.locator('.u15-review-detail')).toContainText('Nord');
-  await expect(review.locator('.u15-review-standings')).toContainText('Mitte');
+  await expect(review.locator('.u15-review-detail')).toContainText(teamOptions[1]);
+  await expect(review.locator('.u15-review-standings')).toContainText(teamOptions[2]);
   const width=await page.evaluate(()=>({
    actual:globalThis.document.documentElement.scrollWidth,window:globalThis.innerWidth,
   }));
