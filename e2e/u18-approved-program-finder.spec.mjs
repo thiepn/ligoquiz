@@ -87,12 +87,12 @@ test('U18 chooses real original SHA-qualified ladder profile and prepares review
  const choice=finder.getByRole('button',{name:'Logikleiter Kurz 4 Teams auswählen'});
  await expect(choice).toBeVisible();
  await choice.click();
- await expect(page.getByRole('button',{name:/Logikleiter/})).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('.sp-prep-game-choices').getByRole('button',{name:/Logikleiter/})).toHaveAttribute('aria-pressed','true');
  await expect(page.getByRole('combobox',{name:'Umfang'})).toHaveValue('kurz');
  await expect(finder.getByLabel('Aktuelle Programmauswahl')).toContainText('Originalauswahl möglich');
  await page.reload();
  await expect(page.getByRole('heading',{name:'Programm wählen'})).toBeVisible();
- await expect(page.getByRole('button',{name:/Logikleiter/})).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('.sp-prep-game-choices').getByRole('button',{name:/Logikleiter/})).toHaveAttribute('aria-pressed','true');
  const reloaded=page.getByRole('region',{name:'Freigegebene Programme finden'});
  await expect(reloaded.getByLabel('Aktuelle Programmauswahl')).toContainText('Originalauswahl möglich');
  await page.getByRole('button',{name:'Weiter'}).click();
@@ -127,7 +127,7 @@ test('U18 mobile planner rejects tampered approved source hashes with precise mi
  const finder=await setupApproved(page);
  await expect(finder.getByRole('alert')).toContainText('1 Freigaben');
  await expect(finder).toContainText('Kein vollständig freigegebenes Programm verfügbar');
- await page.getByRole('button',{name:/Logikleiter/}).click();
+ await page.locator('.sp-prep-game-choices').getByRole('button',{name:/Logikleiter/}).click();
  await expect(finder.getByLabel('Aktuelle Programmauswahl')).toContainText('rungs: 2 / 3');
  await expect(finder.getByRole('button',{name:/Teams auswählen/})).toHaveCount(0);
  const dims=await page.evaluate(()=>({scroll:globalThis.document.documentElement.scrollWidth,width:globalThis.innerWidth}));
