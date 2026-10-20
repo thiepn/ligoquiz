@@ -6,6 +6,7 @@ import {stageUrl} from '../stage/protocol';
 import {playalongUrl} from '../stage/audience-playalong-model';
 import {backupHref} from '../experience/backstage-model';
 import {describeCockpit} from './host-cockpit-model';
+import {TeamAnswerSheetDesk} from './TeamAnswerSheetDesk';
 import './host-cockpit.css';
 
 /** Host-only read-only display. Game actions remain in the original game hosts. */
@@ -64,6 +65,7 @@ export function HostCockpit({event}:{event:EventRecord}){
    <a href="#/spielen">Gespeicherte Abende</a>
    {state.finished&&<a href={'#/bericht?event='+encodeURIComponent(event.id)}>Abendbericht</a>}
   </nav>
+  <TeamAnswerSheetDesk key={event.id} event={event}/>
   <p className="sp-cockpit-private-note">Spielleitung nicht auf den Beamer spiegeln. Ein geöffnetes Beamerfenster ist keine bestätigte Verbindung.</p>
  </section>;
 }
