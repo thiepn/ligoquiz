@@ -10,7 +10,8 @@ const parts=(value:unknown):value is unknown[]=>Array.isArray(value);
 /** Edits only existing author-owned fields, never IDs, source-kind or review authority. */
 export function editQuestionField(game:GameType,raw:unknown,path:readonly Field[],value:string|number):unknown{
  if(!path.length||!record(raw))throw Error('Ungültiges Bearbeitungsziel');
- if(path.some(segment=>segment==='id'||segment==='reviewed'||segment==='kind'||
+ if(path.some(segment=>segment==='id'||segment==='reviewed'||
+   (segment==='kind'&&!(game==='logikleiter'&&path.length===1))||
    segment==='sourceId'||segment==='status'||segment==='rights')||
    path[0]==='source'&&path[1]==='kind')throw Error('Identität und Freigabe bleiben unverändert');
  const walk=(node:unknown,depth:number):unknown=>{
