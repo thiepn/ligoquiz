@@ -16,7 +16,9 @@ const rows=(value:unknown)=>Array.isArray(value)?value:[];
 
 type EditProps={game:GameType;value:unknown;onChange:(next:unknown)=>void};
 export function StructuredQuestionEditor({game,value,onChange}:EditProps){
- if(!obj(value))return <p role="alert">Aufgabenstruktur ist kein Objekt. JSON-Datensatz korrigieren.</p>;
+ if(!obj(value))return <section className="u16-editor" aria-label="Frage visuell bearbeiten">
+  <p role="alert" className="u16-invalid-json">Ungültiges JSON. Datensatz unter Erweiterte JSON-Bearbeitung korrigieren.</p>
+ </section>;
  const set=(path:Path,v:string|number)=>onChange(editQuestionField(game,value,path,v));
  const field=(label:string,path:Path,{long=false,number=false,max=3000}:{
   long?:boolean;number?:boolean;max?:number;
@@ -56,7 +58,7 @@ export function StructuredQuestionEditor({game,value,onChange}:EditProps){
  const kind=str(value.kind),round=str(value.round);
  return <section className="u16-editor" aria-label="Frage visuell bearbeiten" data-u16-mode={game}>
   <header className="u16-editor-head"><h3>Aufgabe bearbeiten</h3>
-   <span className={issues.length?'u16-invalid':'u16-valid'} role="status">
+   <span className={issues.length?'u16-invalid':'u16-valid'} aria-live="polite">
     {issues.length?issues.length+' Eingaben prüfen':'Aufgabe strukturell gültig'}</span>
   </header>
   <div className="u16-fields">
