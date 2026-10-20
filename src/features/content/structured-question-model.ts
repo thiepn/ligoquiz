@@ -113,7 +113,7 @@ export function editAnswerVariants(game:GameType,raw:unknown,path:readonly Field
    if(!Array.isArray(node)||!node[key])throw Error('Feldindex ungültig');
    const copy=[...node];copy[key]=descend(copy[key],depth+1);return copy;
   }
-  if(!record(node)||!Object.hasOwn(node,key))throw Error('Feld existiert nicht');
+  if(typeof key!=='string'||!record(node)||!Object.hasOwn(node,key))throw Error('Feld existiert nicht');
   return {...node,[key]:descend(node[key],depth+1)};
  };
  return descend(raw,0);
