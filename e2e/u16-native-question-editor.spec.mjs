@@ -34,7 +34,7 @@ test('U16 authored Rundenquiz clues and choices survive saved draft reload witho
  await editor.getByRole('textbox',{name:'Lösung'}).fill('Josua');
  await editor.getByRole('textbox',{name:'Quelle',exact:true}).fill('Eigene Quellenangabe, Prüfung ausstehend');
  for(let i=1;i<=4;i++)await editor.getByRole('textbox',{name:'Hinweis '+i}).fill('Originaler Hinweis '+i);
- await expect(editor.getByRole('status')).toContainText('strukturell gültig');
+ await expect(editor.locator('.u16-valid')).toContainText('strukturell gültig');
  const preview=editor.getByRole('region',{name:'Vorschau nur freigegebener Fragefelder'});
  await expect(preview).toContainText('Originaler Hinweis 4');
  await expect(preview).not.toContainText('Josua');
@@ -54,7 +54,7 @@ test('U16 authored Rundenquiz clues and choices survive saved draft reload witho
 test('U16 Quiztafel native point-value selector updates canonical row/value together',async({page})=>{
  const editor=await create(page,'quiztafel');
  await editor.getByRole('combobox',{name:'Feldwert'}).selectOption('4');
- await editor.getByRole('textbox',{name:'Kategorie'}).fill('Geschichte');
+ await editor.getByRole('textbox',{name:'Kategorie',exact:true}).fill('Geschichte');
  await editor.getByRole('textbox',{name:'Fragestellung'}).fill('Welche Antwort passt?');
  await editor.getByRole('textbox',{name:'Lösung'}).fill('Eine selbst geprüfte Antwort');
  await editor.getByRole('textbox',{name:'Quelle',exact:true}).fill('Eigener Testbeleg');
@@ -75,7 +75,7 @@ test('U16 Verbindungen builds valid three-element sequence entirely via native c
  await editor.getByRole('textbox',{name:'Lösung'}).fill('4');
  await editor.getByRole('textbox',{name:'Erklärung'}).fill('Es wird bei jeder Zahl eins addiert.');
  await editor.getByRole('textbox',{name:'Quelle',exact:true}).fill('Eigene Aufgabenentwicklung');
- await expect(editor.getByRole('status')).toContainText('strukturell gültig');
+ await expect(editor.locator('.u16-valid')).toContainText('strukturell gültig');
  await page.getByRole('button',{name:'Änderungen als Entwurf speichern'}).click();
  const item=await savedContent(page,'verbindungen');
  expect(item.payload.kind).toBe('sequence');
@@ -128,7 +128,7 @@ test('U16 375px original content authoring does not overflow and invalid JSON fa
  await expect(editor.getByRole('alert')).toContainText('Noch nicht speicherbar');
  await page.locator('.cx-structured summary').click();
  await page.getByRole('textbox',{name:'JSON-Datensatz'}).fill('{"invalid":');
- await expect(editor.getByRole('alert')).toContainText('kein Objekt');
+ await expect(editor.getByRole('alert')).toContainText('Ungültiges JSON');
  await page.getByRole('button',{name:'Änderungen als Entwurf speichern'}).click();
  await expect(page.getByRole('alert').last()).toBeVisible();
  const bounds=await page.evaluate(()=>({scroll:globalThis.document.documentElement.scrollWidth,width:globalThis.innerWidth}));
