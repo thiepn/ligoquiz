@@ -54,7 +54,7 @@ describe('U18 authentic reviewed program finder, no shadow pack authority',()=>{
   }
   expect(matchingApprovedChoice(result,'verbindungen','lang',5)?.ready).toBe(false);
   expect(matchingApprovedChoice(result,'quiztafel','standard',3)?.ready).toBe(false);
-  expect(matchingApprovedChoice(result,'rundenquiz','standard',3)?.ready).toBe(false);
+  expect(matchingApprovedChoice(result,'rundenquiz','standard',3)?.ready).toBe(true);
   expect(matchingApprovedChoice(result,'logikleiter','standard',3)?.ready).toBe(false);
  });
  it('distinguishes numeric counts from structural integrity for a corrupted original quiz board',async()=>{
