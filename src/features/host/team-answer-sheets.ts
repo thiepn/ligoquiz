@@ -11,7 +11,9 @@ const roundup:Readonly<Record<string,string>>={
 const puzzle:Readonly<Record<string,string>>={
  clues:'Vier Hinweise',sequence:'Folge ergänzen',wall:'Verbindungswand',
 };
-const say=(v:string):string=>v.replace(/[\u0000-\u001f\u007f-\u009f]/g,' ').trim();
+const say=(v:string):string=>Array.from(v,ch=>{const code=ch.charCodeAt(0);
+ return code<32||code>=127&&code<=159?' ':ch;
+}).join('').trim();
 /** Read-only original session skeleton; deliberately NEVER inspects frozenTasks/answers. */
 export function originalAnswerSheetPlan(event:EventRecord):AnswerSheetPlan|null{
  if(event.lifecycle==='complete'||event.lifecycle==='abandoned'||event.recoveryRequired)return null;
