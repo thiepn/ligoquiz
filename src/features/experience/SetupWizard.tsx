@@ -8,6 +8,7 @@ import {
 
 import {StudioPopMotif} from '../../design-system/StudioPop';
 import {ApprovedProgramFinder} from './ApprovedProgramFinder';
+import {RundenquizLineupEditor} from './RundenquizLineupEditor';
 import {GAME_ORDER,GAME_VISUALS} from '../../design-system/theme';
 import './u04-prep.css';
 
@@ -22,17 +23,29 @@ export function SetupWizard() {
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
   const [projectorAcknowledged,setProjectorAcknowledged]=useState(false);
+  const [lineupValid,setLineupValid]=useState(false);
   useEffect(()=>{
     try { saveSetupDraft(draft); } catch { setError('Vorbereitung konnte lokal nicht zwischengespeichert werden.'); }
   },[draft]);
-  const set=(next:Partial<SetupDraft>)=>{setError('');setDraft(prev=>({...prev,...next}));};
+  const set=(next:Partial<SetupDraft>)=>{setError('');setDraft(prev=>({
+    ...prev,...next,...((next.game&&next.game!==prev.game||
+      next.profile&&next.profile!==prev.profile||
+      next.contentSource&&next.contentSource!==prev.contentSource)?
+      {rqQuestionIds:undefined}:{}),
+  }));};
   const next=()=>{if(draft.step===0&&!validNames(draft)){setError('Bitte jedem Team einen eindeutigen Namen geben.');return;}
+    if(draft.step===1&&draft.game==='rundenquiz'&&draft.contentSource==='approved'&&
+      draft.rqQuestionIds!==undefined&&!lineupValid){
+      setError('Bitte alle Fragen je Runde vollständig auswählen.');return;
+    }
     set({step:Math.min(2,draft.step+1) as SetupDraft['step']});
   };
   async function prepare() {
     if(busy)return;
     if(!validNames(draft)){setError('Bitte Teamnamen prüfen.');set({step:0});return;}
     if(!projectorAcknowledged){setError('Bitte die Beamer-Hinweise bestätigen.');return;}
+    if(draft.game==='rundenquiz'&&draft.contentSource==='approved'&&
+       draft.rqQuestionIds!==undefined&&!lineupValid){setError('Fragenauswahl erneut prüfen.');return;}
     setBusy(true);setError('');
     const repo=new EventRepository();
     try{
@@ -110,6 +123,9 @@ export function SetupWizard() {
       </fieldset>
       {draft.contentSource==='approved'&&<ApprovedProgramFinder draft={draft}
        onSelect={choice=>set({...choice})}/>}
+      {draft.contentSource==='approved'&&draft.game==='rundenquiz'&&
+       <RundenquizLineupEditor draft={draft}
+        onChange={ids=>set({rqQuestionIds:ids})} onValidity={setLineupValid}/>} 
       <p className="exp-notice">Die Probeinhalte sind weder importiert noch redaktionell freigegeben. Quiztafel hat feste Wahlrechte; Verbindungen verteilt alle Einzelaufgaben gleichmäßig. Logikleiter bietet allen Teams dieselben Stufen. Umfrageduell nutzt ausdrücklich erfundene Beispieldaten, keine echte Befragung.</p>
     </div>}
     {draft.step===2&&<div className="exp-form sp-prep-panel">
