@@ -83,7 +83,7 @@ export function parseSetupDraft(raw: unknown): SetupDraft | null {
     contentSource:x.contentSource==='approved'?'approved':'trial',
     step: x.step as SetupDraft['step'], teams: [...x.teams] as string[],
     ...(Array.isArray(x.rqQuestionIds)&&x.rqQuestionIds.length<=16&&
-      x.rqQuestionIds.every(s=>typeof s==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(s))&&
+      x.rqQuestionIds.every(s=>typeof s==='string'&&s.trim()===s&&s.length>0&&s.length<=128)&&
       new Set(x.rqQuestionIds).size===x.rqQuestionIds.length?
       {rqQuestionIds:[...x.rqQuestionIds] as string[]}:{}) };
 }
