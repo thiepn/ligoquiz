@@ -79,6 +79,7 @@ describe('U19 source-backed Rundenquiz custom lineups',()=>{
   expect(parseSetupDraft(baseline)?.rqQuestionIds).toBeUndefined();
   const updated={...baseline,rqQuestionIds:['a-id','b-id','c-id'],step:1};
   expect(parseSetupDraft(JSON.parse(JSON.stringify(updated)))?.rqQuestionIds).toEqual(updated.rqQuestionIds);
+  expect(parseSetupDraft({...updated,rqQuestionIds:['a.id:1','x/2']})?.rqQuestionIds).toEqual(['a.id:1','x/2']);
   expect(parseSetupDraft({...updated,rqQuestionIds:['a','a']})?.rqQuestionIds).toBeUndefined();
   expect(parseSetupDraft({...updated,rqQuestionIds:Array.from({length:17},(_,i)=>'id'+i)})?.rqQuestionIds).toBeUndefined();
  });
