@@ -16,6 +16,7 @@ import {
   eveningHalfPoints, type Action,
 } from '../../games/quiztafel/engine';
 import { readHostIdentity } from '../experience/model';
+import {countdownScope,useHostCountdown} from './useHostCountdown';
 
 const errorText=(v:unknown)=>v instanceof Error?v.message:'Aktion fehlgeschlagen';
 
@@ -27,13 +28,12 @@ export function QuiztafelHost(){
   const [connected,setConnected]=useState(0);
   const [ready,setReady]=useState(false);
   const controllerRef=useRef<HostSessionController|null>(null);
-  const [timeLeft,setTimeLeft]=useState(20);
-  const [clockRunning,setClockRunning]=useState(false);
-  const timerNow=useRef(Date.now());
   const qt=event?.quiztafel;
-  const timePhase=qt?.phase==='question'?'first':qt?.phase==='steal'?'steal':'idle';
-
-  useEffect(()=>{
+   const timePhase=qt?.phase==='question'?'first':qt?.phase==='steal'?'steal':'idle';
+   const {seconds:timeLeft,clock:clockRunning,setClock:setClockRunning,setSeconds:setTimeLeft}=
+    useHostCountdown(countdownScope(event?.id,event?.hostEpoch,qt?.selectedTileId??undefined,timePhase),
+     timePhase==='steal'?10:20,Boolean(!ready||qt?.paused||event?.recoveryRequired));
+   useEffect(()=>{
     if(!identity)return;
     let disposed=false;
     const db=new EventRepository();
@@ -59,23 +59,6 @@ export function QuiztafelHost(){
       window.clearInterval(ticker);publisher.stop();void db.close();
     };
   },[identity?.eventId,identity?.hostId]);
-
-  useEffect(()=>{
-    setClockRunning(false);
-    setTimeLeft(timePhase==='steal'?10:20);
-  },[timePhase,qt?.selectedTileId,qt?.paused]);
-  useEffect(()=>{
-    if(!clockRunning||qt?.paused||timePhase==='idle')return;
-    timerNow.current=Date.now();
-    const timer=window.setInterval(()=>{
-      const now=Date.now(),elapsed=Math.floor((now-timerNow.current)/1000);
-      if(elapsed<1)return;
-      timerNow.current+=elapsed*1000;
-      setTimeLeft(prev=>Math.max(0,prev-elapsed));
-    },250);
-    return ()=>window.clearInterval(timer);
-  },[clockRunning,qt?.paused,timePhase]);
-  useEffect(()=>{if(timeLeft===0)setClockRunning(false);},[timeLeft]);
 
   async function send(action:Action){
     if(!ready||busy||!event||event.recoveryRequired)return;
