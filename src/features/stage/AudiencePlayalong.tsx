@@ -112,7 +112,7 @@ export function AudiencePlayalong(){
      {locked&&<div className="u14-locked" role="status">
        <p>Festgehalten</p>
        <blockquote>{currentGuess?.text}</blockquote>
-       {editable&&<button type="button" onClick={()=>{setReflection(null);currentGuess&&setGuess({...currentGuess,locked:false});}}>
+       {editable&&<button type="button" onClick={()=>{setReflection(null);if(currentGuess)setGuess({...currentGuess,locked:false});}}>
          Tipp bearbeiten</button>}
       </div>}
      {comparison&&<section className="u21-reflection" aria-label="Eigene Antwort selbst vergleichen">
