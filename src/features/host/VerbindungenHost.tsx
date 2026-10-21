@@ -57,7 +57,7 @@ export function VerbindungenHost(){
  async function send(action:Action){
   if(!ready||busy||!event||event.recoveryRequired)return;
   const controller=controllerRef.current;if(!controller)return;
-  if(['JUDGE','CLOSE_WALL','REVEAL_WALL_GROUP','REVEAL','CONFIRM','PAUSE','NEXT'].includes(action.type))
+  if(['NEXT_CLUE','JUDGE','CLOSE_WALL','REVEAL_WALL_GROUP','REVEAL','CONFIRM','PAUSE','NEXT'].includes(action.type))
    setClock(false);
   setBusy(true);setError('');
   try{
