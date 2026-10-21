@@ -4,7 +4,10 @@ import {StageViewer,type ViewerState} from './stage-viewer';
 import {
   audienceRound,playalongEventIdFromHash,retainedGuess,freshGuess,type LocalGuess,
 } from './audience-playalong-model';
+import {chooseReflection,revealedComparison,type LocalReflection,type SelfReflectionChoice}
+ from './audience-reflection-model';
 import './audience-playalong.css';
+import './u21-audience-reflection.css';
 
 const WAIT:ViewerState={status:'connecting',frame:null,lastReceivedAt:null};
 
@@ -12,16 +15,24 @@ export function AudiencePlayalong(){
  const eventId=playalongEventIdFromHash(window.location.hash);
  const [view,setView]=useState<ViewerState>(WAIT);
  const [guess,setGuess]=useState<LocalGuess|null>(null);
+ const [reflection,setReflection]=useState<LocalReflection|null>(null);
  const [error,setError]=useState('');
 
  useEffect(()=>{
-  setView(WAIT);setGuess(null);setError('');
+  setView(WAIT);setGuess(null);setReflection(null);setError('');
   if(!eventId)return;
   let viewer:StageViewer|null=null;
   try{
    viewer=new StageViewer(eventId,new BrowserStagePort(eventId),(next)=>{
     setView(next);
     setGuess(previous=>retainedGuess(previous,next));
+    setReflection(previous=>{
+     if(!previous||next.status!=='live'||!next.frame)return null;
+     const current=audienceRound(next.frame.scene,previous.key);
+     return next.frame.eventId===previous.eventId && next.frame.gameId===previous.gameId &&
+      next.frame.hostEpoch===previous.hostEpoch && current.kind==='reveal' &&
+      current.key===previous.key ? previous:null;
+    });
    },{acknowledgeFrames:false});
    viewer.start();
   }catch{
@@ -47,6 +58,7 @@ export function AudiencePlayalong(){
  const currentGuess=guess&&frame&&retainedGuess(guess,view)?.key===round.key?guess:null;
  const editable=Boolean(frame&&round.kind==='question'&&round.key);
  const locked=Boolean(currentGuess?.locked);
+ const comparison=revealedComparison(view,currentGuess,reflection);
  const published=round.published.length>0;
  const status=!eventId?'Ungültiger Veranstaltungslink':error?'Nicht verfügbar':
    frame?'Mit der Spielleitung verbunden':view.status==='conflict'?
@@ -100,9 +112,33 @@ export function AudiencePlayalong(){
      {locked&&<div className="u14-locked" role="status">
        <p>Festgehalten</p>
        <blockquote>{currentGuess?.text}</blockquote>
-       {editable&&<button type="button" onClick={()=>currentGuess&&setGuess({...currentGuess,locked:false})}>
+       {editable&&<button type="button" onClick={()=>{setReflection(null);currentGuess&&setGuess({...currentGuess,locked:false});}}>
          Tipp bearbeiten</button>}
       </div>}
+     {comparison&&<section className="u21-reflection" aria-label="Eigene Antwort selbst vergleichen">
+      <h3>Dein Vergleich</h3>
+      <div className="u21-reflection-pair">
+       <div><strong>Dein festgehaltener Tipp</strong><p>{comparison.guess}</p></div>
+       <div><strong>Veröffentlichte Auflösung</strong>
+        <ol>{comparison.published.map((answer,i)=><li key={i}>{answer}</li>)}</ol>
+       </div>
+      </div>
+      <fieldset className="u21-reflection-choices">
+       <legend>Wie passt dein Tipp?</legend>
+       {([
+        ['matched','Passt'],['partial','Teilweise'],['different','Anders'],
+       ] as const).map(([value,label])=><button key={value} type="button"
+        aria-pressed={comparison.reflection?.choice===value}
+        onClick={()=>{
+         const selected:SelfReflectionChoice=value;
+         setReflection(chooseReflection(view,currentGuess,selected));
+        }}>{label}</button>)}
+      </fieldset>
+      {comparison.reflection&&<p className="u21-reflection-mark" role="status">
+       {comparison.reflection.choice==='matched'?'Passt':
+        comparison.reflection.choice==='partial'?'Teilweise':'Anders'} · Nur deine Selbsteinschätzung
+      </p>}
+     </section>}
      {round.kind==='reveal'&&!locked&&<p>Kein Tipp vor der Auflösung festgehalten.</p>}
      {(round.kind==='scores'||round.kind==='board')&&<p>
        {round.kind==='board'?'Nach Veröffentlichung einer Frage kannst du hier antworten.':
