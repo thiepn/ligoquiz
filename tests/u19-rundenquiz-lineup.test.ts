@@ -35,8 +35,8 @@ describe('U19 source-backed Rundenquiz custom lineups',()=>{
  it('preserves explicit chosen original IDs and original Rundenquiz round order',async()=>{
   const all=await approved();
   const choices=(await reviewedRundenquizChoices(all)).questions;
-  const picked=ROUNDS.flatMap(round=>choices.filter(q=>q.round===round)
-   .slice(-PROFILE_COUNTS.kurz[round]).map(q=>q.id));
+  const picked=ROUNDS.flatMap(round=>(PROFILE_COUNTS.kurz[round]?choices.filter(q=>q.round===round)
+   .slice(-PROFILE_COUNTS.kurz[round]).map(q=>q.id):[]));
   expect(picked).toHaveLength(7);
   const checked=chosenRundenquizCounts('kurz',choices,picked);
   expect(checked.exact).toBe(true);
@@ -47,8 +47,8 @@ describe('U19 source-backed Rundenquiz custom lineups',()=>{
  });
  it('denies incomplete, extra, duplicated, forged or revoked question IDs without trial fallback',async()=>{
   const all=await approved(),choices=(await reviewedRundenquizChoices(all)).questions;
-  const ids=ROUNDS.flatMap(round=>choices.filter(q=>q.round===round)
-   .slice(0,PROFILE_COUNTS.kurz[round]).map(q=>q.id));
+  const ids=ROUNDS.flatMap(round=>(PROFILE_COUNTS.kurz[round]?choices.filter(q=>q.round===round)
+   .slice(0,PROFILE_COUNTS.kurz[round]).map(q=>q.id):[]));
   const fail=(selection:readonly string[],records=all)=>
    ()=>selectedReviewedRundenquizPack(records,'kurz',selection);
   expect(fail(ids)).not.toThrow();
@@ -61,9 +61,9 @@ describe('U19 source-backed Rundenquiz custom lineups',()=>{
   expect(chosenRundenquizCounts('kurz',choices,[...ids,'other']).exact).toBe(false);
  });
  it('rejects a stale approved payload digest at final immutable original event source check',async()=>{
-  const all=await approved(),ids=ROUNDS.flatMap(round=>all
+  const all=await approved(),ids=ROUNDS.flatMap(round=>(PROFILE_COUNTS.kurz[round]?all
    .filter(i=>(i.payload as {round:string}).round===round)
-   .slice(0,PROFILE_COUNTS.kurz[round]).map(i=>i.id));
+   .slice(0,PROFILE_COUNTS.kurz[round]).map(i=>i.id):[]));
   const changed=all.map(item=>item.id===ids[0]?{
    ...item,review:{...item.review!,fingerprint:'f'.repeat(64)},
   }:item);
