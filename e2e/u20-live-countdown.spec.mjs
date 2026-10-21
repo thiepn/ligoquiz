@@ -89,6 +89,7 @@ test('U20 Verbindungen new revealed clue still starts its original fresh timing 
  await clock.getByRole('button',{name:'Start'}).click();
  await expect.poll(()=>seconds(host,game.clock),{timeout:7000}).toBeLessThan(before);
  await host.getByRole('button',{name:'Nächster Hinweis'}).click();
- expect(await seconds(host,game.clock)).toBe(before);
+ await expect(host.locator('.u08-vb-clues p')).toHaveCount(2);
+ await expect.poll(()=>seconds(host,game.clock)).toBe(before);
  await expect(clock.getByRole('button',{name:'Start'})).toBeEnabled();
 });
