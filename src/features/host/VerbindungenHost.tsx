@@ -16,6 +16,7 @@ import {
  type Action
 } from '../../games/verbindungen/engine';
 import {readHostIdentity} from '../experience/model';
+import {countdownScope,useHostCountdown} from './useHostCountdown';
 
 const errorText=(error:unknown)=>error instanceof Error?error.message:'Aktion fehlgeschlagen';
 export function VerbindungenHost(){
@@ -24,12 +25,12 @@ export function VerbindungenHost(){
  const [error,setError]=useState('');
  const [ready,setReady]=useState(false),[busy,setBusy]=useState(false),[viewers,setViewers]=useState(0);
  const controllerRef=useRef<HostSessionController|null>(null);
- const [seconds,setSeconds]=useState(0),[clock,setClock]=useState(false);
- const lastTick=useRef(Date.now());
  const vb=event?.verbindungen;
  const task=vb?.phase==='complete'?null:vb?active(vb):null;
  const timerLimit=task?.puzzle.kind==='wall'?180:task?.puzzle.kind==='sequence'?45:30;
-
+ const {seconds,clock,setClock,setSeconds}=useHostCountdown(
+  countdownScope(event?.id,event?.hostEpoch,task?.puzzle.id,vb?.phase,vb?.clueIndex),
+  timerLimit,Boolean(!ready||vb?.paused||event?.recoveryRequired));
  useEffect(()=>{
   if(!identity)return;
   const db=new EventRepository();let disposed=false;
@@ -52,19 +53,6 @@ export function VerbindungenHost(){
   const interval=window.setInterval(()=>{void publisher.refresh();},1600);
   return ()=>{disposed=true;controllerRef.current=null;window.clearInterval(interval);publisher.stop();void db.close();};
  },[identity?.eventId,identity?.hostId]);
-
- useEffect(()=>{setClock(false);setSeconds(timerLimit);},[vb?.index,vb?.phase,vb?.clueIndex,vb?.paused,timerLimit]);
- useEffect(()=>{
-  if(!clock||vb?.paused||seconds===0)return;
-  lastTick.current=Date.now();
-  const timer=window.setInterval(()=>{
-   const now=Date.now(),delta=Math.floor((now-lastTick.current)/1000);
-   if(delta<1)return;lastTick.current+=delta*1000;
-   setSeconds(n=>Math.max(0,n-delta));
-  },250);
-  return ()=>window.clearInterval(timer);
- },[clock,vb?.paused,vb?.index,vb?.phase,seconds===0]);
- useEffect(()=>{if(seconds===0)setClock(false);},[seconds]);
 
  async function send(action:Action){
   if(!ready||busy||!event||event.recoveryRequired)return;
