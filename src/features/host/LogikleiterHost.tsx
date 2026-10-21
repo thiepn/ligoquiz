@@ -13,6 +13,7 @@ import {HostStagePublisher} from '../stage/host-publisher';
 import type {EventRecord} from '../../domain/event/schemas';
 import {currentRung,orderedTeams,rungSeconds,rungValue,scores,eveningHalfPoints,type Action} from '../../games/logikleiter/engine';
 import {readHostIdentity} from '../experience/model';
+import {countdownScope,useHostCountdown} from './useHostCountdown';
 const errorText=(e:unknown)=>e instanceof Error?e.message:'Aktion fehlgeschlagen';
 
 export function LogikleiterHost(){
@@ -21,11 +22,12 @@ export function LogikleiterHost(){
  const [ready,setReady]=useState(false),[busy,setBusy]=useState(false);
  const [error,setError]=useState(''),[viewers,setViewers]=useState(0);
  const controllerRef=useRef<HostSessionController|null>(null);
- const [seconds,setSeconds]=useState(60),[clock,setClock]=useState(false);
- const lastTick=useRef(Date.now());
  const ll=event?.logikleiter;
  const rung=ll&&ll.phase!=='complete'?currentRung(ll):null;
  const limit=rungSeconds(ll?.index??0);
+ const {seconds,clock,setClock,setSeconds}=useHostCountdown(
+  countdownScope(event?.id,event?.hostEpoch,rung?.id,ll?.phase),
+  limit,Boolean(!ready||ll?.paused||event?.recoveryRequired));
  useEffect(()=>{
   if(!identity)return;
   const db=new EventRepository();let disposed=false;
@@ -48,18 +50,6 @@ export function LogikleiterHost(){
   const interval=window.setInterval(()=>{void publisher.refresh();},1600);
   return ()=>{disposed=true;controllerRef.current=null;window.clearInterval(interval);publisher.stop();void db.close();};
  },[identity?.eventId,identity?.hostId]);
- useEffect(()=>{setClock(false);setSeconds(limit);},[ll?.index,ll?.phase,ll?.paused,limit]);
- useEffect(()=>{
-  if(!clock||ll?.paused||seconds===0)return;
-  lastTick.current=Date.now();
-  const t=window.setInterval(()=>{
-   const now=Date.now(),delta=Math.floor((now-lastTick.current)/1000);
-   if(delta<1)return;lastTick.current+=delta*1000;
-   setSeconds(v=>Math.max(0,v-delta));
-  },250);
-  return ()=>window.clearInterval(t);
- },[clock,ll?.paused,ll?.index,ll?.phase,seconds===0]);
- useEffect(()=>{if(seconds===0)setClock(false);},[seconds]);
  async function send(action:Action){
   if(!ready||busy||!event||event.recoveryRequired)return;
   const controller=controllerRef.current;if(!controller)return;
