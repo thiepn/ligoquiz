@@ -67,7 +67,7 @@ export function applyMotionPreference(motion: Preferences['motion']): void {
   if (typeof document !== 'undefined') document.documentElement.dataset.ligoMotion = motion;
 }
 
-export type SetupDraft = { teams: string[]; count: 3 | 4 | 5; profile: Profile; game: 'rundenquiz'|'quiztafel'|'verbindungen'|'logikleiter'|'umfrageduell'; contentSource:'trial'|'approved';step: 0 | 1 | 2 };
+export type SetupDraft = { teams: string[]; count: 3 | 4 | 5; profile: Profile; game: 'rundenquiz'|'quiztafel'|'verbindungen'|'logikleiter'|'umfrageduell'; contentSource:'trial'|'approved';step: 0 | 1 | 2; rqQuestionIds?:string[] };
 export function newSetupDraft(preference: Preferences = DEFAULT_PREFERENCES): SetupDraft {
   return { count: preference.defaultTeams, profile: preference.defaultProfile, game:'rundenquiz', contentSource:'trial',step: 0,
     teams: ['Team 1', 'Team 2', 'Team 3', 'Team 4', 'Team 5'] };
@@ -81,7 +81,11 @@ export function parseSetupDraft(raw: unknown): SetupDraft | null {
   return { count: x.count as SetupDraft['count'], profile: x.profile as Profile,
     game:x.game==='quiztafel'?'quiztafel':x.game==='verbindungen'?'verbindungen':x.game==='logikleiter'?'logikleiter':x.game==='umfrageduell'?'umfrageduell':'rundenquiz',
     contentSource:x.contentSource==='approved'?'approved':'trial',
-    step: x.step as SetupDraft['step'], teams: [...x.teams] as string[] };
+    step: x.step as SetupDraft['step'], teams: [...x.teams] as string[],
+    ...(Array.isArray(x.rqQuestionIds)&&x.rqQuestionIds.length<=16&&
+      x.rqQuestionIds.every(s=>typeof s==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(s))&&
+      new Set(x.rqQuestionIds).size===x.rqQuestionIds.length?
+      {rqQuestionIds:[...x.rqQuestionIds] as string[]}:{}) };
 }
 export function readSetupDraft(): SetupDraft | null {
   return parseSetupDraft(storageGet(typeof localStorage === 'undefined' ? undefined : localStorage, DRAFT_KEY));
