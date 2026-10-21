@@ -10,9 +10,10 @@ import {createSession as vbSession} from '../../games/verbindungen/engine';
 import {createSession as llSession} from '../../games/logikleiter/engine';
 import {createSession as udSession} from '../../games/umfrageduell/engine';
 import type {SetupDraft,HostIdentity} from './model';
+import {selectedReviewedRundenquizPack} from './rundenquiz-lineup';
 
 export async function createPreparedApproved(
- repo:EventRepository,draft:Pick<SetupDraft,'teams'|'count'|'profile'|'game'>,
+ repo:EventRepository,draft:Pick<SetupDraft,'teams'|'count'|'profile'|'game'|'rqQuestionIds'>,
 ):Promise<HostIdentity>{
  const store=new ContentRepository();
  let items:ContentItem[];
@@ -53,7 +54,9 @@ export async function createPreparedApproved(
  try{
   switch(draft.game){
    case 'rundenquiz':{
-    const bank=selectReviewedPack(items,'rundenquiz',draft.profile,draft.count);
+    const bank=draft.rqQuestionIds===undefined?
+     selectReviewedPack(items,'rundenquiz',draft.profile,draft.count):
+     selectedReviewedRundenquizPack(items,draft.profile,draft.rqQuestionIds);
     const rq=rqSession({id:eventId,ownerId:hostId,profile:draft.profile,teams:roster,bank});
     const frozen=rq.questions.map(q=>freeze(q.id,'rundenquiz',q.prompt,[...(q.clues??[])],[q.answer],q.reference));
     return await create({rundenquiz:rq},frozen);
