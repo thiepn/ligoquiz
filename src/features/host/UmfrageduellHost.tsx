@@ -15,6 +15,7 @@ import type {EventRecord} from '../../domain/event/schemas';
 import {currentSurvey,orderedTeams,taskSeconds,scores,eveningHalfPoints,
   pointsFor,suggestMatch,type Action,type Submission,type Rank} from '../../games/umfrageduell/engine';
 import {readHostIdentity} from '../experience/model';
+import {countdownScope,useHostCountdown} from './useHostCountdown';
 const errorText=(e:unknown)=>e instanceof Error?e.message:'Aktion fehlgeschlagen';
 const empty=(n:number):Submission=>({answers:Array(n).fill('') as string[],mapped:Array(n).fill(null) as (Rank|null)[]});
 export function UmfrageduellHost(){
@@ -26,11 +27,12 @@ export function UmfrageduellHost(){
  const draftsRef=useRef<Record<string,Submission>>({});
  const controllerRef=useRef<HostSessionController|null>(null);
  const queueRef=useRef<Promise<void>>(Promise.resolve());
- const [seconds,setSeconds]=useState(30),[clock,setClock]=useState(false);
- const lastTick=useRef(Date.now());
  const ud=event?.umfrageduell;
  const task=ud&&ud.phase!=='complete'?currentSurvey(ud):null;
  const count=task?.format==='top3'?3:1,limit=taskSeconds(task?.format??'popular');
+ const {seconds,clock,setClock,setSeconds}=useHostCountdown(
+  countdownScope(event?.id,event?.hostEpoch,task?.id,ud?.phase),
+  limit,Boolean(!ready||ud?.paused||event?.recoveryRequired));
  useEffect(()=>{
   if(!identity)return;
   const db=new EventRepository();let disposed=false;let publisher:HostStagePublisher;
@@ -64,18 +66,6 @@ export function UmfrageduellHost(){
    setDrafts(prepared);
   }
  },[ud?.index,ud?.surveys,ud?.phase==='setup']);
- useEffect(()=>{setClock(false);setSeconds(limit);},[ud?.index,ud?.phase,ud?.paused,limit]);
- useEffect(()=>{
-  if(!clock||ud?.paused||seconds===0)return;
-  lastTick.current=Date.now();
-  const timer=window.setInterval(()=>{
-   const now=Date.now(),delta=Math.floor((now-lastTick.current)/1000);
-   if(delta<1)return;lastTick.current+=delta*1000;
-   setSeconds(v=>Math.max(0,v-delta));
-  },250);
-  return ()=>window.clearInterval(timer);
- },[clock,ud?.paused,ud?.index,ud?.phase,seconds===0]);
- useEffect(()=>{if(seconds===0)setClock(false);},[seconds]);
  function send(action:Action):Promise<void>{
   if(!ready||!event||event.recoveryRequired)return Promise.resolve();
   const ctrl=controllerRef.current;if(!ctrl)return Promise.resolve();
