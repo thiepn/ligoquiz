@@ -9,6 +9,7 @@ import {
 import {StudioPopMotif} from '../../design-system/StudioPop';
 import {ApprovedProgramFinder} from './ApprovedProgramFinder';
 import {RundenquizLineupEditor} from './RundenquizLineupEditor';
+import {QuiztafelBoardComposer} from './QuiztafelBoardComposer';
 import {GAME_ORDER,GAME_VISUALS} from '../../design-system/theme';
 import './u04-prep.css';
 
@@ -24,6 +25,7 @@ export function SetupWizard() {
   const [error,setError]=useState('');
   const [projectorAcknowledged,setProjectorAcknowledged]=useState(false);
   const [lineupValid,setLineupValid]=useState(false);
+  const [boardValid,setBoardValid]=useState(false);
   useEffect(()=>{
     try { saveSetupDraft(draft); } catch { setError('Vorbereitung konnte lokal nicht zwischengespeichert werden.'); }
   },[draft]);
@@ -32,11 +34,18 @@ export function SetupWizard() {
       next.profile&&next.profile!==prev.profile||
       next.contentSource&&next.contentSource!==prev.contentSource)?
       {rqQuestionIds:undefined}:{}),
+    ...((next.game&&next.game!==prev.game||next.profile&&next.profile!==prev.profile||
+      next.contentSource&&next.contentSource!==prev.contentSource||
+      next.count&&next.count!==prev.count)?{qtTileIds:undefined}:{}),
   }));};
   const next=()=>{if(draft.step===0&&!validNames(draft)){setError('Bitte jedem Team einen eindeutigen Namen geben.');return;}
     if(draft.step===1&&draft.game==='rundenquiz'&&draft.contentSource==='approved'&&
       draft.rqQuestionIds!==undefined&&!lineupValid){
       setError('Bitte alle Fragen je Runde vollständig auswählen.');return;
+    }
+    if(draft.step===1&&draft.game==='quiztafel'&&draft.contentSource==='approved'&&
+      draft.qtTileIds!==undefined&&!boardValid){
+      setError('Bitte jede Quiztafel-Kategorie und jeden Feldwert vollständig auswählen.');return;
     }
     set({step:Math.min(2,draft.step+1) as SetupDraft['step']});
   };
@@ -46,6 +55,8 @@ export function SetupWizard() {
     if(!projectorAcknowledged){setError('Bitte die Beamer-Hinweise bestätigen.');return;}
     if(draft.game==='rundenquiz'&&draft.contentSource==='approved'&&
        draft.rqQuestionIds!==undefined&&!lineupValid){setError('Fragenauswahl erneut prüfen.');return;}
+    if(draft.game==='quiztafel'&&draft.contentSource==='approved'&&
+       draft.qtTileIds!==undefined&&!boardValid){setError('Spielfeldauswahl erneut prüfen.');return;}
     setBusy(true);setError('');
     const repo=new EventRepository();
     try{
@@ -125,7 +136,10 @@ export function SetupWizard() {
        onSelect={choice=>set({...choice})}/>}
       {draft.contentSource==='approved'&&draft.game==='rundenquiz'&&
        <RundenquizLineupEditor draft={draft}
-        onChange={ids=>set({rqQuestionIds:ids})} onValidity={setLineupValid}/>} 
+        onChange={ids=>set({rqQuestionIds:ids})} onValidity={setLineupValid}/>}
+      {draft.contentSource==='approved'&&draft.game==='quiztafel'&&
+       <QuiztafelBoardComposer draft={draft} onChange={ids=>set({qtTileIds:ids})}
+        onValidity={setBoardValid}/>} 
       <p className="exp-notice">Die Probeinhalte sind weder importiert noch redaktionell freigegeben. Quiztafel hat feste Wahlrechte; Verbindungen verteilt alle Einzelaufgaben gleichmäßig. Logikleiter bietet allen Teams dieselben Stufen. Umfrageduell nutzt ausdrücklich erfundene Beispieldaten, keine echte Befragung.</p>
     </div>}
     {draft.step===2&&<div className="exp-form sp-prep-panel">
