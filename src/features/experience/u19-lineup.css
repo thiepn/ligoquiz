@@ -1,0 +1,21 @@
+.u19-lineup{margin:18px 0 0;background:#fff;border:2px solid #b9c9eb;color:#17294d;min-width:0}
+.u19-lineup-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:15px 18px;background:#162a5a;color:white}
+.u19-lineup-head h3{margin:0;font:900 22px/1.2 system-ui}
+.sp-prep .u19-lineup button{min-height:44px;cursor:pointer;font:800 15px/1.3 system-ui;padding:9px 12px;border-radius:0}
+.u19-lineup-head button{background:#ffe45c;color:#152b58;border:2px solid #ffe45c}
+.u19-lineup-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:14px 16px}
+.u19-lineup-switch button{background:white;color:#19335f;border:2px solid #b2c4e5}
+.u19-lineup-switch button[aria-pressed=true]{background:#285bff;color:white;border-color:#285bff}
+.u19-lineup>p{padding:12px 18px;margin:0;font-size:15px;line-height:1.5}
+.u19-lineup-status{margin:0 16px 14px;padding:11px 14px;background:#fff0e4;border-left:5px solid #c35434;display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;font-size:15px}
+.u19-lineup-status[data-lineup-valid=true]{background:#e4f8ed;border-color:#007b58}
+.u19-lineup-round{border:1px solid #bac9e3;margin:13px 16px;padding:11px;display:grid;gap:7px;min-width:0}
+.u19-lineup-round legend{font:850 17px/1.4 system-ui;padding:0 7px}
+.u19-lineup-round>p{font-size:15px;margin:0}
+.u19-lineup-option{display:flex;align-items:center;gap:11px;padding:10px 12px;background:#f3f6fc;border:1px solid #d7dfea;color:#172d53;font:600 16px/1.4 system-ui;overflow-wrap:anywhere;min-width:0}
+.u19-lineup-option:has(input:checked){background:#e8f2ff;border:2px solid #285bff;padding:9px 11px}
+.u19-lineup-option:has(input:disabled:not(:checked)){opacity:.55}
+.u19-lineup-option input{width:22px;height:22px;flex:none;accent-color:#285bff}
+.u19-lineup-error{color:#842d24;background:#fff0e9}
+.u19-lineup :is(button,input):focus-visible{outline:3px solid #f0aa24;outline-offset:3px}
+@media(max-width:550px){.u19-lineup-head{padding:12px}.u19-lineup-head button{width:100%}.u19-lineup-switch{grid-template-columns:1fr;padding:12px}.u19-lineup-round{margin:10px}}
