@@ -30,10 +30,11 @@ export function HostGameplayRail({game,phase,paused,recovery,completed,total}:Ho
   [{name:'Vorbereiten',hint:'Format & Herkunft'},{name:'Antworten',hint:'Teamantworten schließen'},{name:'Werten',hint:'Zuordnung & Auflösung'},{name:'Weiter',hint:'Nächste Umfrage'}]:LABELS;
  return <section className={'u07-phase-rail u07-phase-rail--'+game} data-u07-phase={phase}
    aria-label="Spielablauf" aria-roledescription="Moderationsschritte">
-   <div className="u07-rail-top">
+   <div className="u07-rail-top" aria-live="polite" aria-atomic="true">
      <strong>{recovery?'Wiederherstellung prüfen':paused?'Spiel pausiert':guidance.step}</strong>
      <small>{safeCompleted} / {total} {game==='quiztafel'?'Felder':game==='logikleiter'?'Stufen':'Aufgaben'} abgeschlossen</small>
    </div>
+   <p className="u07-rail-next" role="status">{recovery?'Zuerst den wiederhergestellten Spielstand prüfen.':paused?'Spiel ausdrücklich fortsetzen, bevor die nächste Aktion möglich ist.':guidance.next}</p>
    <ol className="u07-phase-steps">
      {steps.map((step,i)=><li key={step.name} className={i===active?'is-current':i<active?'is-complete':''}
        aria-current={i===active?'step':undefined}>
