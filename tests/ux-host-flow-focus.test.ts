@@ -31,7 +31,7 @@ describe('UX host flow: canonical semantics not another engine',()=>{
  });
  it('preserves the original explicit publication and grading boundaries',()=>{
   for(const game of names){
-   const input={game,phase:'ready',paused:false,recovery:false,completed:0,total:10,
+   const input={game,phase:game==='quiztafel'?'board':'ready',paused:false,recovery:false,completed:0,total:10,
     viewers:0,ready:true,busy:false};
    const state=describeHostStep(input);
    expect(state.visibility).toMatch(/verborgen/);
