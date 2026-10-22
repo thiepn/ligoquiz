@@ -98,7 +98,9 @@ export function OrganizerHome() {
    const base=current??newSetupDraft(readPreferences());
    // Selection is an explicit user action. Reuse the existing draft schema;
    // never create or modify a live event from the lobby.
-   saveSetupDraft({...base,game,step:current && current.game!==game && current.step===2?1:base.step});
+   saveSetupDraft({...base,game,gameFromLobby:true,
+    ...(base.game!==game?{rqQuestionIds:undefined,qtTileIds:undefined}:{}),
+    step:current && current.game!==game && current.step===2?1:base.step});
    window.location.hash='#/setup';
   }catch(e){setActionError(e instanceof Error?e.message:'Spielauswahl konnte nicht gespeichert werden.');}
  }
@@ -108,8 +110,11 @@ export function OrganizerHome() {
    <div className="sp-lobby-hero-copy">
     <h1 id="sp-lobby-title">Spielen</h1>
     <div className="sp-lobby-actions">
-     <a className="sp-lobby-cta" href="#/setup">Neuen Quizabend vorbereiten <span aria-hidden="true">↗</span></a>
-     <a className="sp-lobby-demo" href="#/demo">Demo ansehen <span aria-hidden="true">▷</span></a>
+     {latest?<ResumeButton event={latest} onError={setActionError}/>:
+      draft?<a className="sp-lobby-cta" href="#/setup">Vorbereitung fortsetzen <span aria-hidden="true">↗</span></a>:
+      <a className="sp-lobby-cta" href="#/setup">Neuen Quizabend vorbereiten <span aria-hidden="true">↗</span></a>}
+     {(latest||draft)&&<a className="sp-lobby-demo" href="#/setup">Neuen Quizabend vorbereiten <span aria-hidden="true">↗</span></a>}
+     <a className="sp-lobby-demo" href="#/demo">Spielmodi ausprobieren <span aria-hidden="true">▷</span></a>
     </div>
    </div>
    <div className="sp-lobby-poster" aria-hidden="true">
