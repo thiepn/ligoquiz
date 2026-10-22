@@ -1,7 +1,7 @@
 import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {loadSafelyPausedQuiztafel} from './quiztafel-load';
-import {HostModerationGuide} from './HostModerationGuide';
+import {HostModerationGuide,hostPhaseLabel} from './HostModerationGuide';
 import {HostGameplayRail} from './HostGameplayRail';
 import {StudioPopMotif} from '../../design-system/StudioPop';
 import './u07-play.css';
@@ -135,7 +135,7 @@ export function QuiztafelHost(){
       <div className="qt-active-row u07-qt-status">
         <div><small>AKTUELLES WAHLRECHT</small><strong>{selectorTeam?.name}</strong></div>
         <div><small>FELDER ABGESCHLOSSEN</small><strong>{qt.usedTileIds.length} / {qt.tiles.length}</strong></div>
-        <div><small>SPIELPHASE</small><strong>{qt.paused?'PAUSIERT':qt.phase.toUpperCase()}</strong></div>
+        <div><small>SPIELPHASE</small><strong>{hostPhaseLabel('quiztafel',qt.phase,qt.paused,Boolean(event?.recoveryRequired))}</strong></div>
       </div>
       {event?.recoveryRequired&&<div className="rq-recovery" role="alert">
         <strong>Wiederhergestellten Spielstand prüfen</strong>
@@ -195,9 +195,9 @@ export function QuiztafelHost(){
           <div className="u07-timer-meter" aria-hidden="true"><span style={{width:timeLeft/(qt.phase==='steal'?10:20)*100+'%'}}/></div>
         </div>}
         {qt.phase==='question'&&<div className="qt-decisions u07-qt-judgement" role="group" aria-label={'Erstantwort bewerten: '+selectorTeam?.name}>
-          <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'PRIMARY',result:'correct'})}>Erstantwort richtig</button>
-          <button disabled={disabled} onClick={()=>void send({type:'PRIMARY',result:'wrong'})}>Erstantwort falsch</button>
-          <button disabled={disabled} onClick={()=>void send({type:'PRIMARY',result:'none'})}>Keine Antwort</button>
+          <button data-host-choice disabled={disabled} onClick={()=>void send({type:'PRIMARY',result:'correct'})}>Erstantwort richtig</button>
+          <button data-host-choice disabled={disabled} onClick={()=>void send({type:'PRIMARY',result:'wrong'})}>Erstantwort falsch</button>
+          <button data-host-choice disabled={disabled} onClick={()=>void send({type:'PRIMARY',result:'none'})}>Keine Antwort</button>
         </div>}
         {qt.phase==='steal-offer'&&<div className="qt-decision u07-qt-steal-offer">
           <h3>Einmalige Übernahme: {stealer?.name}</h3>
@@ -205,10 +205,10 @@ export function QuiztafelHost(){
           <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'OFFER_STEAL'})}>Übernahme anbieten</button>
         </div>}
         {qt.phase==='steal'&&<div className="qt-decisions u07-qt-judgement" role="group" aria-label={'Übernahme bewerten: '+stealer?.name}>
-          <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'STEAL',result:'correct'})}>Übernahme richtig</button>
-          <button disabled={disabled} onClick={()=>void send({type:'STEAL',result:'wrong'})}>Übernahme falsch</button>
-          <button disabled={disabled} onClick={()=>void send({type:'STEAL',result:'none'})}>Keine Antwort</button>
-          <button disabled={disabled} onClick={()=>void send({type:'STEAL',result:'declined'})}>Team verzichtet</button>
+          <button data-host-choice disabled={disabled} onClick={()=>void send({type:'STEAL',result:'correct'})}>Übernahme richtig</button>
+          <button data-host-choice disabled={disabled} onClick={()=>void send({type:'STEAL',result:'wrong'})}>Übernahme falsch</button>
+          <button data-host-choice disabled={disabled} onClick={()=>void send({type:'STEAL',result:'none'})}>Keine Antwort</button>
+          <button data-host-choice disabled={disabled} onClick={()=>void send({type:'STEAL',result:'declined'})}>Team verzichtet</button>
         </div>}
         {qt.phase==='adjudicated'&&<div className="qt-decision u07-qt-reveal-confirm">
           <p>Antworten geschlossen · Punkte ausstehend.</p>
