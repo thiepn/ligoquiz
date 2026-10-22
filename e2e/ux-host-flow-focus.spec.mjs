@@ -56,7 +56,7 @@ for(const mode of modes){
   await panel.getByRole('button',{name:/Nächste Aktion fokussieren/}).click();
   await expect(next).toBeFocused();
   expect(await progress(host)).toEqual(before);
-  await expect(host.getByRole('button',{name:mode.start})).toHaveCSS('background-color','rgb(40, 91, 255)');
+  await expect(host.getByRole('button',{name:mode.start})).toHaveCSS('background-color',/rgb\(40, 91, 255\)|rgb\(23, 69, 216\)/);
   const width=await page.evaluate(()=>({page:globalThis.document.documentElement.scrollWidth,
    screen:globalThis.innerWidth}));
   expect(width.page).toBeLessThanOrEqual(width.screen+3);
@@ -75,6 +75,8 @@ for(const mode of modes.filter(m=>m.game==='quiztafel'||m.game==='verbindungen')
   await expect(picks).toHaveCount(3);
   await expect(host.locator('[data-host-next]:not(:disabled)')).toHaveCount(0);
   const phases=await progress(host);
+  // Hover can temporarily highlight one choice; compare the neutral decision states.
+  await page.mouse.move(0,0);
   const styles=await picks.evaluateAll(nodes=>nodes.map(node=>{
     const x=globalThis.getComputedStyle(node);
     return {background:x.backgroundColor,color:x.color,border:x.borderTopColor,

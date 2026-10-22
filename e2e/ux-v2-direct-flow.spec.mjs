@@ -37,7 +37,7 @@ test('UX game choice from lobby has one obvious selected game and preserves edit
 test('UX mobile setup exposes persistent next action and prevents bypassing validation',async({page})=>{
  await page.setViewportSize({width:375,height:812});
  await page.goto('/#/setup');
- const focused=page.getByRole('navigation',{name:'Vorbereitung'});
+ const focused=page.getByRole('navigation',{name:'Vorbereitung',exact:true});
  await expect(focused).toContainText('Quizabend vorbereiten');
  await expect(page.getByRole('navigation',{name:'Mobile Schnellnavigation'})).toHaveCount(0);
  const next=page.getByRole('button',{name:'Weiter'});
