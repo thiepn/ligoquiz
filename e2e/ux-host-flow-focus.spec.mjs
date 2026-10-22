@@ -90,7 +90,15 @@ for(const mode of modes.filter(m=>m.game==='quiztafel'||m.game==='verbindungen')
   await expect(picks.first()).toBeFocused();
   expect(await progress(host)).toEqual(phases);
   await picks.last().click();
-  await expect(host).not.toHaveAttribute('data-host-phase',phases.phase);
+  // The original Verbindungen engine records a judgment without publishing its answer.
+  // The phase changes only after the host explicitly releases the solution.
+  await expect(host).toHaveAttribute('data-host-phase',phases.phase);
+  await expect(picks).toHaveCount(0);
+  expect((await progress(host)).scoreText).toBe(phases.scoreText);
+  const reveal=host.getByRole('button',{name:'Lösung veröffentlichen'});
+  await expect(reveal).toBeEnabled();
+  await reveal.click();
+  await expect(host).toHaveAttribute('data-host-phase','revealed');
   await expect(host.getByRole('region',{name:'Moderationsübersicht'})).toBeVisible();
  });
 }
