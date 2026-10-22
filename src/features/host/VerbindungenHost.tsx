@@ -1,7 +1,7 @@
 import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {loadSafelyPausedVerbindungen} from './verbindungen-load';
-import {HostModerationGuide,hostPhaseLabel} from './HostModerationGuide';
+import {HostModerationGuide,hostPhaseLabel,hostContentLabel} from './HostModerationGuide';
 import {HostGameplayRail} from './HostGameplayRail';
 import {StudioPopMotif} from '../../design-system/StudioPop';
 import './u08-play.css';
@@ -96,7 +96,7 @@ export function VerbindungenHost(){
   <header className="vb-host-head u08-mode-head u08-mode-head--vb">
    <div className="u08-mode-copy">
     <h2>Verbindungen<span aria-hidden="true">.</span></h2>
-    <span className="g3-tech-tag">PROBEINHALTE · NICHT REDAKTIONELL FREIGEGEBEN</span></div>
+    <span className="g3-tech-tag">{hostContentLabel(event)}</span></div>
    <span className="u08-mode-art" aria-hidden="true"><StudioPopMotif game="verbindungen"/></span></header>
   <div className="vb-host-toolbar u08-utility">
    <a href={stageUrl(identity.eventId)} className="g3-tech-link" target="_blank" rel="noopener noreferrer">Beamer öffnen ↗</a>
