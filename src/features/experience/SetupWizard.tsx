@@ -86,8 +86,12 @@ export function SetupWizard() {
       <span className="sp-prep-decor" aria-hidden="true">!</span>
     </header>
     <nav aria-label="Vorbereitungsschritte" className="exp-steps sp-prep-steps">
-      {steps.map((name,i)=><div key={name} aria-current={draft.step===i?'step':undefined}
-        className={draft.step===i?'exp-current':i<draft.step?'sp-prep-done':''}><b>0{i+1}</b><span>{name}</span></div>)}
+      {steps.map((name,i)=><button type="button" key={name}
+        aria-current={draft.step===i?'step':undefined} disabled={i>draft.step}
+        aria-label={'Schritt '+(i+1)+': '+name}
+        onClick={()=>{if(i<draft.step)set({step:i as SetupDraft['step']});}}
+        className={draft.step===i?'exp-current':i<draft.step?'sp-prep-done':''}>
+        <b>0{i+1}</b><span>{name}</span></button>)}
     </nav>
     <div className="sp-prep-layout"><div className="sp-prep-main">
     {draft.step===0&&<div className="exp-form sp-prep-panel">
@@ -104,7 +108,7 @@ export function SetupWizard() {
     {draft.step===1&&<div className="exp-form sp-prep-panel">
       <h2>Programm wählen</h2>
       <div className="exp-choice-games sp-prep-game-choices" aria-label="Spielmodus wählen">
-        {GAME_ORDER.map(game=>{
+        {GAME_ORDER.filter(game=>!draft.gameFromLobby||game===draft.game).map(game=>{
           const look=GAME_VISUALS[game],chosen=draft.game===game;
           return <button type="button" key={game}
             className={'exp-program sp-prep-game sp-prep-game--'+look.tone+(chosen?' chosen':'')}
@@ -115,7 +119,10 @@ export function SetupWizard() {
             <b>{chosen?'Ausgewählt':'Wählen'}</b>
           </button>;
         })}
-      </div>      <label className="exp-field">Umfang
+      </div>
+      {draft.gameFromLobby&&<button type="button" className="sp-prep-switch-game"
+        onClick={()=>set({gameFromLobby:false})}>Anderes Spiel wählen</button>}
+      <label className="exp-field">Umfang
         <select value={draft.profile} onChange={e=>set({profile:e.target.value as SetupDraft['profile']})}>
           <option value="kurz">Kurz · {draft.game==='quiztafel'?draft.count*3+' Felder':draft.game==='logikleiter'?'3 Stufen':draft.game==='umfrageduell'?'4 Umfragen':draft.game==='verbindungen'?(draft.count+1)+' Aufgaben':'7 Aufgaben'}</option>
           <option value="standard">Standard · {draft.game==='quiztafel'?draft.count*5+' Felder':draft.game==='logikleiter'?'5 Stufen':draft.game==='umfrageduell'?'6 Umfragen':draft.game==='verbindungen'?(2*draft.count+1)+' Aufgaben':'11 Aufgaben'}</option>
@@ -140,7 +147,9 @@ export function SetupWizard() {
       {draft.contentSource==='approved'&&draft.game==='quiztafel'&&
        <QuiztafelBoardComposer draft={draft} onChange={ids=>set({qtTileIds:ids})}
         onValidity={setBoardValid}/>} 
-      <p className="exp-notice">Die Probeinhalte sind weder importiert noch redaktionell freigegeben. Quiztafel hat feste Wahlrechte; Verbindungen verteilt alle Einzelaufgaben gleichmäßig. Logikleiter bietet allen Teams dieselben Stufen. Umfrageduell nutzt ausdrücklich erfundene Beispieldaten, keine echte Befragung.</p>
+      {draft.contentSource==='trial'&&<p className="exp-notice" role="note">
+        Probeinhalte sind nicht redaktionell geprüft.{draft.game==='umfrageduell'?' Die Umfragewerte sind erfundene Beispieldaten.':''}
+      </p>}
     </div>}
     {draft.step===2&&<div className="exp-form sp-prep-panel">
       <h2>Bereit zum Spielen</h2>

@@ -10,14 +10,14 @@
 .sp-prep .sp-prep-exit{position:relative;z-index:1;flex:none;color:white;background:#FFFFFF1C;border:1px solid #B5C5E8;text-decoration:none;padding:12px;font-size:12px;font-weight:900}
 .sp-prep .sp-prep-decor{position:absolute;right:12%;top:-90px;transform:rotate(-12deg);pointer-events:none;font:900 360px system-ui;color:#5F78BC;opacity:.15;z-index:-1}
 .sp-prep .sp-prep-steps{margin:0 0 22px;background:#E5EAF6;border:0;gap:3px}
-.sp-prep .sp-prep-steps>div{border:0;background:#fff;color:#53627D;gap:12px;padding:16px;font-weight:900}
-.sp-prep .sp-prep-steps>div b{display:grid;place-items:center;width:36px;height:36px;flex:none;color:#3F5272;border:2px solid #D5E0F1}
-.sp-prep .sp-prep-steps>div span{display:grid;gap:3px}
-.sp-prep .sp-prep-steps>div small{font-weight:700;font-size:10px;color:#6D7890}
-.sp-prep .sp-prep-steps>div.exp-current{background:#285BFF;color:white}
-.sp-prep .sp-prep-steps>div.exp-current b{color:#111E42;background:#FFE45C;border-color:#FFE45C}
-.sp-prep .sp-prep-steps>div.exp-current small{color:#DFEAFF}
-.sp-prep .sp-prep-steps>div.sp-prep-done{background:#E6F8F3;color:#075E55}
+.sp-prep .sp-prep-steps>button{border:0;background:#fff;color:#53627D;gap:12px;padding:16px;font-weight:900}
+.sp-prep .sp-prep-steps>button b{display:grid;place-items:center;width:36px;height:36px;flex:none;color:#3F5272;border:2px solid #D5E0F1}
+.sp-prep .sp-prep-steps>button span{display:grid;gap:3px}
+.sp-prep .sp-prep-steps>button small{font-weight:700;font-size:10px;color:#6D7890}
+.sp-prep .sp-prep-steps>button.exp-current{background:#285BFF;color:white}
+.sp-prep .sp-prep-steps>button.exp-current b{color:#111E42;background:#FFE45C;border-color:#FFE45C}
+.sp-prep .sp-prep-steps>button.exp-current small{color:#DFEAFF}
+.sp-prep .sp-prep-steps>button.sp-prep-done{background:#E6F8F3;color:#075E55}
 .sp-prep .sp-prep-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(235px,285px);gap:clamp(14px,2vw,27px);align-items:start}
 .sp-prep .sp-prep-main{min-width:0}
 .sp-prep .sp-prep-panel{padding:clamp(20px,3vw,35px);margin:0;background:#fff;border:1px solid #D6DEEE}
@@ -130,5 +130,16 @@
 
 @media(max-width:1120px){.sp-prep .sp-prep-layout{grid-template-columns:minmax(0,1fr) 230px}.sp-prep .sp-prep-game-choices{grid-template-columns:1fr}}
 @media(max-width:800px){.sp-prep .sp-prep-layout{grid-template-columns:minmax(0,1fr)}.sp-prep .sp-prep-aside{position:static;grid-template-columns:1fr 1fr}.sp-prep .sp-prep-preview{min-height:230px}}
-@media(max-width:570px){.sp-prep .sp-prep-mast{padding:22px 17px;flex-direction:column}.sp-prep .sp-prep-steps>div{display:grid;gap:6px;padding:13px 8px;font-size:11px}.sp-prep .sp-prep-steps>div b{width:28px;height:28px}.sp-prep .sp-prep-steps>div small{font-size:9px}.sp-prep .sp-prep-roster{grid-template-columns:1fr}.sp-prep .sp-prep-aside{grid-template-columns:1fr}.sp-prep .sp-prep-game{grid-template-columns:56px minmax(0,1fr);padding:12px;gap:8px}.sp-prep .sp-prep-game.chosen{padding:11px}.sp-prep .sp-prep-game-art{width:56px;height:56px}.sp-prep .sp-prep-game-art .sp-motif{width:51px;height:51px}.sp-prep .sp-prep-actions{flex-wrap:wrap}.sp-prep .sp-prep-actions button{flex:1 1 100%}.sp-prep .sp-prep-mast h1{font-size:32px}}
+@media(max-width:570px){.sp-prep .sp-prep-mast{padding:22px 17px;flex-direction:column}.sp-prep .sp-prep-steps>button{display:grid;gap:6px;padding:13px 8px;font-size:11px}.sp-prep .sp-prep-steps>button b{width:28px;height:28px}.sp-prep .sp-prep-steps>button small{font-size:9px}.sp-prep .sp-prep-roster{grid-template-columns:1fr}.sp-prep .sp-prep-aside{grid-template-columns:1fr}.sp-prep .sp-prep-game{grid-template-columns:56px minmax(0,1fr);padding:12px;gap:8px}.sp-prep .sp-prep-game.chosen{padding:11px}.sp-prep .sp-prep-game-art{width:56px;height:56px}.sp-prep .sp-prep-game-art .sp-motif{width:51px;height:51px}.sp-prep .sp-prep-actions{flex-wrap:wrap}.sp-prep .sp-prep-actions button{flex:1 1 100%}.sp-prep .sp-prep-mast h1{font-size:32px}}
 @media(prefers-reduced-motion:reduce){.sp-prep *,.sp-prep *::before,.sp-prep *::after{transition:none!important;animation:none!important}}
+
+
+/* Earlier steps remain directly accessible; future steps cannot bypass setup validation. */
+.sp-prep .sp-prep-steps>button{font-family:inherit;cursor:pointer;text-align:left;border-radius:0}
+.sp-prep .sp-prep-steps>button:disabled{cursor:default;opacity:.75}
+.sp-prep .sp-prep-steps>button.exp-current{cursor:default}
+.sp-prep .sp-prep-switch-game{display:inline-flex;align-items:center;min-height:44px;
+ border:2px solid #A8BAE2;background:#fff;color:#2049A0;padding:9px 14px;margin:0 0 18px;
+ font:850 15px/1.3 system-ui;cursor:pointer}
+.sp-prep .sp-prep-switch-game:hover{border-color:#285BFF;background:#EDF3FF}
+.sp-prep .sp-prep-steps>button:focus-visible{outline:3px solid #285BFF;outline-offset:3px}
