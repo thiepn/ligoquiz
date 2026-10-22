@@ -1,6 +1,7 @@
 import '../../styles/g15-host-a11y.css';
 import {useCallback,useEffect} from 'react';
 import '../../styles/g14-moderator.css';
+import '../../styles/host-flow-ux.css';
 
 export type HostGame='rundenquiz'|'quiztafel'|'verbindungen'|'logikleiter'|'umfrageduell';
 export type HostGuideInput={
@@ -79,10 +80,11 @@ export function focusHostAction(root:Element|null, paused:boolean,recovery:boole
  if(!root)return false;
  const selector=recovery?'.rq-recovery button:not(:disabled)':
   paused? '[data-host-resume]:not(:disabled), .rq-control .g3-tech-primary:not(:disabled)':
-   '[data-host-next]:not(:disabled), .qt-cell:not(:disabled)';
+   '[data-host-next]:not(:disabled), [data-host-choice]:not(:disabled), .qt-cell:not(:disabled)';
  const target=root.querySelector<HTMLButtonElement>(selector);
  if(!target)return false;
  target.focus();
+ target.scrollIntoView({block:'center',behavior:'instant'});
  return document.activeElement===target;
 }
 
@@ -110,14 +112,18 @@ export function HostModerationGuide(props:HostGuideInput){
  return <section className="g14-guide" aria-label="Moderationsübersicht">
   <div className="g14-guide-head">
    <div>
-    <h3>{state.step}</h3>{(props.recovery||props.paused)&&<p>{state.warning}</p>}</div>
+    <small className="g14-current-step">{state.step}</small>
+    <h3>Als Nächstes: {state.next}</h3>
+    {(props.recovery||props.paused)&&<p>{state.warning}</p>}</div>
    <div className="g14-connect"><strong>{props.viewers}</strong><span>Beamerfenster bestätigt</span></div>
   </div>
-  <div className="g14-facts">
-   <div><small>ALS NÄCHSTES</small><strong>{state.next}</strong></div>
-   <div><small>VERÖFFENTLICHUNG</small><strong>{state.visibility}</strong></div>
-   <div><small>PUNKTSTAND</small><strong>{state.scoring}</strong></div>
-  </div>
+  <details className="g14-optional">
+   <summary>Beamer- und Wertungsstatus</summary>
+   <div className="g14-facts">
+    <div><small>VERÖFFENTLICHUNG</small><strong>{state.visibility}</strong></div>
+    <div><small>PUNKTSTAND</small><strong>{state.scoring}</strong></div>
+   </div>
+  </details>
   <div className="g14-guide-foot">
    <div className="g14-progress">
     <span>{completed} von {total} {props.game==='quiztafel'?'Feldern':'Aufgaben'} abgeschlossen</span>
