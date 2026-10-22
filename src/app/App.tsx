@@ -14,6 +14,7 @@ import '../styles/umfrageduell.css';
 import { parseRoute, currentEventId } from './routes';
 import { AppShell } from './AppShell';
 import { StageView } from '../features/stage/StageView';
+import {stageUrl} from '../features/stage/protocol';
 import { AudiencePlayalong } from '../features/stage/AudiencePlayalong';
 import { ProjectorTechCheck } from '../features/host/ProjectorTechCheck';
 import { RundenquizHost } from '../features/host/RundenquizHost';
@@ -29,6 +30,7 @@ import { SetupWizard } from '../features/experience/SetupWizard';
 import { DisposableDemo } from '../features/experience/DisposableDemo';
 import { ExperienceSettings } from '../features/experience/ExperienceSettings';
 import { applyMotionPreference, readPreferences, readHostIdentity } from '../features/experience/model';
+import './ux-flow.css';
 
 function useCurrentHash(){
   const [hash,setHash]=useState(() => window.location.hash);
@@ -81,16 +83,18 @@ function HostSurface(){
  return <section className="exp-host-wrapper sp-cockpit-wrap" aria-label="Spielleitung">
    <div className="exp-host-header sp-cockpit-topline"><a href="#/spielen">← Spielen</a>
      <div><strong>Spielleitung</strong></div>
+     {snapshot&&!error&&<a className="sp-cockpit-quick-stage" href={stageUrl(snapshot.id)}
+       target="_blank" rel="noopener noreferrer">Beamer öffnen ↗</a>}
      <a href="#/technik">Technikcheck</a></div>
    {error&&<div role="alert" className="exp-error">{error} <a href="#/spielen">Zur Übersicht</a></div>}
-   {snapshot&&mode&&!error&&<HostCockpit event={snapshot}/>}
    {activeIdentity&&!error&&!snapshot&&<p role="status" className="sp-cockpit-loading">Gespeicherter Spielstand wird geprüft …</p>}
-   {activeIdentity&&!error&&mode&&<div id="sp-host-game" tabIndex={-1} className="sp-host-game-region">
+   {activeIdentity&&!error&&mode&&<div id="sp-host-game" tabIndex={-1} className="sp-host-game-region" aria-label="Spiel steuern">
      {mode==='umfrageduell'?<UmfrageduellHost/>:
       mode==='logikleiter'?<LogikleiterHost/>:
       mode==='verbindungen'?<VerbindungenHost/>:
       mode==='quiztafel'?<QuiztafelHost/>:<RundenquizHost/>}
    </div>}
+   {snapshot&&mode&&!error&&<HostCockpit event={snapshot}/>}
    {!activeIdentity&&<div className="exp-page exp-empty">
      <h2>Keine Spielleitung in diesem Fenster</h2>
      <p>Öffne einen gespeicherten Spielstand aus Spielen oder bereite einen neuen Quizabend vor. Das Beamerfenster benötigt keine Hostanmeldung.</p>
