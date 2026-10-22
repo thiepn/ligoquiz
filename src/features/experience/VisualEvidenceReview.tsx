@@ -44,7 +44,7 @@ export function VisualEvidenceReview(){
   }catch(e){setReviewStatus('Prüfung abgelehnt: '+(e instanceof Error?e.message:'ungültige JSON-Daten'));}
  }
   return <section className="g16-review" aria-label="Visuelle Evidenzprüfung">
-  <span className="eyebrow">G16 · EVIDENZSICHTUNG</span>
+  
   <h2>Visuelle Evidenz prüfen</h2>
   <p>15 unveränderte synthetische Chromium-Screenshots aus
    <a href="https://github.com/thiepn/ligoquiz/actions/runs/38040891245" target="_blank"

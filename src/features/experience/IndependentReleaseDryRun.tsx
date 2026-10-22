@@ -80,7 +80,7 @@ export function IndependentReleaseDryRun(){
   finally{setBusy(false);}
  }
  return <section className="g21-review" aria-label="G21 Unabhängige Root-Attestierung und Release-Trockenlauf">
-  <header><div><p className="eyebrow">G21 · EXTERNE PRÜFKETTE · KEINE PRODUKTION</p>
+  <header><div>
    <h2>Unabhängige Root-Attestierung</h2>
    <p>Originale aus G18 und G20 mit unabhängig zugestellten G21-Ed25519-Aussagen abgleichen.
     Signierte Behauptungen und selbst gemeldete Rollen sind keine bestätigte Identität oder Freigabe.</p></div>

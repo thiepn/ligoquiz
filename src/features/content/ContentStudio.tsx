@@ -5,6 +5,8 @@ import {createDraft,coverage,validatePayload,selectReviewedPack,findDuplicates,t
 import {legacyBackup,previewFile,exportLibrary,type Preview} from '../../content/migration';
 import '../../styles/content-studio.css';
 import {EditorialAuditPanel} from './EditorialAuditPanel';
+import {StructuredQuestionEditor} from './StructuredQuestionEditor';
+
 
 const LABELS:Record<GameType,string>={
  rundenquiz:'Rundenquiz',quiztafel:'Quiztafel',verbindungen:'Verbindungen',
@@ -111,13 +113,6 @@ export function ContentStudio(){
    await repo.create(item);choose(item);setMessage('Neuer Entwurf angelegt; noch nicht spielbar.');
   });
  }
- function changeBasic(key:string,value:string){
-  try{const payload=JSON.parse(json) as Record<string,unknown>;
-   if(payload&&typeof payload==='object'&&!Array.isArray(payload)){
-    payload[key]=value;setJson(JSON.stringify(payload,null,2));
-   }
-  }catch{setError('Strukturdaten enthalten derzeit ungültiges JSON');}
- }
  async function saveDraft(){
   if(!current)return;
   await act(async()=>{
@@ -183,13 +178,11 @@ export function ContentStudio(){
    setMessage('Unveränderte Importentwürfe samt Quarantäne rückgängig gemacht.');
   });
  }
- let basic:Record<string,unknown>|null=null;
- try{const p=JSON.parse(json) as unknown;
-  if(p&&typeof p==='object'&&!Array.isArray(p))basic=p as Record<string,unknown>;
- }catch{/* Raw editor displays JSON parsing problems on save. */}
+ let structured:unknown=null;
+ try{structured=JSON.parse(json) as unknown;}catch{/* Advanced JSON remains available to repair syntax. */}
  return <section className="cx-studio exp-page" aria-label="Inhaltsatelier">
-  <div className="exp-heading"><div><p className="eyebrow">INHALTE / REDAKTION</p>
-   <h1>Inhaltsatelier</h1><p>Aufgaben erfassen, Quellen prüfen, Bestand importieren und spielbare Pakete freigeben.</p></div>
+  <div className="exp-heading"><div>
+   <h1>Inhaltsatelier</h1></div>
    <div className="cx-summary"><b>{items.length} Inhalte</b><span>{summary.approved} freigegeben</span><span>{summary.review} in Prüfung</span></div></div>
   <div className="cx-warning" role="note"><strong>Getrennt von laufenden Spielabenden.</strong>
    {' '}Importiert wird nur in die v2-Inhaltsdatenbank. Bestehende v1-Spielstände, Browser-Schlüssel und veröffentlichte Spiele werden nicht geändert.</div>
@@ -202,7 +195,7 @@ export function ContentStudio(){
     onChange={e=>void loadImport(e.currentTarget.files?.[0])} disabled={busy}/></label>
   </div>
   {preview&&<section className="cx-import" aria-label="Importvorschau">
-    <div><p className="eyebrow">VOR DEM IMPORT · NICHT GESPEICHERT</p><h2>Importvorschau</h2>
+    <div><h2>Importvorschau</h2>
      <p>{preview.records} Quelldatensätze · {preview.items.length} gültige Entwürfe · {preview.quarantined.length} Quarantäne</p>
      <small>Quelltyp {preview.sourceType} · SHA-256 {preview.bundleHash}</small></div>
     {preview.warnings.map((v,i)=><p key={i} className="cx-warning">{v}</p>)}
@@ -249,19 +242,16 @@ export function ContentStudio(){
       {current.provenance.sourceId?' / '+current.provenance.sourceId:''}</p>
      {current.status==='approved'&&<p className="cx-approved">Freigegeben durch {current.review?.reviewer}.
        {' '}Jede Bearbeitung verlangt erneute Prüfung.</p>}
-     {'prompt' in (basic??{})&&<label className="cx-field">Fragestellung
-       <textarea rows={3} value={String(basic?.prompt??'')} onChange={e=>changeBasic('prompt',e.target.value)}/></label>}
-     {'answer' in (basic??{})&&<label className="cx-field">Lösung
-       <input value={String(basic?.answer??'')} onChange={e=>changeBasic('answer',e.target.value)}/></label>}
-     {'reference' in (basic??{})&&<label className="cx-field">Quelle
-       <input value={String(basic?.reference??'')} onChange={e=>changeBasic('reference',e.target.value)}/></label>}
+     <StructuredQuestionEditor game={current.game} value={structured} onChange={next=>{
+      setJson(JSON.stringify(next,null,2));setError('');setMessage('');
+     }}/>
      <label className="cx-field">Nutzungsrechte und externe Freigabegrundlage
       <textarea rows={2} value={rightsDraft} maxLength={600}
        placeholder="Rechteinhaber, Lizenz oder Erlaubnis, Dokument, Datum (extern prüfen)"
        onChange={e=>setRightsDraft(e.target.value)}/></label>
      <p className="cx-origin">Rechteangaben sind Selbstangaben und keine unabhängige Autorisierung. Speichern setzt den Prüfstatus auf Entwurf.</p>
-     <details className="cx-structured" open={current.game==='verbindungen'||current.game==='umfrageduell'}>
-      <summary>Strukturierte Aufgabe · Kategorien, Hinweise und Antwortvarianten</summary>
+     <details className="cx-structured">
+      <summary>Erweiterte JSON-Bearbeitung</summary>
       <label className="cx-field">JSON-Datensatz <textarea rows={15} spellCheck={false} value={json}
        onChange={e=>setJson(e.target.value)} /></label>
      </details>

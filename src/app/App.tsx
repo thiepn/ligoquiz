@@ -1,3 +1,4 @@
+import {TechWorkflowNavigation} from '../features/experience/TechWorkflowNavigation';
 import {PhysicalCustodyReview} from '../features/experience/PhysicalCustodyReview';
 import {IndependentReleaseDryRun} from '../features/experience/IndependentReleaseDryRun';
 import {CustodyHandoffReview} from '../features/experience/CustodyHandoffReview';
@@ -7,9 +8,13 @@ import {ReleaseCandidateDesk} from '../features/experience/ReleaseCandidateDesk'
 import {CutoverPreflight} from '../features/experience/CutoverPreflight';
 import {VisualEvidenceReview} from '../features/experience/VisualEvidenceReview';
 import { useEffect, useState } from 'react';
+import type {EventRecord} from '../domain/event/schemas';
+import {HostCockpit} from '../features/host/HostCockpit';
 import '../styles/umfrageduell.css';
-import { parseRoute, routeHref, currentEventId, type Route } from './routes';
+import { parseRoute, currentEventId } from './routes';
+import { AppShell } from './AppShell';
 import { StageView } from '../features/stage/StageView';
+import { AudiencePlayalong } from '../features/stage/AudiencePlayalong';
 import { ProjectorTechCheck } from '../features/host/ProjectorTechCheck';
 import { RundenquizHost } from '../features/host/RundenquizHost';
 import { QuiztafelHost } from '../features/host/QuiztafelHost';
@@ -25,11 +30,6 @@ import { DisposableDemo } from '../features/experience/DisposableDemo';
 import { ExperienceSettings } from '../features/experience/ExperienceSettings';
 import { applyMotionPreference, readPreferences, readHostIdentity } from '../features/experience/model';
 
-const NAV: readonly {id:Route; label:string; symbol:string}[] = [
-  {id:'spielen',label:'Spielen',symbol:'▶'},
-  {id:'inhalte',label:'Inhalte',symbol:'▤'},
-  {id:'verlauf',label:'Verlauf',symbol:'◷'},
-];
 function useCurrentHash(){
   const [hash,setHash]=useState(() => window.location.hash);
   useEffect(()=>{
@@ -42,33 +42,56 @@ function useCurrentHash(){
 function HostSurface(){
  const activeIdentity=readHostIdentity();
  const [mode,setMode]=useState<'rundenquiz'|'quiztafel'|'verbindungen'|'logikleiter'|'umfrageduell'|null>(null);
+ const [snapshot,setSnapshot]=useState<EventRecord|null>(null);
  const [error,setError]=useState('');
  useEffect(()=>{
-   setMode(null);setError('');
+   setMode(null);setSnapshot(null);setError('');
    if(!activeIdentity)return;
-   let cancelled=false;
+   let disposed=false,inFlight=false;
    const repo=new EventRepository();
-   void repo.get(activeIdentity.eventId).then(event=>{
-     if(cancelled)return;
-     if(!event||event.hostId!==activeIdentity.hostId)
-       throw new Error('Die Spielleitung gehört zu einer anderen Sitzung.');
-     setMode(event.umfrageduell?'umfrageduell':event.logikleiter?'logikleiter':event.verbindungen?'verbindungen':event.quiztafel?'quiztafel':event.rundenquiz?'rundenquiz':null);
-   }).catch(e=>{if(!cancelled)setError(e instanceof Error?e.message:'Sitzung ungültig');})
-     .finally(()=>{void repo.close();});
-   return ()=>{cancelled=true;};
+   // Read-only snapshot; native game hosts remain the sole writers and publishers.
+   const refresh=async()=>{
+     if(disposed||inFlight)return;
+     inFlight=true;
+     try{
+       const event=await repo.get(activeIdentity.eventId);
+       if(disposed)return;
+       if(!event||event.hostId!==activeIdentity.hostId)
+         throw new Error('Die Spielleitung gehört zu einer anderen Sitzung.');
+       const selected=event.umfrageduell?'umfrageduell':event.logikleiter?'logikleiter':
+         event.verbindungen?'verbindungen':event.quiztafel?'quiztafel':event.rundenquiz?'rundenquiz':null;
+       if(!selected)throw new Error('Kein unterstütztes Spiel in dieser Sitzung.');
+       setMode(selected);
+       setSnapshot(previous=>previous?.revision===event.revision &&
+         previous.hostEpoch===event.hostEpoch && previous.stageRevision===event.stageRevision
+         ?previous:event);
+       setError('');
+     }catch(e){
+       if(!disposed){
+         // Never retain private host UI or stale scores after failed owner verification.
+         setMode(null);setSnapshot(null);
+         setError(e instanceof Error?e.message:'Sitzung ungültig');
+       }
+     }finally{inFlight=false;}
+   };
+   void refresh();
+   const timer=window.setInterval(()=>{void refresh();},2500);
+   return ()=>{disposed=true;window.clearInterval(timer);void repo.close();};
  },[activeIdentity?.eventId,activeIdentity?.hostId]);
- return <section className="exp-host-wrapper" aria-label="Spielleitung">
-   <div className="exp-host-header"><a href="#/spielen">← Spielen</a>
-     <div><strong>Spielleitung</strong><small>GESPEICHERTER SPIELSTAND · NUR HOST</small></div>
+ return <section className="exp-host-wrapper sp-cockpit-wrap" aria-label="Spielleitung">
+   <div className="exp-host-header sp-cockpit-topline"><a href="#/spielen">← Spielen</a>
+     <div><strong>Spielleitung</strong></div>
      <a href="#/technik">Technikcheck</a></div>
    {error&&<div role="alert" className="exp-error">{error} <a href="#/spielen">Zur Übersicht</a></div>}
-   {activeIdentity&&!error&&mode==='umfrageduell'?<UmfrageduellHost/>:
-    activeIdentity&&!error&&mode==='logikleiter'?<LogikleiterHost/>:
-    activeIdentity&&!error&&mode==='verbindungen'?<VerbindungenHost/>:
-    activeIdentity&&!error&&mode==='quiztafel'?<QuiztafelHost/>:
-    activeIdentity&&!error&&mode==='rundenquiz'?<RundenquizHost/>:
-    activeIdentity&&!error?<div role="status" className="exp-page">Sitzung wird geladen …</div>:
-    <div className="exp-page exp-empty">
+   {snapshot&&mode&&!error&&<HostCockpit event={snapshot}/>}
+   {activeIdentity&&!error&&!snapshot&&<p role="status" className="sp-cockpit-loading">Gespeicherter Spielstand wird geprüft …</p>}
+   {activeIdentity&&!error&&mode&&<div id="sp-host-game" tabIndex={-1} className="sp-host-game-region">
+     {mode==='umfrageduell'?<UmfrageduellHost/>:
+      mode==='logikleiter'?<LogikleiterHost/>:
+      mode==='verbindungen'?<VerbindungenHost/>:
+      mode==='quiztafel'?<QuiztafelHost/>:<RundenquizHost/>}
+   </div>}
+   {!activeIdentity&&<div className="exp-page exp-empty">
      <h2>Keine Spielleitung in diesem Fenster</h2>
      <p>Öffne einen gespeicherten Spielstand aus Spielen oder bereite einen neuen Quizabend vor. Das Beamerfenster benötigt keine Hostanmeldung.</p>
      <a className="exp-primary" href="#/spielen">Spielstände ansehen</a>
@@ -80,52 +103,54 @@ export function App(){
  const route=parseRoute(currentHash);
  useEffect(()=>{applyMotionPreference(readPreferences().motion);},[]);
  useEffect(()=>{document.title=route==='stage'?'LiGoQuiz — Beamer':
+  route==='mitspielen'?'LiGoQuiz — Mitspielen':
   route==='host'?'LiGoQuiz — Spielleitung':'LiGoQuiz — '+(route==='spielen'?'Spielen':route);},[route]);
  if(route==='stage')return <StageView/>;
- if(route==='host')return <HostSurface/>;
+ if(route==='mitspielen')return <AudiencePlayalong/>;
+ if(route==='host')return <AppShell route={route}><HostSurface/></AppShell>;
  if(route==='demo')return <div className="exp-focused"><DisposableDemo/></div>;
- return <div className="app-shell">
-   <aside className="sidebar">
-     <a href={routeHref('spielen')} className="brand" aria-label="LiGoQuiz Startseite">
-       <span className="brand-symbol" aria-hidden="true">L<span>.</span></span>
-       <span className="brand-text">LiGo<span>Quiz</span><small>GAME NIGHT SYSTEM</small></span>
-     </a>
-     <div className="nav-group-title">NAVIGATION</div>
-     <nav className="main-nav" aria-label="Hauptnavigation">
-       {NAV.map(item=><a key={item.id} href={routeHref(item.id)}
-         className={'nav-item'+(route===item.id||(route==='setup'&&item.id==='spielen')||(route==='bericht'&&item.id==='verlauf')?' active':'')}
-         aria-current={route===item.id?'page':undefined}>
-         <span className="nav-symbol" aria-hidden="true">{item.symbol}</span>{item.label}
-       </a>)}
-     </nav>
-     <div className="sidebar-bottom">
-       <a className="exp-sidebar-link" href="#/technik">Beamer / Technikcheck</a>
-       <a className="exp-sidebar-link" href="#/einstellungen">Einstellungen</a>
-       <div className="version-info">VERSION 2.0 · G11 ENTWICKLUNG</div>
-     </div>
-   </aside>
-   <main className="workspace" id="main-content">
+ return <AppShell route={route}>
      {route==='spielen'&&<OrganizerHome/>}
      {route==='setup'&&<SetupWizard/>}
      {route==='inhalte'&&<ContentStudio/>}
      {route==='verlauf'&&<SessionHistory eventId={null}/>}
      {route==='bericht'&&<SessionHistory eventId={currentEventId(currentHash)}/>}
      {route==='einstellungen'&&<ExperienceSettings/>}
-     {route==='technik'&&<section className="exp-page">
-       <div className="exp-heading"><div><p className="eyebrow">GERÄTE</p><h1>Technikcheck</h1>
-       <p>Hostfenster auf dem Laptop, öffentliche Beameransicht auf dem erweiterten Bildschirm.</p></div></div>
-       <CutoverPreflight/>
-       <ReleaseCandidateDesk/>
-       <OfflinePreflight/>
-       <ProjectorTechCheck/>
-       <VisualEvidenceReview/>
-       <EventTrialReadiness/>
-       <WitnessEvidenceReview/>
-       <CustodyHandoffReview/>
-       <IndependentReleaseDryRun/>
-       <PhysicalCustodyReview/>
-       <p className="exp-footnote">Für einen echten Quizabend verbinde den Beamer über die Spielleitung des aktiven Spiels.</p>
+     {route==='technik'&&<section className="exp-page u10-tech-workflow">
+       <div className="exp-heading"><div><h1>Technikcheck</h1>
+</div><a className="exp-quiet" href="#/spielen">← Spielstände</a></div>
+       <TechWorkflowNavigation/>
+       <section className="u10-tech-section" id="u10-offline-check" tabIndex={-1} aria-label="Offline und Gerätespeicher">
+        <div className="u10-tech-section-head"><h2>Offline und Speicher</h2>
+         <p>Der Browsercheck belegt weder die physische Beamerverkabelung noch ein reales WLAN-Ausfallprotokoll.</p></div>
+        <OfflinePreflight/>
+        <p className="u10-tech-section-next"><a href="#/einstellungen">Vollständige Sitzung sichern und ggf. wiederherstellen →</a></p>
+       </section>
+       <section className="u10-tech-section" id="u10-projector-check" tabIndex={-1} aria-label="Originale Beamerprobe">
+        <div className="u10-tech-section-head"><h2>Beamer getrennt testen</h2>
+         <p>Die technische Demo bleibt separat. Der echte Abend veröffentlicht nur über den ursprünglichen Host.</p></div>
+        <ProjectorTechCheck/>
+        <p className="u10-tech-section-next"><a href="#/spielen">Echten Abend auswählen – Beamer in der Spielleitung öffnen →</a></p>
+       </section>
+       <section className="u10-tech-section u10-tech-section--evidence" id="u10-g26-evidence" tabIndex={-1} aria-label="G26 Originalnachweise und Rückweg">
+        <div className="u10-tech-section-head"><h2>Unabhängige Nachweise · NO-GO</h2>
+         <p>Alle ursprünglichen Prüfmodule bleiben vollständig vorhanden. Weder diese Übersicht noch eine grüne lokale Prüfung erteilt Veranstaltungs- oder Releasefreigabe.</p></div>
+        <CutoverPreflight/>
+        <ReleaseCandidateDesk/>
+        <VisualEvidenceReview/>
+        <EventTrialReadiness/>
+        <WitnessEvidenceReview/>
+        <CustodyHandoffReview/>
+        <IndependentReleaseDryRun/>
+        <PhysicalCustodyReview/>
+       </section>
+       <nav className="u10-tech-last" aria-label="Nach dem Technikcheck">
+        <a href="#/spielen">Spielstände & sichere Wiederaufnahme</a>
+        <a href="#/einstellungen">Sicherung & Wiederherstellung</a>
+        <a href="#/verlauf">Ergebnisse</a>
+        <a href="#/inhalte">Quellen & Rechte</a>
+       </nav>
+    
      </section>}
-   </main>
- </div>;
+ </AppShell>;
 }

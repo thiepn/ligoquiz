@@ -12,6 +12,7 @@ export interface ViewerSettings {
   readonly expireAfterMs?: number;
   readonly requestEveryMs?: number;
   readonly makeId?: () => string;
+  readonly acknowledgeFrames?: boolean;
 }
 
 /**
@@ -27,6 +28,7 @@ export class StageViewer {
   private readonly requestEveryMs: number;
   private readonly makeId: () => string;
   private readonly viewerId: string;
+  private readonly acknowledgeFrames: boolean;
   private unsubscribe: (() => void) | null = null;
   private lastRequestAt = -Infinity;
   private blockedVersion: string | null = null;
@@ -44,6 +46,7 @@ export class StageViewer {
     this.requestEveryMs = settings.requestEveryMs ?? 1800;
     this.makeId = settings.makeId ?? (() => crypto.randomUUID());
     this.viewerId = this.makeId();
+    this.acknowledgeFrames = settings.acknowledgeFrames ?? true;
   }
   get state(): ViewerState { return this.view; }
   start(): void {
@@ -96,11 +99,11 @@ export class StageViewer {
     if (this.view.status === 'live' &&
         JSON.stringify(this.view.frame) === JSON.stringify(frame)) {
       this.view = { status: 'live', frame, lastReceivedAt: now };
-      this.acknowledge(frame);
+      if (this.acknowledgeFrames) this.acknowledge(frame);
       return;
     }
     this.emit({ status: 'live', frame, lastReceivedAt: now });
-    this.acknowledge(frame);
+    if (this.acknowledgeFrames) this.acknowledge(frame);
   }
   private acknowledge(frame: PublicStageDto): void {
     this.port.send({

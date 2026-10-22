@@ -134,7 +134,7 @@ export function ProjectorTechCheck() {
   const next = availableAction(event);
   return <section className="g3-tech" aria-label="Beamer-Techniktest">
     <div className="g3-tech-heading">
-      <div><div className="eyebrow">G3 · FUNKTIONSTEST</div>
+      <div>
         <h2>Beamer-Verbindung</h2>
         <p>Öffne die separate Publikumsansicht. Kontrolliere Frage, Hinweis, Antwort und Verbindungsabbruch.</p>
       </div><span className="g3-tech-tag">KEIN SPIELMODUS</span>
@@ -153,7 +153,7 @@ export function ProjectorTechCheck() {
         <div className="g3-tech-state">
           <span>BEAMER</span>
           <strong>{audienceCount > 0 ? audienceCount + ' Ansicht(en) verbunden' : 'Warte auf Empfang'}</strong>
-          <small>Gleicher Browser-Ursprung · keine Fernverbindung</small>
+          
         </div>
       </div>
       <a className="g3-tech-link" href={stageUrl(identity.eventId)} target="_blank" rel="noopener noreferrer">
@@ -177,7 +177,6 @@ export function ProjectorTechCheck() {
         setAudienceCount(0);
         setError(null);
       }}>Anderen Techniktest beginnen</button>
-      <p className="g3-tech-footnote">Die Technikdemo ist ausschließlich für die Übertragungsprüfung bestimmt. Für neue Tests kann eine neue Sitzung angelegt werden; es werden keine v1-Daten gelesen.</p>
     </>}
     {error && <p className="g3-tech-error" role="alert">{error}</p>}
   </section>;

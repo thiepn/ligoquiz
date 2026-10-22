@@ -2,6 +2,9 @@ import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {loadSafelyPausedQuiztafel} from './quiztafel-load';
 import {HostModerationGuide} from './HostModerationGuide';
+import {HostGameplayRail} from './HostGameplayRail';
+import {StudioPopMotif} from '../../design-system/StudioPop';
+import './u07-play.css';
 import { useEffect, useRef, useState } from 'react';
 import { EventRepository } from '../../infrastructure/db/event-repository';
 import { HostSessionController } from '../../application/host-controller/host-session';
@@ -13,6 +16,7 @@ import {
   eveningHalfPoints, type Action,
 } from '../../games/quiztafel/engine';
 import { readHostIdentity } from '../experience/model';
+import {countdownScope,useHostCountdown} from './useHostCountdown';
 
 const errorText=(v:unknown)=>v instanceof Error?v.message:'Aktion fehlgeschlagen';
 
@@ -24,13 +28,12 @@ export function QuiztafelHost(){
   const [connected,setConnected]=useState(0);
   const [ready,setReady]=useState(false);
   const controllerRef=useRef<HostSessionController|null>(null);
-  const [timeLeft,setTimeLeft]=useState(20);
-  const [clockRunning,setClockRunning]=useState(false);
-  const timerNow=useRef(Date.now());
   const qt=event?.quiztafel;
-  const timePhase=qt?.phase==='question'?'first':qt?.phase==='steal'?'steal':'idle';
-
-  useEffect(()=>{
+   const timePhase=qt?.phase==='question'?'first':qt?.phase==='steal'?'steal':'idle';
+   const {seconds:timeLeft,clock:clockRunning,setClock:setClockRunning,setSeconds:setTimeLeft}=
+    useHostCountdown(countdownScope(event?.id,event?.hostEpoch,qt?.selectedTileId??undefined,timePhase),
+     timePhase==='steal'?10:20,Boolean(!ready||qt?.paused||event?.recoveryRequired));
+   useEffect(()=>{
     if(!identity)return;
     let disposed=false;
     const db=new EventRepository();
@@ -56,23 +59,6 @@ export function QuiztafelHost(){
       window.clearInterval(ticker);publisher.stop();void db.close();
     };
   },[identity?.eventId,identity?.hostId]);
-
-  useEffect(()=>{
-    setClockRunning(false);
-    setTimeLeft(timePhase==='steal'?10:20);
-  },[timePhase,qt?.selectedTileId,qt?.paused]);
-  useEffect(()=>{
-    if(!clockRunning||qt?.paused||timePhase==='idle')return;
-    timerNow.current=Date.now();
-    const timer=window.setInterval(()=>{
-      const now=Date.now(),elapsed=Math.floor((now-timerNow.current)/1000);
-      if(elapsed<1)return;
-      timerNow.current+=elapsed*1000;
-      setTimeLeft(prev=>Math.max(0,prev-elapsed));
-    },250);
-    return ()=>window.clearInterval(timer);
-  },[clockRunning,qt?.paused,timePhase]);
-  useEffect(()=>{if(timeLeft===0)setClockRunning(false);},[timeLeft]);
 
   async function send(action:Action){
     if(!ready||busy||!event||event.recoveryRequired)return;
@@ -116,13 +102,16 @@ export function QuiztafelHost(){
   if(!identity)return <div className="qt-host exp-empty">
     <h2>Keine Sitzung ausgewählt</h2><a href="#/spielen" className="exp-secondary">Spielstände</a>
   </div>;
-  return <section className="qt-host" data-host-game="quiztafel" aria-label="Quiztafel Spielleitung">
-    <header className="qt-host-header">
-      <div><span className="eyebrow">G6 · SPIELMODUS IM TEST</span><h2>Quiztafel</h2>
-        <p>Jedes Team wählt reihum ein Feld. Genau eine Übernahmechance bei einem Fehlversuch.</p></div>
-      <span className="g3-tech-tag">PROBEINHALTE</span>
+  return <section className="qt-host u07-qt" data-host-game="quiztafel" data-host-phase={qt?.phase??"loading"} aria-label="Quiztafel Spielleitung">
+    <header className="qt-host-header u07-mode-head u07-mode-head--qt">
+      <div className="u07-mode-copy">
+        
+        <h2>Quiztafel<span aria-hidden="true">.</span></h2>
+        <span className="g3-tech-tag">PROBEINHALTE · NICHT REDAKTIONELL FREIGEGEBEN</span>
+      </div>
+      <span className="u07-mode-art" aria-hidden="true"><StudioPopMotif game="quiztafel"/></span>
     </header>
-    <div className="qt-host-toolbar">
+    <div className="qt-host-toolbar u07-utility">
       <a className="g3-tech-link" href={stageUrl(identity.eventId)} target="_blank" rel="noopener noreferrer">
         Beamer öffnen ↗
       </a>
@@ -132,14 +121,18 @@ export function QuiztafelHost(){
     </div>
     {!qt&&<p role="status">Quiztafel-Sitzung wird geprüft …</p>}
     {qt&&<>
+      <HostGameplayRail game="quiztafel" phase={qt.phase} paused={qt.paused}
+        recovery={Boolean(event?.recoveryRequired)} completed={qt.usedTileIds.length} total={qt.tiles.length}/>
       <HostModerationGuide game="quiztafel" phase={qt.phase} paused={qt.paused}
       recovery={Boolean(event?.recoveryRequired)} completed={qt.usedTileIds.length} total={qt.tiles.length}
       viewers={connected} ready={ready} busy={busy}/>
     {event&&<CorrectionProvenance event={event}/>}
     <ScoreDecisionPanel source={{game:'quiztafel',session:qt}} blocked={disabled}/>
-    <div className="qt-scorebar">{teams.map(team=><div key={team.id}>
+    <div className="u07-block-title"><div><h3>Teamwertung</h3></div>
+      <span className="u07-snapshot-label">Lokal · erst nach Bestätigung öffentlich</span></div>
+    <div className="qt-scorebar u07-qt-scores">{teams.map(team=><div key={team.id}>
         <span>{team.name}</span><strong>{tally[team.id]??0}</strong></div>)}</div>
-      <div className="qt-active-row">
+      <div className="qt-active-row u07-qt-status">
         <div><small>AKTUELLES WAHLRECHT</small><strong>{selectorTeam?.name}</strong></div>
         <div><small>FELDER ABGESCHLOSSEN</small><strong>{qt.usedTileIds.length} / {qt.tiles.length}</strong></div>
         <div><small>SPIELPHASE</small><strong>{qt.paused?'PAUSIERT':qt.phase.toUpperCase()}</strong></div>
@@ -156,11 +149,11 @@ export function QuiztafelHost(){
           onClick={()=>void send({type:'RESUME'})}>Spiel ausdrücklich fortsetzen</button>:
           <button disabled={disabled} onClick={()=>void send({type:'PAUSE'})}>Spielleitung pausieren</button>}
       </div>}
-      {(qt.phase==='board'||qt.phase==='prepared'||qt.phase==='setup')&&<div className="qt-board-host">
+      {(qt.phase==='board'||qt.phase==='prepared'||qt.phase==='setup')&&<div className="qt-board-host u07-qt-board">
         <div className="qt-board-title"><h3>Spieltafel</h3>
           <p>{inPrivateSelection?'Feld nur für die Spielleitung ausgewählt – noch nicht veröffentlicht.':
             'Nur ein offenes Feld wählen. Vergebene Felder bleiben geschlossen.'}</p></div>
-        <div className="qt-grid" style={{gridTemplateColumns:'repeat('+qt.categories.length+',minmax(0,1fr))'}}>
+        <div className="qt-grid u07-qt-grid" role="group" aria-label="Spieltafel mit wählbaren Kategorien" style={{gridTemplateColumns:'repeat('+qt.categories.length+',minmax(0,1fr))'}}>
           {qt.categories.map(category=><div className="qt-column" key={category.id}>
             <h4>{category.name}</h4>
             {Array.from({length:DEPTH[qt.profile]},(_,index)=>{
@@ -168,7 +161,7 @@ export function QuiztafelHost(){
               if(!cell)return null;
               const played=qt.usedTileIds.includes(cell.id),selected=cell.id===qt.selectedTileId;
               return <button key={cell.id} className={'qt-cell'+(played?' used':'')+(selected?' selected':'')}
-                disabled={disabled||played||qt.phase!=='board'} onClick={()=>void send({type:'PICK',tileId:cell.id})}
+                aria-pressed={selected} disabled={disabled||played||qt.phase!=='board'} onClick={()=>void send({type:'PICK',tileId:cell.id})}
                 title={played?'Bereits abgeschlossen':cell.value+' Punkte'}>
                 {played?'—':cell.value}
               </button>;
@@ -177,62 +170,63 @@ export function QuiztafelHost(){
         </div>
         {qt.phase==='setup'&&<button data-host-next className="g3-tech-primary" disabled={!ready||busy}
           onClick={()=>void send({type:'START'})}>Quiztafel auf dem Beamer vorbereiten</button>}
-        {qt.phase==='prepared'&&<div className="qt-decision">
+        {qt.phase==='prepared'&&<div className="qt-decision u07-qt-prepared">
           <div><span className="eyebrow">PRIVATE FELDAUSWAHL</span>
             <h3>{currentCategory?.name} / {tile?.value} Punkte</h3>
-            <p>{tile?.prompt}</p><p className="qt-internal">Private Lösung: <b>{tile?.answer}</b></p></div>
+            <p className="u07-qt-selection-prompt">{tile?.prompt}</p><p className="qt-internal"><span className="u07-private-eyebrow">NUR SPIELLEITUNG · NOCH NICHT ÖFFENTLICH</span><span>Private Lösung: <b>{tile?.answer}</b></span></p></div>
           <button disabled={disabled} onClick={()=>void send({type:'UNPICK'})}>Auswahl zurücknehmen</button>
           <button data-host-next className="g3-tech-primary" disabled={disabled}
             onClick={()=>void send({type:'PUBLISH'})}>Frage ausdrücklich veröffentlichen</button>
         </div>}
       </div>}
-      {tile&&!['prepared','board','setup','complete'].includes(qt.phase)&&<div className="qt-question-host">
+      {tile&&!['prepared','board','setup','complete'].includes(qt.phase)&&<div className="qt-question-host u07-qt-question">
         <div className="qt-question-meta"><span>{currentCategory?.name} · {tile.value} Punkte</span>
           <strong>{qt.phase==='steal'?'Übernahme: '+stealer?.name:'Erstantwort: '+selectorTeam?.name}</strong></div>
         <h3>{tile.prompt}</h3>
-        <div className="qt-solution-private"><small>PRIVATE LÖSUNG</small><strong>{tile.answer}</strong>
+        <div className="qt-solution-private u07-private-panel"><small>PRIVATE LÖSUNG · NUR SPIELLEITUNG</small><strong>{tile.answer}</strong>
           <span>{tile.reference}</span></div>
-        {(qt.phase==='question'||qt.phase==='steal')&&<div className="qt-clock">
+        {(qt.phase==='question'||qt.phase==='steal')&&<div className="qt-clock u07-qt-clock" data-timer-running={clockRunning} data-timer-warning={timeLeft<=5}>
           <div><small>OPTIONALE ZEIT</small><strong>{timeLeft} s</strong>
             <span>Nach Ablauf keine automatische Aktion.</span></div>
           <button disabled={disabled||clockRunning||timeLeft===0}
             onClick={()=>setClockRunning(true)}>Start</button>
           <button disabled={!clockRunning} onClick={()=>setClockRunning(false)}>Stopp</button>
           <button disabled={disabled} onClick={()=>{setClockRunning(false);setTimeLeft(qt.phase==='steal'?10:20);}}>Zurücksetzen</button>
+          <div className="u07-timer-meter" aria-hidden="true"><span style={{width:timeLeft/(qt.phase==='steal'?10:20)*100+'%'}}/></div>
         </div>}
-        {qt.phase==='question'&&<div className="qt-decisions">
+        {qt.phase==='question'&&<div className="qt-decisions u07-qt-judgement" role="group" aria-label={'Erstantwort bewerten: '+selectorTeam?.name}>
           <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'PRIMARY',result:'correct'})}>Erstantwort richtig</button>
           <button disabled={disabled} onClick={()=>void send({type:'PRIMARY',result:'wrong'})}>Erstantwort falsch</button>
           <button disabled={disabled} onClick={()=>void send({type:'PRIMARY',result:'none'})}>Keine Antwort</button>
         </div>}
-        {qt.phase==='steal-offer'&&<div className="qt-decision">
+        {qt.phase==='steal-offer'&&<div className="qt-decision u07-qt-steal-offer">
           <h3>Einmalige Übernahme: {stealer?.name}</h3>
           <p>Dieses Team erhält die einzige Übernahmechance. Kein weiteres Team darf antworten.</p>
           <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'OFFER_STEAL'})}>Übernahme anbieten</button>
         </div>}
-        {qt.phase==='steal'&&<div className="qt-decisions">
+        {qt.phase==='steal'&&<div className="qt-decisions u07-qt-judgement" role="group" aria-label={'Übernahme bewerten: '+stealer?.name}>
           <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'STEAL',result:'correct'})}>Übernahme richtig</button>
           <button disabled={disabled} onClick={()=>void send({type:'STEAL',result:'wrong'})}>Übernahme falsch</button>
           <button disabled={disabled} onClick={()=>void send({type:'STEAL',result:'none'})}>Keine Antwort</button>
           <button disabled={disabled} onClick={()=>void send({type:'STEAL',result:'declined'})}>Team verzichtet</button>
         </div>}
-        {qt.phase==='adjudicated'&&<div className="qt-decision">
-          <p>Antwortversuche abgeschlossen. Noch keine Punkte verbucht.</p>
+        {qt.phase==='adjudicated'&&<div className="qt-decision u07-qt-reveal-confirm">
+          <p>Antworten geschlossen · Punkte ausstehend.</p>
           <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'REVEAL'})}>Lösung ausdrücklich zeigen</button>
         </div>}
-        {qt.phase==='revealed'&&<div className="qt-decision">
+        {qt.phase==='revealed'&&<div className="qt-decision u07-qt-award">
           <h3>Punktevorschau</h3>
           <p>{awardee?awardee.name+' erhält +'+tile.value+' Punkte.':'Kein Team erhält Punkte.'}</p>
           <p>Richtige Antwort: {tile.answer}</p>
-          <div className="qt-decisions">
-            <button disabled={disabled} onClick={()=>void send({type:'ADJUST',winner:'selector'})}>Wertung: Erstantwort</button>
-            {qt.stealResult!==null&&<button disabled={disabled}
+          <div className="qt-decisions u07-qt-award-options" role="group" aria-label="Punktkandidat wählen">
+            <button aria-pressed={qt.candidate==='selector'} disabled={disabled} onClick={()=>void send({type:'ADJUST',winner:'selector'})}>Wertung: Erstantwort</button>
+            {qt.stealResult!==null&&<button aria-pressed={qt.candidate==='stealer'} disabled={disabled}
               onClick={()=>void send({type:'ADJUST',winner:'stealer'})}>Wertung: Übernahme</button>}
-            <button disabled={disabled} onClick={()=>void send({type:'ADJUST',winner:'none'})}>Wertung: 0 Punkte</button>
+            <button aria-pressed={qt.candidate==='none'} disabled={disabled} onClick={()=>void send({type:'ADJUST',winner:'none'})}>Wertung: 0 Punkte</button>
           </div>
           <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'CONFIRM'})}>Punkte verbindlich bestätigen</button>
         </div>}
-        {qt.phase==='awarded'&&<div className="qt-decision">
+        {qt.phase==='awarded'&&<div className="qt-decision u07-qt-awarded">
           <h3>Feld abgeschlossen</h3>
           <p>{qt.annulled?'Aufgabe annulliert: 0 Punkte.':
             (qt.outcomes.find(o=>o.tileId===tile.id)?.winnerId?
@@ -242,9 +236,9 @@ export function QuiztafelHost(){
             {qt.usedTileIds.length===qt.tiles.length?'Quiztafel abschließen':'Zurück zur Tafel · nächstes Wahlrecht'}
           </button>
         </div>}
-        {qt.phase!=='awarded'&&<button className="qt-annul" disabled={disabled} onClick={annul}>Feld begründet annullieren</button>}
+        {qt.phase!=='awarded'&&<button className="qt-annul u07-danger-action" disabled={disabled} onClick={annul}>Feld begründet annullieren</button>}
       </div>}
-      {qt.phase==='complete'&&<div className="qt-final">
+      {qt.phase==='complete'&&<div className="qt-final u07-qt-final">
         <h3>Quiztafel beendet</h3>
         {teams.map(team=><p key={team.id}>{team.name}: <b>{tally[team.id]??0}</b> Punkte · Abendpunkte <b>{(eveningHalfPoints(qt)[team.id]??0)/2}</b></p>)}
         <a href="#/verlauf" className="exp-primary">Abendbericht ansehen</a>
@@ -252,6 +246,5 @@ export function QuiztafelHost(){
     </>}
     {error&&<p role="alert" className="g3-tech-error">{error}</p>}
    {error&&<SafeErrorRecovery message={String(error)}/>}
-    <p className="g3-tech-footnote">Quiztafel G6 verwendet vorläufige Übungsinhalte. Keine automatische Enthüllung, Benotung oder Übernahme. Nur gleiche Browser-Origin für Beamer.</p>
   </section>;
 }

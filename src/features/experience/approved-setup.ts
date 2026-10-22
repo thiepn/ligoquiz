@@ -10,9 +10,11 @@ import {createSession as vbSession} from '../../games/verbindungen/engine';
 import {createSession as llSession} from '../../games/logikleiter/engine';
 import {createSession as udSession} from '../../games/umfrageduell/engine';
 import type {SetupDraft,HostIdentity} from './model';
+import {selectedReviewedRundenquizPack} from './rundenquiz-lineup';
+import {selectedReviewedQuiztafelBoard} from './quiztafel-board-composer';
 
 export async function createPreparedApproved(
- repo:EventRepository,draft:Pick<SetupDraft,'teams'|'count'|'profile'|'game'>,
+ repo:EventRepository,draft:Pick<SetupDraft,'teams'|'count'|'profile'|'game'|'rqQuestionIds'|'qtTileIds'>,
 ):Promise<HostIdentity>{
  const store=new ContentRepository();
  let items:ContentItem[];
@@ -53,13 +55,17 @@ export async function createPreparedApproved(
  try{
   switch(draft.game){
    case 'rundenquiz':{
-    const bank=selectReviewedPack(items,'rundenquiz',draft.profile,draft.count);
+    const bank=draft.rqQuestionIds===undefined?
+     selectReviewedPack(items,'rundenquiz',draft.profile,draft.count):
+     selectedReviewedRundenquizPack(items,draft.profile,draft.rqQuestionIds);
     const rq=rqSession({id:eventId,ownerId:hostId,profile:draft.profile,teams:roster,bank});
     const frozen=rq.questions.map(q=>freeze(q.id,'rundenquiz',q.prompt,[...(q.clues??[])],[q.answer],q.reference));
     return await create({rundenquiz:rq},frozen);
    }
    case 'quiztafel':{
-    const board=selectReviewedPack(items,'quiztafel',draft.profile,draft.count);
+    const board=draft.qtTileIds===undefined?
+     selectReviewedPack(items,'quiztafel',draft.profile,draft.count):
+     selectedReviewedQuiztafelBoard(items,draft.profile,draft.count,draft.qtTileIds);
     const qt=qtSession({id:eventId,ownerId:hostId,profile:draft.profile,teams:roster,...board});
     const frozen=qt.tiles.map(t=>freeze(t.id,'quiztafel',t.prompt,[],[t.answer],t.reference));
     return await create({quiztafel:qt},frozen);

@@ -23,12 +23,12 @@ test('saved setup survives reload and transfers to the authoritative host',async
  await page.locator('.exp-host-header').getByRole('link',{name:'Spielen'}).click();
  await expect(page).toHaveURL(/#\/spielen$/);
  await expect(page.getByRole('button',{name:'Vorbereitung fortsetzen'})).toBeVisible();
- await expect(page.locator('.exp-active')).toContainText('Vorbereitung');
+ await expect(page.locator('.sp-lobby-featured')).toContainText('Vorbereitung');
 });
 
 test('demo never persists history or a live session',async({page})=>{
  await page.goto('/#/spielen');
- await page.getByRole('link',{name:'Demo ausprobieren'}).click();
+ await page.getByRole('link',{name:/Demo ansehen/}).click();
  await expect(page).toHaveURL(/#\/demo$/);
  await expect(page.locator('.exp-demo-private')).toContainText('Josua');
  await expect(page.locator('.exp-demo-stage')).not.toContainText('Josua');

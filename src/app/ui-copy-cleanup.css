@@ -1,0 +1,82 @@
+/* Functional-text sizing and spacing after React copy removal. No text is hidden. */
+.sp-shell .sp-shell-nav-link,
+.sp-shell .sp-shell-start,
+.sp-shell .sp-shell-mobile-menu summary,
+.sp-shell .sp-shell-subnav .sp-shell-nav-link{font-size:14px}
+.sp-shell .sp-shell-mobile-label{font-size:14px}
+.sp-shell--spielwelt .sp-lobby{gap:clamp(28px,3.5vw,48px)}
+.sp-shell--spielwelt .sp-lobby-hero{min-height:300px;padding:clamp(22px,3vw,43px)}
+.sp-shell--spielwelt .sp-lobby-poster{min-height:205px}
+.sp-shell--spielwelt .sp-lobby-game-grid .sp-game-tile{min-height:225px}
+.sp-shell--spielwelt .sp-lobby-game-grid .sp-game-bottom{padding-bottom:0}
+.sp-shell .sp-lobby :is(.sp-lobby-draft p,.sp-lobby-draft-link,.sp-lobby-session-count,.sp-lobby-search label,.sp-lobby-search>span,.sp-lobby-links a,.sp-lobby-resume button,.sp-lobby-featured small,.sp-lobby-session-row small){font-size:14px}
+.sp-shell :is(.sp-lobby-game-grid,.sp-prep) .sp-game-bottom>span,
+.sp-shell .sp-lobby-game-grid .sp-game-bottom>span{font-size:14px;line-height:1.45}
+.sp-shell .sp-prep.exp-page{max-width:1050px}
+.sp-shell .sp-prep .sp-prep-layout{grid-template-columns:minmax(0,1fr);gap:0}
+.sp-shell .sp-prep .sp-prep-mast h1{margin:5px 0 11px}
+.sp-shell .sp-prep :is(.sp-prep-local,.sp-prep-exit,.sp-prep-steps>div,.sp-prep-panel>p,.exp-field,.sp-prep-team-number,.sp-prep-game-copy>span,.sp-prep-game>b,.sp-prep-sources legend,.sp-prep-safety span,.sp-prep-ack){font-size:14px}
+.sp-shell .sp-prep .exp-field :is(input,select){font-size:14px}
+.sp-shell .sp-backstage-counters span,
+.sp-shell .sp-backstage-warning,
+.sp-shell .sp-backstage-workflow>small,
+.sp-shell .sp-backstage-recent-head>a,
+.sp-shell .sp-backstage-no-history,
+.sp-shell .sp-backstage-recent-item>div>span,
+.sp-shell .sp-backstage-recent-item>div>small,
+.sp-shell .sp-backstage-recent-item nav a,
+.sp-shell .sp-backstage-privacy,
+.sp-shell .sp-backstage-row-actions>a,
+.sp-shell .sp-backstage-settings-hint,
+.sp-shell .sp-backstage-report-actions>a,
+.sp-shell .sp-backstage-archive-summary>span,
+.sp-shell .sp-backstage-archive-summary>a,
+.sp-shell .sp-backstage-archive-row nav a,
+.sp-shell .sp-backstage-audit-facts span,
+.sp-shell .sp-backstage-audit-count,
+.sp-shell .sp-backstage-audit-warning,
+.sp-shell .sp-backstage-audit li>span,
+.sp-shell .sp-backstage-audit li>small,
+.sp-shell .sp-backstage-audit li>strong,
+.sp-shell .sp-backstage-audit-list time,
+.sp-shell .sp-backstage-audit-filter :is(label,select,small),
+.sp-shell .sp-backstage-audit-detail summary{font-size:14px}
+.sp-shell .sp-backstage-workflow{min-height:105px;gap:8px}
+.sp-shell .sp-backstage-desk-head h2{font-size:clamp(24px,3vw,35px)}
+.sp-shell .sp-cockpit-hero{min-height:145px;padding:clamp(18px,2vw,28px)}
+.sp-shell .sp-cockpit-title>p:not(.sp-cockpit-overline),
+.sp-shell .sp-cockpit-private-note{font-size:14px}
+.sp-shell :is(.u10-tech-handoffs a,.u10-tech-section-next a,.u10-tech-last a,.u10-tech-section-head p),
+.sp-shell .u10-tech-step-grid button strong{font-size:14px}
+.sp-shell--spielleitung :is(.u07-rq,.u07-qt) :is(.u07-phase-copy strong,.u07-rail-top>small,.u07-private-eyebrow,.u07-question-kicker,.u07-judgement-count,.u07-pause-note,.u07-snapshot-label,.rq-actions>button),
+.sp-shell--spielleitung :is(.u07-rq,.u07-qt) :is(.rq-scoreboard,.qt-scorebar) span,
+.sp-shell--spielleitung :is(.u08-vb,.u08-ll) :is(.u07-phase-copy strong,.u07-rail-top>small,.u08-utility,.u08-task-kicker,.u08-private small,.u08-private span,.u08-scorebar span,.u08-round-count span,.u08-marking-head strong,.u08-mark-row button,.ll-grades button),
+.sp-shell--spielleitung .u09-ud :is(.u07-phase-copy strong,.u07-rail-top>small,.u09-utility,.u09-task-kicker,.u09-origin,.u09-private>small,.u09-private>div small,.u09-team-head span,.u09-team-preview span,.u09-team-preview small,.u09-entry label,.u09-match-feedback,.u09-team-footer small,.u09-reveal-gate span,.u09-source-reminder,.u09-awards p small){font-size:14px}
+.sp-shell--spielleitung :is(.u07-rq,.u07-qt,.u08-vb,.u08-ll,.u09-ud) :is(.g3-tech-tag,.g3-tech-primary,.u07-confirm-action){font-size:14px}
+.sp-shell .sp-u10-results-head p,
+.sp-shell .sp-u10-result-evening,
+.sp-shell .sp-u10-result-raw small,
+.sp-shell .sp-u10-results-actions a,
+.sp-shell .exp-footnote{font-size:14px;line-height:1.45}
+.sp-shell .sp-u10-result-evening{white-space:normal}
+.sp-shell .exp-page :is(.exp-heading p:not(.eyebrow),.exp-field,.exp-empty p,.exp-form>p){font-size:14px;line-height:1.5}
+.sp-shell .g14-guide :is(.g14-eyebrow,.g14-guide-head p,.g14-facts small,.g14-guide-foot span){font-size:14px}
+@media(max-width:700px){
+ .sp-shell--spielwelt .sp-lobby-hero{min-height:0}
+ .sp-shell--spielwelt .sp-lobby{gap:29px}
+ .sp-shell--spielwelt .sp-lobby-poster{min-height:80px}
+ .sp-shell .sp-prep .sp-prep-layout{grid-template-columns:minmax(0,1fr)}
+ .sp-shell .sp-prep .sp-prep-steps>div{gap:5px;padding:12px 8px}
+ .sp-shell .sp-cockpit-hero{min-height:0}
+ .sp-shell .sp-backstage-workflow{min-height:95px}
+ .sp-shell--spielleitung :is(.u07-rq,.u07-qt,.u08-vb,.u08-ll,.u09-ud) :is(button,select,input){min-width:0;max-width:100%}
+}
+
+.sp-shell .exp-report-source{font-size:14px;line-height:1.5}
+
+/* Operational evidence IDs, source metadata, dates and accessibility cues
+   must remain readable; avoid tiny technical microcopy on Backstage routes. */
+.sp-shell--backstage .sp-shell-workspace small,
+.sp-shell--backstage .sp-shell-workspace .eyebrow,
+.sp-shell--backstage .sp-shell-workspace .exp-footnote{font-size:14px;line-height:1.45;overflow-wrap:anywhere}
+.sp-shell--backstage .sp-shell-workspace :is(a,button,summary,select,input,textarea){font-size:14px;line-height:1.4}

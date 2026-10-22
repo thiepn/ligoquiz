@@ -13,7 +13,8 @@ permissions:
 jobs:
   browser:
     name: Host and projector (Chromium)
-    runs-on: ubuntu-latest
+    # Pinned Playwright 1.56.1 Chromium is unsupported by ubuntu-26.04 (verified U15 CI).
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -135,6 +136,13 @@ jobs:
           if-no-files-found: error
       - name: Exercise full game and projector browser flows
         run: npx playwright test --config e2e/playwright.config.mjs
+      - name: Retain UI copy desktop and mobile rendering evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-copy-visual-evidence
+          path: test-results/ui-copy-evidence/
+          if-no-files-found: warn
       - name: Build scoped offline PWA
         run: npm run build
       - name: Test offline installed build and safe navigation

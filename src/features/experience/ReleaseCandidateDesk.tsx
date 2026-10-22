@@ -38,7 +38,7 @@ export function ReleaseCandidateDesk(){
   finally{setBusy(false);}
  }
  return <section className="g25-desk" aria-label="G25 Spielabend und Release-Handoff">
-  <header className="g25-head"><div><p className="eyebrow">G25 / ECHTE QUELLDATEIEN / LESEN OHNE ÜBERNAHME</p>
+  <header className="g25-head"><div>
     <h2>Spielabend-Übergabe</h2>
     <p>Originale Generalprobe und den redaktionellen Prüfindex hier zusammenführen.
       Du siehst offene Fälle, die nächsten Handlungen und ein datensparsames Übergabepaket.

@@ -3,6 +3,7 @@ import {EventRepository} from '../../infrastructure/db/event-repository';
 import {checkOffline,offerManualUpdate,registerShell,type OfflineCheck} from '../../resilience/offline';
 import {decodeBackup,encodeBackup,type BackupPayload} from '../../resilience/backup';
 import {writeHostIdentity} from '../experience/model';
+import {backupTargetFromHash} from '../experience/backstage-model';
 import '../../styles/resilience.css';
 
 const errorText=(e:unknown)=>e instanceof Error?e.message:'Vorgang fehlgeschlagen';
@@ -38,7 +39,7 @@ export function OfflinePreflight(){
   finally{await repo.close();setBusy(false);}
  }
  return <section className="g11-preflight" aria-label="Offline-Vorprüfung">
-  <div className="g11-heading"><p className="eyebrow">G11 / AUSFALLSICHERHEIT</p>
+  <div className="g11-heading">
    <h2>Offline-Start und Gerätebereitschaft</h2>
    <p>Bitte vor Veranstaltungsbeginn bei aktiver Internetverbindung prüfen. Ein grüner Browserstatus ersetzt keinen echten Beamer- und Flugmodus-Test.</p></div>
   <button className="exp-secondary" disabled={busy} onClick={()=>void check()}>Offline-Vorprüfung erneut ausführen</button>
@@ -73,7 +74,11 @@ export function BackupRecovery(){
    const list=d.items.map(e=>({id:e.id,description:
     (e.program[0]?.type??'Spiel')+' · '+e.teams.length+' Teams · '+e.lifecycle+
      ' · '+new Date(e.updatedAt).toLocaleString('de-DE')}));
-   setSessions(list);setSelected(v=>v||list[0]?.id||'');
+   const requested=backupTargetFromHash(window.location.hash);
+   setSessions(list);
+   setSelected(v=>requested&&list.some(s=>s.id===requested)?requested:v||list[0]?.id||'');
+   if(requested&&!list.some(s=>s.id===requested))
+    setError('Die angeforderte Sitzung ist nicht in diesem Browser verfügbar. Keine Sicherung gestartet.');
   }).catch(e=>{if(active)setError(errorText(e));})
    .finally(()=>void repo.close());
   return ()=>{active=false;};
@@ -116,10 +121,11 @@ export function BackupRecovery(){
   }catch(e){setError(errorText(e));}
   finally{await repo.close();setBusy(false);}
  }
- return <section className="g11-backup" aria-label="Sicherung und Wiederherstellung">
-  <div className="g11-heading"><p className="eyebrow">SICHERUNG / RÜCKKEHR</p>
+ return <section className="g11-backup sp-backstage-backup" id="sp-backstage-backup" aria-label="Sicherung und Wiederherstellung">
+  <div className="g11-heading">
    <h2>Spielstand sichern</h2>
-   <p>Vollständige Sitzungsdatei mit Aufgaben, Wertungsledger, Audit und Checkpoints. Der einfache Ergebnisbericht reicht zur Wiederherstellung nicht aus.</p></div>
+   <p>Vollständige Sitzungsdatei mit Aufgaben, Wertungsledger, Audit und Checkpoints. Der einfache Ergebnisbericht reicht zur Wiederherstellung nicht aus.</p>
+   <p>Der Backstage-Link wählt eine vorhandene Sitzung aus; erst ein Klick auf „Exportieren“ lädt die Datei herunter.</p></div>
   <div className="g11-row"><label>Gespeicherte Sitzung
    <select value={selected} onChange={e=>setSelected(e.target.value)}>
     {!sessions.length&&<option value="">Keine Sitzung vorhanden</option>}

@@ -19,7 +19,7 @@ export function EditorialAuditPanel({items,preview,onChoose}:{
  const inspectedPreview=useMemo(()=>preview?auditPreview(preview):null,[preview]);
  const visible=audit.issues.filter(x=>!blockersOnly||x.severity==='blocker').slice(0,150);
  return <section className="g23-panel" aria-label="G23 Quellen und Rechteprüfung">
-  <header><div><p className="eyebrow">G23 · ORIGINALQUELLEN / REDAKTION</p>
+  <header><div>
    <h2>Fragenqualität und Rechteprüfung</h2>
    <p>Historische v1-Angaben werden nicht als geprüfte Fakten, Lizenzen oder freigegebene Aufgaben anerkannt.</p>
    </div><strong>NO-GO · NICHT FREIGEGEBEN</strong></header>
