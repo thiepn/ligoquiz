@@ -110,10 +110,10 @@ export function OrganizerHome() {
    <div className="sp-lobby-hero-copy">
     <h1 id="sp-lobby-title">Spielen</h1>
     <div className="sp-lobby-actions">
-     {latest?<ResumeButton event={latest} onError={setActionError} label="Spiel direkt fortsetzen"/>:
+     {latestOutstanding?<ResumeButton event={latestOutstanding} onError={setActionError} label="Spiel direkt fortsetzen"/>:
       draft?<a className="sp-lobby-cta" href="#/setup">Vorbereitung fortsetzen <span aria-hidden="true">↗</span></a>:
       <a className="sp-lobby-cta" href="#/setup">Neuen Quizabend vorbereiten <span aria-hidden="true">↗</span></a>}
-     {(latest||draft)&&<a className="sp-lobby-demo" href="#/setup">Neuen Quizabend vorbereiten <span aria-hidden="true">↗</span></a>}
+     {(latestOutstanding||draft)&&<a className="sp-lobby-demo" href="#/setup">Neuen Quizabend vorbereiten <span aria-hidden="true">↗</span></a>}
      <a className="sp-lobby-demo" href="#/demo">Demo ansehen und ausprobieren <span aria-hidden="true">▷</span></a>
     </div>
    </div>
