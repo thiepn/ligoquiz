@@ -1,0 +1,76 @@
+/* UX: prioritize the real next action while preserving Studio Pop's visual language. */
+.sp-shell .sp-shell-mobile-bottom{display:none}
+.sp-shell--spielwelt .sp-lobby-actions>.exp-primary{
+ display:inline-flex;align-items:center;justify-content:center;text-align:center;
+ min-height:57px;min-width:230px;padding:14px 20px;border:2px solid #FFE45C;
+ border-radius:9px;background:#FFE45C;color:#101629;
+ font:900 14px/1.3 system-ui;cursor:pointer;
+}
+.sp-shell--spielwelt .sp-lobby-actions>.exp-primary:hover{background:#FFF09B}
+.sp-shell--spielwelt .sp-lobby-actions>.exp-primary:disabled{opacity:.6;cursor:wait}
+.sp-shell--spielleitung .sp-cockpit-topline{
+ display:flex;align-items:center;justify-content:space-between;gap:10px;
+ background:#fff;border:1px solid #D8E2F0;padding:10px 14px;margin:0 auto 16px;
+}
+.sp-shell--spielleitung .sp-cockpit-topline a{min-height:44px;display:inline-flex;align-items:center}
+.sp-shell--spielleitung .sp-cockpit-topline .sp-cockpit-quick-stage{
+ padding:10px 13px;background:#FFE45C;border:2px solid #E4C73B;
+ color:#101629;text-decoration:none;font-weight:900;
+}
+.sp-shell--spielleitung .sp-host-game-region{margin-bottom:16px}
+.sp-shell--spielleitung .sp-cockpit{margin-top:12px}
+@media(max-width:760px){
+ /* Three stable destinations are always visible; the menu holds deeper tools. */
+ .sp-shell .sp-shell-mobile-bottom{
+  position:fixed;z-index:40;inset:auto 0 0;display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;
+  padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));
+  background:#101629;border-top:2px solid #394972;
+  box-shadow:0 -6px 22px #0A122A33;
+ }
+ .sp-shell .sp-shell-mobile-bottom a{
+  min-width:0;min-height:55px;padding:5px 3px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;color:#DFE6FA;
+  text-decoration:none;border:2px solid transparent;border-radius:7px;
+  font:850 12px/1.2 system-ui;
+ }
+ .sp-shell .sp-shell-mobile-bottom a>span{font-size:20px;line-height:1}
+ .sp-shell .sp-shell-mobile-bottom a.is-active{
+  background:#FFE45C;border-color:#FFE45C;color:#101629;
+ }
+ .sp-shell .sp-shell-mobile-bottom a:focus-visible{outline:3px solid #FFE45C;outline-offset:3px}
+ .sp-shell .sp-shell-workspace{
+  padding-bottom:calc(108px + env(safe-area-inset-bottom,0px));
+ }
+ .sp-shell--spielwelt .sp-shell-workspace:has(.sp-lobby){
+  padding-bottom:calc(108px + env(safe-area-inset-bottom,0px));
+ }
+ /* Keep the only valid next step within thumb reach on long content-editor screens. */
+ .sp-shell .sp-prep .sp-prep-actions{
+  position:sticky;bottom:calc(69px + env(safe-area-inset-bottom,0px));
+  z-index:12;display:flex;flex-wrap:nowrap;gap:8px;
+  margin:12px -2px 0;padding:10px;
+  background:#F8FAFF;border:2px solid #C4D3EC;
+  box-shadow:0 -8px 24px #152A4B1C;
+ }
+ .sp-shell .sp-prep .sp-prep-actions button{
+  min-width:0;flex:1 1 40%;min-height:48px;padding:9px 12px;
+  font-size:16px;white-space:normal;
+ }
+ .sp-shell .sp-prep .sp-prep-actions .sp-prep-next{flex:2 1 60%}
+ .sp-shell--spielleitung .sp-cockpit-topline{
+  position:sticky;top:0;z-index:15;flex-wrap:wrap;
+  margin-bottom:10px;padding:6px 8px;gap:5px;border-color:#BDD0EE;
+ }
+ .sp-shell--spielleitung .sp-cockpit-topline a{
+  min-height:40px;font-size:13px;padding:7px;
+ }
+ .sp-shell--spielleitung .sp-cockpit-topline>div{display:none}
+ .sp-shell--spielwelt .sp-lobby-actions>.exp-primary{width:100%;min-width:0}
+}
+@media(max-width:380px){
+ .sp-shell--spielleitung .sp-cockpit-topline{justify-content:space-between}
+ .sp-shell--spielleitung .sp-cockpit-topline .sp-cockpit-quick-stage{
+  order:-1;flex:1 1 100%;justify-content:center;
+ }
+}
