@@ -36,7 +36,7 @@ export function HostGameplayRail({game,phase,paused,recovery,completed,total}:Ho
    </div>
    <div className="u07-rail-guidance"><p className="u07-rail-next" role="status">{guidance.next}</p>
     {phase!=='complete'&&<button type="button" className="u07-rail-focus" onClick={()=>focusHostAction(document.querySelector(`[data-host-game="${game}"]`),paused,recovery)}>
-      Aktion finden ↓
+      {recovery?'Prüfung finden ↓':paused?'Fortsetzen finden ↓':'Nächste Aktion finden ↓'}
     </button>}
    </div>
    <ol className="u07-phase-steps">
