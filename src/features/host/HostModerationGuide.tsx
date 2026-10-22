@@ -1,4 +1,5 @@
 import '../../styles/g15-host-a11y.css';
+import type {EventRecord} from '../../domain/event/schemas';
 import {useCallback,useEffect} from 'react';
 import '../../styles/g14-moderator.css';
 import '../../styles/host-flow-ux.css';
@@ -72,6 +73,14 @@ export function describeHostStep(input:HostGuideInput):HostGuideState{
 export function hostPhaseLabel(game:HostGame,phase:string,paused:boolean,recovery=false):string{
  return describeHostStep({game,phase,paused,recovery,completed:0,total:0,
   viewers:0,ready:true,busy:false}).step;
+}
+
+/** A saved event's original source authority, never an inference from a game title. */
+export function hostContentLabel(event:Pick<EventRecord,'program'>|null):string{
+ if(!event)return 'INHALTE WERDEN GEPRÜFT';
+ return event.program.some(game=>game.rulesVersion.endsWith('-reviewed-v1'))
+  ?'REDAKTIONELL FREIGEGEBENE INHALTE'
+  :'PROBEINHALTE · NICHT REDAKTIONELL FREIGEGEBEN';
 }
 
 /** A keyboard shortcut is a focus hint, never a game command or input-editing override. */
