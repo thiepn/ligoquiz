@@ -88,6 +88,7 @@ export function OrganizerHome() {
  const outstanding=dir?.items.filter(e=>e.lifecycle!=='complete'&&e.lifecycle!=='abandoned')??[];
  const matching=filterSessions(outstanding,query);
  const latest=matching[0];
+ const latestOutstanding=outstanding[0];
  const draft=readSetupDraft();
 
  function chooseGame(game:GameType) {
