@@ -111,11 +111,16 @@ test('G15 projector contrast and focus styles are inspectable',async({page})=>{
  await expect(stage.locator('.stage-preview')).toBeVisible();
  const palette=await stage.evaluate(()=>{
   const a=globalThis.document.querySelector('.stage-bottom');
-  const b=globalThis.document.querySelector('.stage-topline>span:last-child');
-  return {footer:globalThis.getComputedStyle(a).color,header:globalThis.getComputedStyle(b).color};
+  const b=globalThis.document.querySelector('.sp-stage-phase');
+  return {footer:globalThis.getComputedStyle(a).color,phase:globalThis.getComputedStyle(b).color};
  });
- // Stage labels must be light, not muted near-black on the dark projection.
+ // The surviving public phase must remain high contrast on the dark projector.
  expect(palette.footer).toBe('rgb(197, 207, 221)');
- expect(palette.header).toBe('rgb(197, 207, 221)');
+ expect(palette.phase).toBe('rgb(255, 255, 255)');
+ await stage.setViewportSize({width:375,height:812});
+ const phase=stage.locator('.sp-stage-phase');
+ await expect(phase).toBeVisible();
+ const fontSize=await phase.evaluate(el=>Number.parseFloat(globalThis.getComputedStyle(el).fontSize));
+ expect(fontSize,'mobile projector phase text size').toBeGreaterThanOrEqual(14);
  await stage.close();
 });
