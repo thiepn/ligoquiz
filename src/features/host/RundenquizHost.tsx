@@ -1,6 +1,6 @@
 import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
-import {HostModerationGuide,hostPhaseLabel} from './HostModerationGuide';
+import {HostModerationGuide,hostPhaseLabel,hostContentLabel} from './HostModerationGuide';
 import {HostGameplayRail} from './HostGameplayRail';
 import {StudioPopMotif} from '../../design-system/StudioPop';
 import './u07-play.css';
@@ -215,7 +215,7 @@ export function RundenquizHost(){
    <div className="u07-mode-copy">
     
     <h2>Rundenquiz<span aria-hidden="true">.</span></h2>
-    <span className="g3-tech-tag">PROBEINHALTE · NICHT REDAKTIONELL FREIGEGEBEN</span>
+    <span className="g3-tech-tag">{hostContentLabel(event)}</span>
    </div>
    <span className="u07-mode-art" aria-hidden="true"><StudioPopMotif game="rundenquiz"/></span>
   </header>
