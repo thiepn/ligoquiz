@@ -1,7 +1,7 @@
 import {loadSafelyPausedLogikleiter} from './logikleiter-load';
 import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
-import {HostModerationGuide} from './HostModerationGuide';
+import {HostModerationGuide,hostPhaseLabel} from './HostModerationGuide';
 import {HostGameplayRail} from './HostGameplayRail';
 import {StudioPopMotif} from '../../design-system/StudioPop';
 import './u08-play.css';
@@ -104,7 +104,7 @@ export function LogikleiterHost(){
     className={i<ll.index?'done':i===ll.index?'current':''} aria-current={i===ll.index&&ll.phase!=='complete'?'step':undefined}>
     <span>STUFE {i+1}</span><strong>{rungValue(i)}<small> PUNKTE</small></strong></div>)}</div>
    <div className="ll-status u08-status"><span>STUFE {Math.min(ll.index+1,ll.rungs.length)} / {ll.rungs.length}</span>
-    <strong>{ll.paused?'PAUSIERT':ll.phase.toUpperCase()}</strong></div>
+    <strong>{hostPhaseLabel('logikleiter',ll.phase,ll.paused,Boolean(event?.recoveryRequired))}</strong></div>
    {event?.recoveryRequired&&<div className="rq-recovery" role="alert">
     <h3>Wiederhergestellte Sitzung prüfen</h3>
     <p>Hinweis und Abgaben bleiben gespeichert. Der Beamer bleibt bis zur Bestätigung ausgeblendet.</p>
@@ -157,7 +157,7 @@ export function LogikleiterHost(){
       <div className="u08-grade-count" aria-live="polite"><strong>{teams.filter(t=>Boolean(ll.grades[t.id])).length} / {teams.length}</strong><span>Teamwertungen erfasst</span></div>
       <div className="ll-lock-panel u08-grade-panel">{teams.map(t=><div className="ll-team-row u08-grade-row" key={t.id} role="group" aria-label={'Wertung für '+t.name}>
        <span>{t.name} <small>{ll.locks[t.id]?.hintRevision===0?'Vor Hinweis':ll.locks[t.id]?.hintRevision===1?'Nach Hinweis':'Keine Sperre'}</small></span>
-       <div className="ll-grades">{(['correct','wrong','absent'] as const).map(value=><button key={value}
+       <div className="ll-grades">{(['correct','wrong','absent'] as const).map(value=><button key={value} data-host-choice
         disabled={disabled||(value==='correct'&&!ll.locks[t.id])} aria-pressed={ll.grades[t.id]===value}
         onClick={()=>void send({type:'GRADE',teamId:t.id,value})}>
         {value==='correct'?'Richtig':value==='wrong'?'Falsch':'Keine Antwort'}</button>)}</div>
