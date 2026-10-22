@@ -79,3 +79,9 @@
 .sp-shell .sp-shell-subnav .sp-shell-nav-symbol{font-size:16px}
 }
 @media(prefers-reduced-motion:reduce){.sp-shell *,.sp-shell *::before,.sp-shell *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Focused navigation for the two task-critical journeys. */
+.sp-shell .sp-shell-context{display:flex;align-items:center;gap:18px;padding:12px clamp(18px,3.5vw,55px);background:#192540;color:#fff;border-bottom:1px solid #394972;font-size:14px}
+.sp-shell .sp-shell-context a{color:#FFE45C;text-decoration:none;font-weight:800;min-height:40px;display:inline-flex;align-items:center}
+.sp-shell .sp-shell-context strong{font-weight:900}
+@media(max-width:760px){.sp-shell .sp-shell-context{padding:8px 16px;gap:12px}.sp-shell--spielwelt:has(.sp-shell-context) .sp-shell-workspace,.sp-shell--spielleitung:has(.sp-shell-context) .sp-shell-workspace{padding-bottom:28px}}
