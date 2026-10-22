@@ -22,6 +22,8 @@ export function AppShell({route,children}:{route:Route;children:ReactNode}){
  const zone=shellZoneFor(route);
 const activePrimary=zone==='spielwelt'?'spielen':zone==='spielleitung'?'host':'inhalte';
  const activeBackstage=backstageActiveRoute(route);
+ const isPreparing=route==='setup';
+ const inGame=route==='host';
  // The public projector deliberately has no app chrome. StageView handles it separately.
  if(zone==='public')return <>{children}</>;
 
@@ -36,31 +38,34 @@ const activePrimary=zone==='spielwelt'?'spielen':zone==='spielleitung'?'host':'i
          {PRIMARY_LINKS.map(link=><NavLink key={link.route} route={route} link={link}
             current={link.route===activePrimary}/>)}
        </nav>
-       <a className="sp-shell-start" href={routeHref('setup')}>Neuen Abend <span aria-hidden="true">↗</span></a>
+       {!isPreparing&&!inGame&&<a className="sp-shell-start" href={routeHref('setup')}>Neuen Abend <span aria-hidden="true">↗</span></a>}
        <details key={route} className="sp-shell-mobile-menu">
          <summary aria-label="Menü"><span aria-hidden="true">☰</span> MENÜ</summary>
          <nav aria-label="Mobiles Hauptmenü">
            {PRIMARY_LINKS.map(link=><NavLink key={link.route} route={route} link={link} current={link.route===activePrimary}/>)}
            <span className="sp-shell-mobile-label">BACKSTAGE</span>
            {BACKSTAGE_LINKS.map(link=><NavLink key={link.route} route={route} link={link} current={link.route===activeBackstage}/>)}
-           <NavLink route={route} link={{route:'setup',label:'Neuen Quizabend',symbol:'↗'}} current={route==='setup'}/>
+           {!isPreparing&&!inGame&&<NavLink route={route} link={{route:'setup',label:'Neuen Quizabend',symbol:'↗'}} current={false}/>}
          </nav>
        </details>
      </div>
    </header>
 
+   {isPreparing&&<nav className="sp-shell-context" aria-label="Vorbereitung"><a href="#/spielen">← Spiele</a><strong>Quizabend vorbereiten</strong></nav>}
+   {inGame&&<nav className="sp-shell-context" aria-label="Aktuelle Spielleitung"><a href="#/spielen">← Spiele</a><strong>Spiel leiten</strong></nav>}
+
    {zone==='backstage'&&<nav className="sp-shell-subnav" aria-label="Backstage-Bereiche">
      {BACKSTAGE_LINKS.map(link=><NavLink key={link.route} route={route} link={link} current={link.route===activeBackstage}/>)}
    </nav>}
 
-   <nav className="sp-shell-mobile-bottom" aria-label="Mobile Schnellnavigation">
+   {!isPreparing&&!inGame&&<nav className="sp-shell-mobile-bottom" aria-label="Mobile Schnellnavigation">
      {PRIMARY_LINKS.map(link=><a key={link.route} href={routeHref(link.route)}
        aria-current={link.route===activePrimary?'page':undefined}
        className={link.route===activePrimary?'is-active':''}>
        <span aria-hidden="true">{link.symbol}</span>
        <strong>{link.route==='spielen'?'Spielen':link.route==='host'?'Leiten':'Inhalte'}</strong>
      </a>)}
-   </nav>
+   </nav>}
 
    <main id="main-content" tabIndex={-1} className="workspace sp-shell-workspace">
      <div className="sp-shell-legacy">{children}</div>
