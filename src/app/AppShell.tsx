@@ -53,6 +53,15 @@ const activePrimary=zone==='spielwelt'?'spielen':zone==='spielleitung'?'host':'i
      {BACKSTAGE_LINKS.map(link=><NavLink key={link.route} route={route} link={link} current={link.route===activeBackstage}/>)}
    </nav>}
 
+   <nav className="sp-shell-mobile-bottom" aria-label="Mobile Schnellnavigation">
+     {PRIMARY_LINKS.map(link=><a key={link.route} href={routeHref(link.route)}
+       aria-current={link.route===activePrimary?'page':undefined}
+       className={link.route===activePrimary?'is-active':''}>
+       <span aria-hidden="true">{link.symbol}</span>
+       <strong>{link.route==='spielen'?'Spielen':link.route==='host'?'Leiten':'Inhalte'}</strong>
+     </a>)}
+   </nav>
+
    <main id="main-content" tabIndex={-1} className="workspace sp-shell-workspace">
      <div className="sp-shell-legacy">{children}</div>
    </main>
