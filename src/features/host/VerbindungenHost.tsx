@@ -1,7 +1,7 @@
 import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {loadSafelyPausedVerbindungen} from './verbindungen-load';
-import {HostModerationGuide} from './HostModerationGuide';
+import {HostModerationGuide,hostPhaseLabel} from './HostModerationGuide';
 import {HostGameplayRail} from './HostGameplayRail';
 import {StudioPopMotif} from '../../design-system/StudioPop';
 import './u08-play.css';
@@ -115,7 +115,7 @@ export function VerbindungenHost(){
     <strong>{totals[t.id]??0}</strong></div>)}</div>
    <div className="vb-active-row u08-status-row"><div><small>TEIL / AUFGABE</small><strong>{task?sectionName:'Endstand'} · {Math.min(vb.index+1,vb.assignments.length)}/{vb.assignments.length}</strong></div>
     <div><small>AKTIVES TEAM</small><strong>{activeTeam?.name??'Alle Teams'}</strong></div>
-    <div><small>SPIELSTATUS</small><strong>{vb.paused?'PAUSIERT':vb.phase.toUpperCase()}</strong></div></div>
+    <div><small>SPIELSTATUS</small><strong>{hostPhaseLabel('verbindungen',vb.phase,vb.paused,Boolean(event?.recoveryRequired))}</strong></div></div>
    {event?.recoveryRequired&&<div className="rq-recovery" role="alert"><strong>Wiederhergestellten Spielstand prüfen</strong>
     <p>Kontrolliere Wertungen, Hinweise und Gruppen. Die Projektion bleibt bis zur Bestätigung ausgeblendet.</p>
     <button disabled={!ready||busy} data-host-next className="g3-tech-primary" onClick={()=>void reviewRecovery()}>Prüfung bestätigen — pausiert bleiben</button>
@@ -189,15 +189,15 @@ export function VerbindungenHost(){
      {vb.phase==='ready'&&<button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'PUBLISH'})}>Aufgabe veröffentlichen</button>}
      {vb.phase==='clue-open'&&<>
       {!vb.judgement&&vb.clueIndex<4&&<button disabled={disabled} onClick={()=>void send({type:'NEXT_CLUE'})}>Nächster Hinweis</button>}
-      {!vb.judgement&&<><button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'correct'})}>Richtige Antwort</button>
-       <button disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'wrong'})}>Falsche Antwort</button>
-       <button disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'none'})}>Keine Antwort</button></>}
+      {!vb.judgement&&<><button data-host-choice disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'correct'})}>Richtige Antwort</button>
+       <button data-host-choice disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'wrong'})}>Falsche Antwort</button>
+       <button data-host-choice disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'none'})}>Keine Antwort</button></>}
       {vb.judgement&&<button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'REVEAL'})}>Lösung veröffentlichen</button>}
      </>}
      {vb.phase==='sequence-open'&&<>
-      {!vb.judgement&&<><button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'correct'})}>Richtig (+20)</button>
-       <button disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'wrong'})}>Falsch (0)</button>
-       <button disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'none'})}>Keine Antwort (0)</button></>}
+      {!vb.judgement&&<><button data-host-choice disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'correct'})}>Richtig (+20)</button>
+       <button data-host-choice disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'wrong'})}>Falsch (0)</button>
+       <button data-host-choice disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'none'})}>Keine Antwort (0)</button></>}
       {vb.judgement&&<button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'REVEAL'})}>Lösung veröffentlichen</button>}
      </>}
      {vb.phase==='wall-open'&&<button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'CLOSE_WALL'})}>Alle Antworten schließen</button>}
