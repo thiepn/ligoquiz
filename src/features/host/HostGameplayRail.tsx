@@ -1,4 +1,4 @@
-import {describeHostStep, type HostGame} from './HostModerationGuide';
+import {describeHostStep, focusHostAction, type HostGame} from './HostModerationGuide';
 
 const PHASES:Record<'rundenquiz'|'quiztafel'|'verbindungen'|'logikleiter'|'umfrageduell',Readonly<Record<string,number>>>={
  rundenquiz:{setup:0,ready:0,open:1,closed:1,revealed:2,graded:3,complete:3},
@@ -34,7 +34,11 @@ export function HostGameplayRail({game,phase,paused,recovery,completed,total}:Ho
      <strong>{recovery?'Wiederherstellung prüfen':paused?'Spiel pausiert':guidance.step}</strong>
      <small>{safeCompleted} / {total} {game==='quiztafel'?'Felder':game==='logikleiter'?'Stufen':'Aufgaben'} abgeschlossen</small>
    </div>
-   <p className="u07-rail-next" role="status">{recovery?'Zuerst den wiederhergestellten Spielstand prüfen.':paused?'Spiel ausdrücklich fortsetzen, bevor die nächste Aktion möglich ist.':guidance.next}</p>
+   <div className="u07-rail-guidance"><p className="u07-rail-next" role="status">{guidance.next}</p>
+    {phase!=='complete'&&<button type="button" className="u07-rail-focus" onClick={()=>focusHostAction(document.querySelector(`[data-host-game="${game}"]`),paused,recovery)}>
+      Aktion finden ↓
+    </button>}
+   </div>
    <ol className="u07-phase-steps">
      {steps.map((step,i)=><li key={step.name} className={i===active?'is-current':i<active?'is-complete':''}
        aria-current={i===active?'step':undefined}>
