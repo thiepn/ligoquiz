@@ -39,7 +39,7 @@ const activePrimary=zone==='spielwelt'?'spielen':zone==='spielleitung'?'host':'i
             current={link.route===activePrimary}/>)}
        </nav>
        {!isPreparing&&!inGame&&<a className="sp-shell-start" href={routeHref('setup')}>Neuen Abend <span aria-hidden="true">↗</span></a>}
-       <details key={route} className="sp-shell-mobile-menu">
+       {!isPreparing&&!inGame&&<details key={route} className="sp-shell-mobile-menu">
          <summary aria-label="Menü"><span aria-hidden="true">☰</span> MENÜ</summary>
          <nav aria-label="Mobiles Hauptmenü">
            {PRIMARY_LINKS.map(link=><NavLink key={link.route} route={route} link={link} current={link.route===activePrimary}/>)}
@@ -47,7 +47,7 @@ const activePrimary=zone==='spielwelt'?'spielen':zone==='spielleitung'?'host':'i
            {BACKSTAGE_LINKS.map(link=><NavLink key={link.route} route={route} link={link} current={link.route===activeBackstage}/>)}
            {!isPreparing&&!inGame&&<NavLink route={route} link={{route:'setup',label:'Neuen Quizabend',symbol:'↗'}} current={false}/>}
          </nav>
-       </details>
+       </details>}
      </div>
    </header>
 
