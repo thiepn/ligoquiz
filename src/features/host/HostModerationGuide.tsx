@@ -68,6 +68,12 @@ export function describeHostStep(input:HostGuideInput):HostGuideState{
  return {step,next,visibility,scoring,warning,finished:false};
 }
 
+/** One human-readable status contract shared by the five original host screens. */
+export function hostPhaseLabel(game:HostGame,phase:string,paused:boolean,recovery=false):string{
+ return describeHostStep({game,phase,paused,recovery,completed:0,total:0,
+  viewers:0,ready:true,busy:false}).step;
+}
+
 /** A keyboard shortcut is a focus hint, never a game command or input-editing override. */
 export type FocusShortcut = Pick<KeyboardEvent,'key'|'altKey'|'shiftKey'|'ctrlKey'|'metaKey'|'repeat'|'isComposing'>;
 export function isFocusShortcut(event:FocusShortcut, editing:boolean):boolean{
