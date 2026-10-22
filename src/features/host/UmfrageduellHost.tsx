@@ -1,7 +1,7 @@
 import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {loadSafelyPausedUmfrageduell} from './umfrageduell-load';
-import {HostModerationGuide,hostPhaseLabel} from './HostModerationGuide';
+import {HostModerationGuide,hostPhaseLabel,hostContentLabel} from './HostModerationGuide';
 import {HostGameplayRail} from './HostGameplayRail';
 import {StudioPopMotif} from '../../design-system/StudioPop';
 import {draftScorePreview,recordedSurveyProgress} from './umfrageduell-presentation';
@@ -135,7 +135,7 @@ export function UmfrageduellHost(){
   <header className="ud-host-head u09-mode-head">
    <div className="u09-mode-copy">
     <h2>Umfrageduell<span aria-hidden="true">.</span></h2>
-    <span className="g3-tech-tag">PROBEINHALTE · HERKUNFT PRO AUFGABE PRÜFEN</span>
+    <span className="g3-tech-tag">{hostContentLabel(event)} · HERKUNFT PRO AUFGABE</span>
    </div>
    <span className="u09-mode-art" aria-hidden="true"><StudioPopMotif game="umfrageduell"/></span>
   </header>
