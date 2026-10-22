@@ -1,7 +1,7 @@
 import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {loadSafelyPausedQuiztafel} from './quiztafel-load';
-import {HostModerationGuide,hostPhaseLabel,hostContentLabel} from './HostModerationGuide';
+import {HostModerationGuide,hostContentLabel} from './HostModerationGuide';
 import {HostGameplayRail} from './HostGameplayRail';
 import {StudioPopMotif} from '../../design-system/StudioPop';
 import './u07-play.css';
@@ -135,7 +135,6 @@ export function QuiztafelHost(){
       <div className="qt-active-row u07-qt-status">
         <div><small>AKTUELLES WAHLRECHT</small><strong>{selectorTeam?.name}</strong></div>
         <div><small>FELDER ABGESCHLOSSEN</small><strong>{qt.usedTileIds.length} / {qt.tiles.length}</strong></div>
-        <div><small>SPIELPHASE</small><strong>{hostPhaseLabel('quiztafel',qt.phase,qt.paused,Boolean(event?.recoveryRequired))}</strong></div>
       </div>
       {event?.recoveryRequired&&<div className="rq-recovery" role="alert">
         <strong>Wiederhergestellten Spielstand prüfen</strong>

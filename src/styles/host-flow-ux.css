@@ -8,7 +8,7 @@
 [data-host-game]:not(.rq-host)>.u07-phase-rail{order:-38}
 [data-host-game]:not(.rq-host)>.g14-guide{order:-37}
 [data-host-game]:not(.rq-host)>.rq-recovery{order:-36}
-[data-host-game]:not(.rq-host)>:is(.qt-active-row,.vb-active-row,.ll-rung-strip,.ll-status,.ud-progress,.ud-phase){order:-35}
+[data-host-game]:not(.rq-host)>:is(.qt-active-row,.vb-active-row,.ll-rung-strip,.ud-progress){order:-35}
 [data-host-game]:not(.rq-host)>:is(.qt-board-host,.qt-question-host,.vb-card,.ll-card,.ud-card,.vb-final,.ll-final,.ud-final,.qt-final){order:-34}
 [data-host-game]:not(.rq-host)>:is(.qt-pauser,.vb-pause,.ll-pause,.ud-pause){order:-33}
 [data-host-game]:not(.rq-host)>:is(.qt-pauser,.vb-pause,.ll-pause,.ud-pause):has([data-host-resume]){order:-36}
@@ -17,7 +17,6 @@
 [data-host-game]>.rq-live>.u07-phase-rail{order:-39}
 [data-host-game]>.rq-live>.g14-guide{order:-38}
 [data-host-game]>.rq-live>.rq-recovery{order:-37}
-[data-host-game]>.rq-live>.rq-status{order:-36}
 [data-host-game]>.rq-live>.rq-control{order:-35}
 [data-host-game]>.rq-live>.rq-end{order:-34}
 

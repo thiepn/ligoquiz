@@ -1,7 +1,7 @@
 import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {loadSafelyPausedUmfrageduell} from './umfrageduell-load';
-import {HostModerationGuide,hostPhaseLabel,hostContentLabel} from './HostModerationGuide';
+import {HostModerationGuide,hostContentLabel} from './HostModerationGuide';
 import {HostGameplayRail} from './HostGameplayRail';
 import {StudioPopMotif} from '../../design-system/StudioPop';
 import {draftScorePreview,recordedSurveyProgress} from './umfrageduell-presentation';
@@ -155,8 +155,6 @@ export function UmfrageduellHost(){
    <div className="ud-progress u09-progress" aria-label="Aufgabenfolge">{ud.surveys.map((item,i)=><span key={item.id}
     className={i<ud.index?'done':i===ud.index?'current':''}
     aria-current={i===ud.index&&ud.phase!=='complete'?'step':undefined}>{i+1}<small>{item.format==='top3'?'TOP 3':'TOP 1'}</small></span>)}</div>
-   <div className="ud-phase u09-status"><span>AUFGABE {Math.min(ud.index+1,ud.surveys.length)} / {ud.surveys.length}</span>
-    <strong>{hostPhaseLabel('umfrageduell',ud.phase,ud.paused,Boolean(event?.recoveryRequired))}</strong></div>
    {event?.recoveryRequired&&<div role="alert" className="rq-recovery">
     <h3>Wiederhergestellte Sitzung prüfen</h3><p>Antworten und Zuordnungen sind erhalten. Der Beamer bleibt gesperrt.</p>
     <button disabled={!ready||busy} onClick={()=>void reviewRecovery()}>Wiederherstellung bestätigen</button></div>}

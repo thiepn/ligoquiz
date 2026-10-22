@@ -1,7 +1,7 @@
 import {loadSafelyPausedLogikleiter} from './logikleiter-load';
 import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
-import {HostModerationGuide,hostPhaseLabel,hostContentLabel} from './HostModerationGuide';
+import {HostModerationGuide,hostContentLabel} from './HostModerationGuide';
 import {HostGameplayRail} from './HostGameplayRail';
 import {StudioPopMotif} from '../../design-system/StudioPop';
 import './u08-play.css';
@@ -103,8 +103,6 @@ export function LogikleiterHost(){
    <div className="ll-rung-strip u08-rung-strip" aria-label="Leiterstufen">{ll.rungs.map((r,i)=><div key={r.id}
     className={i<ll.index?'done':i===ll.index?'current':''} aria-current={i===ll.index&&ll.phase!=='complete'?'step':undefined}>
     <span>STUFE {i+1}</span><strong>{rungValue(i)}<small> PUNKTE</small></strong></div>)}</div>
-   <div className="ll-status u08-status"><span>STUFE {Math.min(ll.index+1,ll.rungs.length)} / {ll.rungs.length}</span>
-    <strong>{hostPhaseLabel('logikleiter',ll.phase,ll.paused,Boolean(event?.recoveryRequired))}</strong></div>
    {event?.recoveryRequired&&<div className="rq-recovery" role="alert">
     <h3>Wiederhergestellte Sitzung prüfen</h3>
     <p>Hinweis und Abgaben bleiben gespeichert. Der Beamer bleibt bis zur Bestätigung ausgeblendet.</p>

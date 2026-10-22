@@ -1,6 +1,6 @@
 import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
-import {HostModerationGuide,hostPhaseLabel,hostContentLabel} from './HostModerationGuide';
+import {HostModerationGuide,hostContentLabel} from './HostModerationGuide';
 import {HostGameplayRail} from './HostGameplayRail';
 import {StudioPopMotif} from '../../design-system/StudioPop';
 import './u07-play.css';
@@ -245,10 +245,6 @@ export function RundenquizHost(){
      total={rq.questions.length} viewers={viewers} ready={sourceReady} busy={busy}/>}
    {event&&<CorrectionProvenance event={event}/>}
    {rq&&<ScoreDecisionPanel source={{game:'rundenquiz',session:rq}} blocked={isPaused||!sourceReady||Boolean(event?.recoveryRequired)}/>}
-   {rq&&<div className="rq-status">
-    <strong>{rq.phase==='complete'?'Quizabend beendet':q?title(q.round)+' · Aufgabe '+(rq.index+1)+'/'+rq.questions.length:'Vorbereitung'}</strong>
-    <span>{hostPhaseLabel('rundenquiz',rq.phase,isPaused,Boolean(event?.recoveryRequired))} · {rq.profile}</span>
-   </div>}
    {rq && !sourceReady && <p role="status">Sitzung wird geladen bzw. überprüft …</p>}
    {event?.recoveryRequired && <div className="rq-recovery" role="alert">
       <strong>Wiederherstellung prüfen</strong>

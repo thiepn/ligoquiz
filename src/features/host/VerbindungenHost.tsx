@@ -1,7 +1,7 @@
 import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {loadSafelyPausedVerbindungen} from './verbindungen-load';
-import {HostModerationGuide,hostPhaseLabel,hostContentLabel} from './HostModerationGuide';
+import {HostModerationGuide,hostContentLabel} from './HostModerationGuide';
 import {HostGameplayRail} from './HostGameplayRail';
 import {StudioPopMotif} from '../../design-system/StudioPop';
 import './u08-play.css';
@@ -114,8 +114,7 @@ export function VerbindungenHost(){
     <div className="vb-scorebar u08-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span>
     <strong>{totals[t.id]??0}</strong></div>)}</div>
    <div className="vb-active-row u08-status-row"><div><small>TEIL / AUFGABE</small><strong>{task?sectionName:'Endstand'} · {Math.min(vb.index+1,vb.assignments.length)}/{vb.assignments.length}</strong></div>
-    <div><small>AKTIVES TEAM</small><strong>{activeTeam?.name??'Alle Teams'}</strong></div>
-    <div><small>SPIELSTATUS</small><strong>{hostPhaseLabel('verbindungen',vb.phase,vb.paused,Boolean(event?.recoveryRequired))}</strong></div></div>
+    <div><small>AKTIVES TEAM</small><strong>{activeTeam?.name??'Alle Teams'}</strong></div></div>
    {event?.recoveryRequired&&<div className="rq-recovery" role="alert"><strong>Wiederhergestellten Spielstand prüfen</strong>
     <p>Kontrolliere Wertungen, Hinweise und Gruppen. Die Projektion bleibt bis zur Bestätigung ausgeblendet.</p>
     <button disabled={!ready||busy} data-host-next className="g3-tech-primary" onClick={()=>void reviewRecovery()}>Prüfung bestätigen — pausiert bleiben</button>

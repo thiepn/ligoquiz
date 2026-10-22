@@ -236,7 +236,7 @@ export function SessionHistory({eventId}:{eventId:string|null}) {
  }
  if(eventId)return <section className="exp-page sp-backstage-report">
   <div className="exp-heading sp-backstage-report-head"><div>
-    <p className="eyebrow">VERLAUF / REGIEPROTOKOLL</p><h1>Abendbericht</h1>
+    <h1>Abendbericht</h1>
 </div>
    <a href="#/verlauf" className="exp-quiet">Alle Abende ←</a></div>
   {!dir?<p role="status">Spielbericht wird geladen …</p>:!report?<p className="exp-error" role="alert">Kein abgeschlossener Bericht für diese Sitzung vorhanden.</p>:
@@ -266,7 +266,7 @@ export function SessionHistory({eventId}:{eventId:string|null}) {
   {error&&<p role="alert" className="exp-error">{error}</p>}
  </section>;
  return <section className="exp-page sp-backstage-history">
-   <div className="exp-heading sp-backstage-history-head"><div><p className="eyebrow">BACKSTAGE / ARCHIV</p>
+   <div className="exp-heading sp-backstage-history-head"><div>
     <h1>Vergangene Abende</h1>
 </div>
     <a className="exp-quiet" href="#/spielen">← Zur Spielwelt</a></div>
