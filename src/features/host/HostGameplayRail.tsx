@@ -34,7 +34,7 @@ export function HostGameplayRail({game,phase,paused,recovery,completed,total}:Ho
      <strong>{recovery?'Wiederherstellung prüfen':paused?'Spiel pausiert':guidance.step}</strong>
      <small>{safeCompleted} / {total} {game==='quiztafel'?'Felder':game==='logikleiter'?'Stufen':'Aufgaben'} abgeschlossen</small>
    </div>
-   <div className="u07-rail-guidance"><p className="u07-rail-next" role="status">{guidance.next}</p>
+   <div className="u07-rail-guidance"><p className="u07-rail-next" role="status"><strong>Als Nächstes:</strong> {guidance.next}</p>
     {phase!=='complete'&&<button type="button" className="u07-rail-focus" onClick={()=>focusHostAction(document.querySelector(`[data-host-game="${game}"]`),paused,recovery)}>
       {recovery?'Prüfung finden ↓':paused?'Fortsetzen finden ↓':'Nächste Aktion finden ↓'}
     </button>}
