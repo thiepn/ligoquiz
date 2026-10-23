@@ -27,7 +27,7 @@ export function trialDraftItems():ContentItem[]{
  ];
  return entries.map(({game,payload,sourceKey})=>{
   const item=createDraft(game,payload,0);
-  return {...item,provenance:{origin:'sample',sourceKey,sourceId:item.id,sourceVersion:TRIAL_DRAFT_SOURCE,
+  return {...item,provenance:{origin:'sample' as const,sourceKey,sourceId:item.id,sourceVersion:TRIAL_DRAFT_SOURCE,
    reviewHint:'Ungeprüfte Probeaufgabe: Fakten, Antwort, Quelle und Rechte selbst prüfen'},
    audit:[{revision:0,at:0,action:'SAMPLE_DRAFT',
     note:'Vorhandene Probeaufgabe als redaktioneller Entwurf; nicht freigegeben'}]};
