@@ -11,6 +11,7 @@ import {trialVerbindungen} from '../src/games/verbindungen/trial-bank';
 import {sampleQuiztafel} from '../src/games/quiztafel/trial-bank';
 import type {GameType} from '../src/domain/game/contracts';
 import {trialDraftBundle,trialDraftItems} from '../src/content/trial-draft-bundle';
+import {contentReviewTasks,originalSourceLead} from '../src/content/editorial-source-review';
 
 const teams=Array.from({length:5},(_,i)=>({id:'team-'+i,name:'Team '+(i+1),order:i}));
 const item=(game:GameType,payload:unknown):ContentItem=>createDraft(game,payload,123);
@@ -233,5 +234,41 @@ describe('Five existing trial banks enter editorial storage only as unapproved d
    }
   }
   expect(trialDraftItems().every(x=>x.status==='draft')).toBe(true);
+ });
+});
+
+describe('Source leads are review work, never content approvals',()=>{
+ it('routes 79 trial questions to 4 exact-match primary leads, 10 illustrative and 65 other checks',()=>{
+  const records=trialDraftItems(),queue=contentReviewTasks(records);
+  expect(queue).toHaveLength(79);
+  expect(queue.filter(x=>x.route==='primary').map(x=>x.item.id))
+   .toEqual(['rq-s1','rq-s4','rq-w4','rq-w6']);
+  expect(queue.filter(x=>x.route==='illustrative')).toHaveLength(10);
+  expect(queue.filter(x=>x.route==='lookup')).toHaveLength(65);
+  for(const task of queue.filter(x=>x.route==='primary')){
+   expect(task.lead?.url).toMatch(/^https:\/\/(www\.)?(ris\.bka\.gv\.at|science\.nasa\.gov|bipm\.org|worldathletics\.org)\//);
+   expect(task.item.status).toBe('draft');
+   expect(task.item.review).toBeUndefined();
+   expect(task.item.provenance.rights).toBeUndefined();
+   expect(task.issues.some(x=>x.code==='RIGHTS_NOT_DOCUMENTED')).toBe(true);
+  }
+ });
+ it('invalidates the linked source after edits, changed ID or replaced provenance',()=>{
+  const base=trialDraftItems().find(x=>x.id==='rq-w4')!;
+  expect(originalSourceLead(base)?.name).toContain('Bundes-Verfassungsgesetz');
+  expect(originalSourceLead({...base,payload:{...base.payload as object,answer:'Salzburg'}})).toBeNull();
+  expect(originalSourceLead({...base,provenance:{...base.provenance,origin:'legacy'}})).toBeNull();
+  expect(originalSourceLead({...base,provenance:{...base.provenance,sourceVersion:'different'}})).toBeNull();
+  expect(originalSourceLead({...base,id:'rq-w6'})).toBeNull();
+  const task=contentReviewTasks([{...base,payload:{...base.payload as object,answer:'Salzburg'}}]);
+  expect(task[0]?.route).toBe('lookup');
+  expect(task[0]?.lead).toBeNull();
+ });
+ it('does not mutate content or pretend survey observations and external approval',()=>{
+  const items=trialDraftItems(),before=JSON.stringify(items),tasks=contentReviewTasks(items);
+  expect(JSON.stringify(items)).toBe(before);
+  expect(tasks.every(x=>!Object.hasOwn(x,'approved')&&!Object.hasOwn(x,'verified'))).toBe(true);
+  expect(tasks.filter(x=>x.route==='illustrative').every(x=>
+   (x.item.payload as {source?:{kind?:string}}).source?.kind==='illustrative')).toBe(true);
  });
 });
