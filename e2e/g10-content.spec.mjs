@@ -114,3 +114,28 @@ test('five original trial banks need consent and cannot silently become approved
  await page.reload();
  await expect(page.locator('.cx-item')).toHaveCount(79);
 });
+
+test('G10 original source leads select editor and expire on substantive edits',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ await expect(queue.getByRole('combobox',{name:'Prüfgruppe'})).toHaveValue('primary');
+ await expect(queue.locator('.cx-source-item')).toHaveCount(4);
+ await queue.getByRole('button',{name:/rq-w4/}).click();
+ const detail=page.getByRole('region',{name:'Quellenabgleich'});
+ await expect(detail.getByRole('link',{name:/Bundes-Verfassungsgesetz/}))
+  .toHaveAttribute('href',/ris\.bka\.gv\.at\/Dokument/);
+ await expect(detail).toContainText('keine Fakten- oder Rechtefreigabe');
+ await expect(page.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
+ await page.getByRole('textbox',{name:'Lösung',exact:true}).fill('Salzburg');
+ await page.getByRole('button',{name:'Änderungen als Entwurf speichern'}).click();
+ await expect(queue.locator('.cx-source-item')).toHaveCount(3);
+ await expect(detail.getByRole('link',{name:/Bundes-Verfassungsgesetz/})).toHaveCount(0);
+ await queue.getByRole('combobox',{name:'Prüfgruppe'}).selectOption('illustrative');
+ await expect(queue.locator('.cx-source-item')).toHaveCount(10);
+ await queue.getByRole('button',{name:/ud-01/}).click();
+ await expect(detail).toContainText('Nur illustrative Rangfolge');
+ await expect(page.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
+});
