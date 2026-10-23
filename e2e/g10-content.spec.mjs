@@ -154,3 +154,22 @@ test('source queue search narrows original Quiztafel questions without changing 
  await expect(page.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
  await expect(queue).toContainText('2 Treffer');
 });
+
+test('editorial queue warns of reused clue targets and opens the corresponding question',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ await queue.getByRole('combobox',{name:'Prüfgruppe'}).selectOption('lookup');
+ await queue.getByRole('checkbox',{name:'Nur wiederholte Hinweisziele'}).check();
+ await expect(queue.locator('.cx-source-item')).toHaveCount(6);
+ await queue.getByRole('button',{name:/rq-h1/}).click();
+ const panel=page.getByRole('region',{name:'Quellenabgleich'});
+ await expect(panel).toContainText('Gleiches Hinweisziel in Verbindungen');
+ await panel.getByRole('button',{name:'Zugehörige Frage öffnen: vb-a-david'}).click();
+ await expect(panel).toContainText('vb-a-david');
+ await expect(panel).toContainText('Gleiches Hinweisziel in Rundenquiz');
+ await expect(page.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+});

@@ -49,3 +49,19 @@ operator must still save the revision as a draft through the unchanged CAS
 repository. Edited variants and unknown provenance do not qualify. Neither
 correction grants any fact/rights approval. Source-review search filters the
 same live queue without a parallel scheduler or database.
+
+## Cross-game clue reuse review
+
+The original trial banks independently contain the same reveal answers in
+Rundenquiz `rq-h1` / Verbindungen `vb-a-david`, `rq-h2` /
+`vb-a-ester`, and `rq-h3` / `vb-a-petrus`. During one event a
+previously revealed answer may spoil a subsequent clue task. The existing G23
+read-only audit now records six reciprocal, nonblocking
+`CROSS_GAME_CLUE_REUSE` review flags with the exact related original IDs.
+
+In the G10 source queue, filter by **Nur wiederholte Hinweisziele** under
+Quellensuche, then use **Zugehörige Frage öffnen** to inspect the paired item
+and decide whether to separate, replace or schedule it differently.
+No content is auto-rewritten, rejected, approved or published, and no second
+scheduler or scoring engine is created. A different answer target removes the
+flag; unrelated game types and same-game hints do not create this cross-game flag.

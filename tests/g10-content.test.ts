@@ -322,3 +322,16 @@ describe('Two original Quiztafel ambiguity repairs retain IDs without granting r
   }
  });
 });
+
+describe('Editorial queue keeps duplicated clue targets visible without content authority',()=>{
+ it('lists three cross-game targets, with reciprocal direct-link IDs and no approval',()=>{
+  const tasks=contentReviewTasks(trialDraftItems());
+  const flagged=tasks.filter(x=>x.issues.some(issue=>issue.code==='CROSS_GAME_CLUE_REUSE'));
+  expect(flagged).toHaveLength(6);
+  expect(flagged.map(t=>t.item.id)).toEqual([
+   'rq-h1','rq-h2','rq-h3','vb-a-david','vb-a-ester','vb-a-petrus',
+  ]);
+  expect(flagged.every(t=>t.issues.some(i=>i.other&&tasks.some(other=>other.item.id===i.other)))).toBe(true);
+  expect(flagged.every(t=>t.item.status==='draft'&&!t.item.review)).toBe(true);
+ });
+});

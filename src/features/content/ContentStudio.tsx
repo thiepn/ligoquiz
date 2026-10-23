@@ -59,6 +59,7 @@ export function ContentStudio(){
  const [profile,setProfile]=useState<GameProfile>('kurz'),[teamCount,setTeamCount]=useState(3);
  const [reviewRoute,setReviewRoute]=useState<ReviewRoute>('primary');
  const [reviewSearch,setReviewSearch]=useState('');
+ const [repeatsOnly,setRepeatsOnly]=useState(false);
  async function refresh(){
   const [all,quarantined,imports]=await Promise.all([repo.list(),repo.quarantined(),repo.receipts()]);
   setItems(all.sort((a,b)=>b.updatedAt-a.updatedAt));
@@ -86,7 +87,9 @@ export function ContentStudio(){
  const normalizedReviewSearch=reviewSearch.toLocaleLowerCase('de-DE').trim();
  const visibleSourceTasks=sourceTasks.filter(x=>{
   const payload=x.item.payload as {prompt?:string;target?:string;answer?:string};
-  return x.route===reviewRoute&&(!normalizedReviewSearch||
+  return x.route===reviewRoute&&
+   (!repeatsOnly||x.issues.some(issue=>issue.code==='CROSS_GAME_CLUE_REUSE'))&&
+   (!normalizedReviewSearch||
    [x.item.id,payload.prompt??'',payload.target??'',payload.answer??'']
     .join(' ').toLocaleLowerCase('de-DE').includes(normalizedReviewSearch));
  });
@@ -248,6 +251,8 @@ export function ContentStudio(){
    <div className="cx-source-filter">
     <input type="search" aria-label="Quellenprüfung durchsuchen" value={reviewSearch}
       onChange={e=>setReviewSearch(e.target.value)} placeholder="Frage oder Kennung"/>
+    <label><input type="checkbox" checked={repeatsOnly}
+      onChange={e=>setRepeatsOnly(e.target.checked)}/>Nur wiederholte Hinweisziele</label>
     <span>{visibleSourceTasks.length} Treffer</span>
    </div>
    <div className="cx-source-items">
@@ -312,6 +317,11 @@ export function ContentStudio(){
        <strong>Bestehende Redaktionshinweise ({selectedSourceTask.issues.length})</strong>
        <ul>{selectedSourceTask.issues.map((issue,i)=><li key={issue.code+'-'+i}>
         {issue.message}</li>)}</ul></div>}
+      {selectedSourceTask.issues.filter(issue=>issue.code==='CROSS_GAME_CLUE_REUSE'&&issue.other)
+       .map(issue=><button type="button" key={issue.other} className="exp-secondary"
+        onClick={()=>{const related=items.find(item=>item.id===issue.other);
+         if(related)choose(related);
+        }}>Zugehörige Frage öffnen: {issue.other}</button>)}
       <p>Quellenlink und Prüfliste sind keine Fakten- oder Rechtefreigabe.</p>
      </section>}
      {historicalCorrection&&<section className="cx-source-evidence" aria-label="Historische Frage korrigieren">
