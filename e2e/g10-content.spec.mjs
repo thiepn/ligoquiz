@@ -75,3 +75,42 @@ test('approved-only setup does not secretly fall back to trial tasks',async({pag
  await expect(page.getByRole('alert')).toContainText('nicht vollständig');
  await expect(page).toHaveURL(/#\/setup$/);
 });
+
+test('five original trial banks need consent and cannot silently become approved play content',async({page})=>{
+ await page.goto('/#/inhalte');
+ const button=page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'});
+ await button.click();
+ const preview=page.getByRole('region',{name:'Importvorschau'});
+ await expect(preview).toContainText('79 Quelldatensätze');
+ await expect(preview).toContainText('79 gültige Entwürfe');
+ await expect(preview).toContainText('0 Quarantäne');
+ await expect(preview).toContainText('ungeprüft');
+ const commit=page.getByRole('button',{name:'Vorschau ausdrücklich importieren'});
+ await expect(commit).toBeDisabled();
+ await expect(page.locator('.cx-item')).toHaveCount(0);
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await commit.click();
+ await expect(page.locator('.cx-item')).toHaveCount(79);
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+ const records=await page.evaluate(async()=>{
+  const db=await new Promise((resolve,reject)=>{
+   const q=indexedDB.open('ligoquiz.v2.content.g10');
+   q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);
+  });
+  const getAll=store=>new Promise((resolve,reject)=>{
+   const q=db.transaction(store,'readonly').objectStore(store).getAll();
+   q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);
+  });
+  const all=await getAll('entries'),receipts=await getAll('receipts');db.close();
+  return {count:all.length,approved:all.filter(x=>x.status==='approved').length,
+   reviews:all.filter(x=>x.review).length,rights:all.filter(x=>x.provenance.rights).length,
+   origins:[...new Set(all.map(x=>x.provenance.origin))],receipts:receipts.length};
+ });
+ expect(records).toEqual({count:79,approved:0,reviews:0,rights:0,origins:['sample'],receipts:1});
+ await button.click();
+ await expect(preview).toContainText('0 gültige Entwürfe');
+ await expect(preview).toContainText('79 Quarantäne');
+ await expect(commit).toBeDisabled();
+ await page.reload();
+ await expect(page.locator('.cx-item')).toHaveCount(79);
+});
