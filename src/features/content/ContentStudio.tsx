@@ -7,6 +7,7 @@ import '../../styles/content-studio.css';
 import {EditorialAuditPanel} from './EditorialAuditPanel';
 import {StructuredQuestionEditor} from './StructuredQuestionEditor';
 import {trialDraftBundle} from '../../content/trial-draft-bundle';
+import {contentReviewTasks,type ReviewRoute} from '../../content/editorial-source-review';
 
 
 const LABELS:Record<GameType,string>={
@@ -56,6 +57,7 @@ export function ContentStudio(){
  const [reviewer,setReviewer]=useState(''),[reviewNote,setReviewNote]=useState('');
  const [checklist,setChecklist]=useState<boolean[]>([false,false,false,false]);
  const [profile,setProfile]=useState<GameProfile>('kurz'),[teamCount,setTeamCount]=useState(3);
+ const [reviewRoute,setReviewRoute]=useState<ReviewRoute>('primary');
  async function refresh(){
   const [all,quarantined,imports]=await Promise.all([repo.list(),repo.quarantined(),repo.receipts()]);
   setItems(all.sort((a,b)=>b.updatedAt-a.updatedAt));
@@ -79,6 +81,9 @@ export function ContentStudio(){
   draft:items.filter(x=>x.status==='draft').length,
   duplicates:findDuplicates(items).length,
  }),[items]);
+ const sourceTasks=useMemo(()=>contentReviewTasks(items),[items]);
+ const visibleSourceTasks=sourceTasks.filter(x=>x.route===reviewRoute);
+ const selectedSourceTask=current?sourceTasks.find(x=>x.item.id===current.id):null;
  const pack=useMemo(()=>{
   const games=GAME_TYPES.map(game=>{
    const result=coverage(items,game,profile,teamCount);
@@ -222,6 +227,28 @@ export function ContentStudio(){
      <button className="exp-secondary" onClick={()=>{setPreview(null);setImportConsent(false);}}>Abbrechen</button></div>
    </section>}
   <EditorialAuditPanel items={items} preview={preview} onChoose={choose}/>
+  <section className="cx-source-queue" aria-label="Quellenprüfung">
+   <div className="cx-catalog-top">
+    <h2>Quellenprüfung</h2>
+    <label>Prüfgruppe <select aria-label="Prüfgruppe" value={reviewRoute}
+      onChange={e=>setReviewRoute(e.target.value as ReviewRoute)}>
+      <option value="primary">Primärquellen ({sourceTasks.filter(x=>x.route==='primary').length})</option>
+      <option value="lookup">Quellensuche ({sourceTasks.filter(x=>x.route==='lookup').length})</option>
+      <option value="illustrative">Illustrative Umfragen ({sourceTasks.filter(x=>x.route==='illustrative').length})</option>
+    </select></label>
+   </div>
+   <div className="cx-source-items">
+    {visibleSourceTasks.map(task=><button type="button" className="cx-source-item"
+      key={task.item.id} aria-pressed={current?.id===task.item.id} onClick={()=>choose(task.item)}>
+      <strong>{task.item.id}</strong>
+      <span>{(task.item.payload as {prompt?:string;target?:string}).prompt??
+       (task.item.payload as {target?:string}).target??'Strukturierte Aufgabe'}</span>
+      <small>{task.lead?.name??(task.route==='illustrative'?'Keine beobachtete Rangfolge':'Quelle eigenständig suchen')}
+       {' · '}{task.issues.length} Prüfhilfen</small>
+    </button>)}
+    {visibleSourceTasks.length===0&&<p>Keine Aufgaben in dieser Prüfgruppe.</p>}
+   </div>
+  </section>
   <div className="cx-main">
    <section className="cx-catalog" aria-label="Aufgabenbestand">
     <div className="cx-catalog-top"><h2>Aufgabenbestand</h2><span>{chosen.length} Treffer</span></div>
@@ -255,6 +282,25 @@ export function ContentStudio(){
       {current.provenance.sourceId?' / '+current.provenance.sourceId:''}</p>
      {current.status==='approved'&&<p className="cx-approved">Freigegeben durch {current.review?.reviewer}.
        {' '}Jede Bearbeitung verlangt erneute Prüfung.</p>}
+     {selectedSourceTask&&<section className="cx-source-evidence" aria-label="Quellenabgleich">
+      <strong>Quellenabgleich · {selectedSourceTask.item.id}</strong>
+      {selectedSourceTask.lead?<p><a href={selectedSourceTask.lead.url}
+       target="_blank" rel="noopener noreferrer">Primärquelle: {selectedSourceTask.lead.name} öffnen</a>
+       {' — '}{selectedSourceTask.lead.comparison}</p>:
+       <p>{selectedSourceTask.route==='illustrative'
+        ?'Nur illustrative Rangfolge. Nicht als erhobene Umfrage kennzeichnen.'
+        :'Keine zugeordnete Primärquelle. Ursprünglichen Beleg unabhängig recherchieren.'}</p>}
+      <ul>
+       <li>Fragestellung, Lösung und genaue Belegstelle vergleichen</li>
+       <li>Mehrdeutigkeiten, Antwortvarianten und Bewertung prüfen</li>
+       <li>Urheberschaft und Nutzungsrecht unabhängig dokumentieren</li>
+      </ul>
+      {selectedSourceTask.issues.length>0&&<div>
+       <strong>Bestehende Redaktionshinweise ({selectedSourceTask.issues.length})</strong>
+       <ul>{selectedSourceTask.issues.map((issue,i)=><li key={issue.code+'-'+i}>
+        {issue.message}</li>)}</ul></div>}
+      <p>Quellenlink und Prüfliste sind keine Fakten- oder Rechtefreigabe.</p>
+     </section>}
      <StructuredQuestionEditor game={current.game} value={structured} onChange={next=>{
       setJson(JSON.stringify(next,null,2));setError('');setMessage('');
      }}/>
