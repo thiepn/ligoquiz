@@ -227,6 +227,8 @@ export function applySessionCommand(
         fail('INVALID_PHASE', 'No pending recovery review');
       }
       next = { ...next, recoveryRequired: false };
+      // The public scene changes from withheld to paused; advance its revision.
+      stageChanged = true;
       break;
     default: {
       const neverCommand: never = payload;

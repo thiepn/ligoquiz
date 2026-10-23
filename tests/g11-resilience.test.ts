@@ -1,6 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {indexedDB as fakeIndexedDB} from 'fake-indexeddb';
 import {createEvent} from '../src/domain/event/transition';
+import {derivePublicStage} from '../src/domain/event/public-projection';
 import {EventRepository} from '../src/infrastructure/db/event-repository';
 import {encodeBackup,decodeBackup,stagedRecovery} from '../src/resilience/backup';
 import {safeOrigin} from '../src/resilience/offline';
@@ -49,6 +50,19 @@ describe('G11 session backup and fenced recovery',()=>{
     hostId:event.hostId,hostEpoch:1,expectedRevision:event.revision,
     issuedAtEpochMs:2100,actor:'host',payload:{type:'EVENT_START'}}))
     .rejects.toMatchObject({code:'STALE_HOST'});
+   // Recovery approval changes the public waiting scene to paused; the stage
+   // revision must advance or the projector fails closed on conflicting frames.
+   expect(derivePublicStage(restored).scene.kind).toBe('waiting');
+   await dest.dispatch({
+    protocolVersion:1,eventId:event.id,commandId:'g11-confirm-recovery',
+    hostId:restored.hostId,hostEpoch:restored.hostEpoch,expectedRevision:restored.revision,
+    issuedAtEpochMs:2200,actor:'host',payload:{type:'RECOVERY_CONFIRM'},
+   });
+   const reviewed=(await dest.get(restored.id))!;
+   expect(reviewed.recoveryRequired).toBe(false);
+   expect(reviewed.lifecycle).toBe('paused');
+   expect(reviewed.stageRevision).toBe(restored.stageRevision+1);
+   expect(derivePublicStage(reviewed).scene.kind).toBe('paused');
   }finally{await origin.close();await dest.close();}
  });
  it('restores actual committed score-ledger points and full command history',async()=>{
