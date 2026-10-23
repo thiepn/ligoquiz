@@ -94,7 +94,7 @@ test('five original trial banks need consent and cannot silently become approved
  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
  const records=await page.evaluate(async()=>{
   const db=await new Promise((resolve,reject)=>{
-   const q=indexedDB.open('ligoquiz.v2.content.g10');
+   const q=globalThis.indexedDB.open('ligoquiz.v2.content.g10');
    q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);
   });
   const getAll=store=>new Promise((resolve,reject)=>{
