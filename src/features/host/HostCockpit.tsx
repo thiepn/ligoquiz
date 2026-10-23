@@ -19,7 +19,7 @@ export function HostCockpit({event}:{event:EventRecord}){
  return <section className={'sp-cockpit'+(compact?' is-compact':'')} aria-label="Aktueller Spielstand" data-cockpit-game={state.game}>
   <div className={'sp-cockpit-hero sp-cockpit-hero--'+visual.tone}>
    <div className="sp-cockpit-title">
-    <h2>{visual.label}<span aria-hidden="true">.</span></h2>
+    <h2>{visual.label}</h2>
     <p>{state.teams.length} Teams</p>
     <div className="sp-cockpit-status">
      <span className={'sp-cockpit-state'+(state.recovery?' is-warning':state.paused?' is-paused':'')}>

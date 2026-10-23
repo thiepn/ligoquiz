@@ -83,7 +83,7 @@ export function SetupWizard() {
         <span className="sp-prep-local">LOKAL · NOCH NICHT LIVE</span>
       </div>
       <a href="#/spielen" className="sp-prep-exit">← Zur Übersicht</a>
-      <span className="sp-prep-decor" aria-hidden="true">!</span>
+      
     </header>
     <nav aria-label="Vorbereitungsschritte" className="exp-steps sp-prep-steps">
       {steps.map((name,i)=><button type="button" key={name}
@@ -156,7 +156,7 @@ export function SetupWizard() {
       <div className="exp-summary">
         <div><span>Teams</span><strong>{draft.count}</strong><p>{draft.teams.slice(0,draft.count).join(' · ')}</p></div>
         <div><span>Programm</span><strong>{draft.game==='quiztafel'?'Quiztafel':draft.game==='verbindungen'?'Verbindungen':draft.game==='logikleiter'?'Logikleiter':draft.game==='umfrageduell'?'Umfrageduell':'Rundenquiz'}</strong><p>{draft.game==='quiztafel'?draft.count*(draft.profile==='kurz'?3:draft.profile==='standard'?5:6):draft.game==='logikleiter'?(draft.profile==='kurz'?3:draft.profile==='standard'?5:7):draft.game==='umfrageduell'?(draft.profile==='kurz'?4:draft.profile==='standard'?6:10):draft.game==='verbindungen'?draft.count*(draft.profile==='kurz'?1:draft.profile==='standard'?2:3)+1:draft.profile==='kurz'?7:draft.profile==='standard'?11:16} {draft.game==='quiztafel'?'Felder':'Aufgaben'} · {draft.contentSource==='approved'?'freigegebene Bibliothek':'Probeinhalte'}</p></div>
-        <div><span>Beamer</span><strong>Noch nicht verbunden</strong><p>Das Beamerfenster öffnest du in der Spielleitung.</p></div>
+        <div><span>Beamer</span><strong>Noch nicht verbunden</strong></div>
       </div>
       <div className="sp-prep-safety"><strong aria-hidden="true">!</strong><span>Beamer-Sicherheit: Die Spielleitung kann private Lösungen enthalten. Vermeide Bildschirmspiegelung.</span></div>
       <label className="exp-ack sp-prep-ack"><input type="checkbox" checked={projectorAcknowledged}
