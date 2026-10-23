@@ -1,7 +1,7 @@
 import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {loadSafelyPausedUmfrageduell} from './umfrageduell-load';
-import {HostModerationGuide} from './HostModerationGuide';
+import {HostModerationGuide,hostPhaseLabel,hostContentLabel} from './HostModerationGuide';
 import {HostGameplayRail} from './HostGameplayRail';
 import {StudioPopMotif} from '../../design-system/StudioPop';
 import {draftScorePreview,recordedSurveyProgress} from './umfrageduell-presentation';
@@ -135,7 +135,7 @@ export function UmfrageduellHost(){
   <header className="ud-host-head u09-mode-head">
    <div className="u09-mode-copy">
     <h2>Umfrageduell<span aria-hidden="true">.</span></h2>
-    <span className="g3-tech-tag">PROBEINHALTE · HERKUNFT PRO AUFGABE PRÜFEN</span>
+    <span className="g3-tech-tag">{hostContentLabel(event)} · HERKUNFT PRO AUFGABE</span>
    </div>
    <span className="u09-mode-art" aria-hidden="true"><StudioPopMotif game="umfrageduell"/></span>
   </header>
@@ -156,7 +156,7 @@ export function UmfrageduellHost(){
     className={i<ud.index?'done':i===ud.index?'current':''}
     aria-current={i===ud.index&&ud.phase!=='complete'?'step':undefined}>{i+1}<small>{item.format==='top3'?'TOP 3':'TOP 1'}</small></span>)}</div>
    <div className="ud-phase u09-status"><span>AUFGABE {Math.min(ud.index+1,ud.surveys.length)} / {ud.surveys.length}</span>
-    <strong>{ud.paused?'PAUSIERT':ud.phase.toUpperCase()}</strong></div>
+    <strong>{hostPhaseLabel('umfrageduell',ud.phase,ud.paused,Boolean(event?.recoveryRequired))}</strong></div>
    {event?.recoveryRequired&&<div role="alert" className="rq-recovery">
     <h3>Wiederhergestellte Sitzung prüfen</h3><p>Antworten und Zuordnungen sind erhalten. Der Beamer bleibt gesperrt.</p>
     <button disabled={!ready||busy} onClick={()=>void reviewRecovery()}>Wiederherstellung bestätigen</button></div>}
@@ -232,7 +232,7 @@ export function UmfrageduellHost(){
        </div>)}
        <div className="ud-team-footer u09-team-footer">
         <small>Alle Felder leer = Keine Antwort · {prior?'Bereits gespeichert':'Ausstehend'}</small>
-        <button disabled={blocked||(ud.phase==='graded'&&Boolean(previousAward?.annulled))}
+        <button data-host-choice disabled={blocked||(ud.phase==='graded'&&Boolean(previousAward?.annulled))}
          onClick={()=>saveTeam(t.id)}>{ud.phase==='graded'?'Begründet korrigieren':'Antwort erfassen'}</button>
        </div>
       </div>;

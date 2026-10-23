@@ -1,6 +1,6 @@
 import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
-import {HostModerationGuide} from './HostModerationGuide';
+import {HostModerationGuide,hostPhaseLabel,hostContentLabel} from './HostModerationGuide';
 import {HostGameplayRail} from './HostGameplayRail';
 import {StudioPopMotif} from '../../design-system/StudioPop';
 import './u07-play.css';
@@ -215,7 +215,7 @@ export function RundenquizHost(){
    <div className="u07-mode-copy">
     
     <h2>Rundenquiz<span aria-hidden="true">.</span></h2>
-    <span className="g3-tech-tag">PROBEINHALTE · NICHT REDAKTIONELL FREIGEGEBEN</span>
+    <span className="g3-tech-tag">{hostContentLabel(event)}</span>
    </div>
    <span className="u07-mode-art" aria-hidden="true"><StudioPopMotif game="rundenquiz"/></span>
   </header>
@@ -247,7 +247,7 @@ export function RundenquizHost(){
    {rq&&<ScoreDecisionPanel source={{game:'rundenquiz',session:rq}} blocked={isPaused||!sourceReady||Boolean(event?.recoveryRequired)}/>}
    {rq&&<div className="rq-status">
     <strong>{rq.phase==='complete'?'Quizabend beendet':q?title(q.round)+' · Aufgabe '+(rq.index+1)+'/'+rq.questions.length:'Vorbereitung'}</strong>
-    <span>{isPaused?'Pausiert':rq.phase} · {rq.profile}</span>
+    <span>{hostPhaseLabel('rundenquiz',rq.phase,isPaused,Boolean(event?.recoveryRequired))} · {rq.profile}</span>
    </div>}
    {rq && !sourceReady && <p role="status">Sitzung wird geladen bzw. überprüft …</p>}
    {event?.recoveryRequired && <div className="rq-recovery" role="alert">
@@ -319,7 +319,7 @@ export function RundenquizHost(){
         {q?.round!=='schaetzen'&&<div className="rq-teamfields u07-judge-grid">{rq.teams.map(t=><div key={t.id} className="rq-judge" role="group" aria-label={'Wertung für '+t.name}>
          <span>{t.name}{rq.entries[t.id]?.judgement?' · '+rq.entries[t.id]?.judgement:''}</span>
          {(['richtig','falsch','keine'] as const).map(v=><button key={v}
-           data-judgement={v} aria-pressed={rq.entries[t.id]?.judgement===v}
+           data-host-choice data-judgement={v} aria-pressed={rq.entries[t.id]?.judgement===v}
            disabled={disabled||v==='richtig'&&q?.round==='hinweise'&&!rq.entries[t.id]?.lockLevel}
            onClick={()=>void action({type:'JUDGE',teamId:t.id,value:v})}>{v}</button>)}
         </div>)}</div>}

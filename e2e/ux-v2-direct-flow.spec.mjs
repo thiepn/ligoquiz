@@ -37,8 +37,9 @@ test('UX game choice from lobby has one obvious selected game and preserves edit
 test('UX mobile setup exposes persistent next action and prevents bypassing validation',async({page})=>{
  await page.setViewportSize({width:375,height:812});
  await page.goto('/#/setup');
- const quick=page.getByRole('navigation',{name:'Mobile Schnellnavigation'});
- await expect(quick.getByRole('link',{name:'Spielen'})).toHaveAttribute('aria-current','page');
+ const focused=page.getByRole('navigation',{name:'Vorbereitung',exact:true});
+ await expect(focused).toContainText('Quizabend vorbereiten');
+ await expect(page.getByRole('navigation',{name:'Mobile Schnellnavigation'})).toHaveCount(0);
  const next=page.getByRole('button',{name:'Weiter'});
  await expect(next).toBeVisible();
  await expect(page.getByRole('button',{name:'Schritt 3: Bereit'})).toBeDisabled();
@@ -61,10 +62,10 @@ test('UX mobile setup exposes persistent next action and prevents bypassing vali
  await expect(page.getByRole('heading',{name:'Programm wählen'})).toBeVisible();
  const widths=await page.evaluate(()=>({
   doc:globalThis.document.documentElement.scrollWidth,width:globalThis.innerWidth,
-  tabs:globalThis.document.querySelector('.sp-shell-mobile-bottom')?.getBoundingClientRect().width,
+  context:globalThis.document.querySelector('.sp-shell-context')?.getBoundingClientRect().width,
  }));
  expect(widths.doc).toBeLessThanOrEqual(widths.width+3);
- expect(widths.tabs).toBeLessThanOrEqual(widths.width);
+ expect(widths.context).toBeLessThanOrEqual(widths.width);
 });
 
 test('UX host shows real controls before overview and keeps a verified quick projector action',async({page})=>{
@@ -82,9 +83,13 @@ test('UX host shows real controls before overview and keeps a verified quick pro
  await expect(page.getByRole('button',{name:'Teams bestätigen'})).toBeEnabled();
  await expect(overview.getByRole('heading',{name:'Punktestand'})).toBeVisible();
  await expect(overview.getByRole('link',{name:/Öffentliches Beamerfenster öffnen/})).toBeVisible();
+ const context=page.getByRole('navigation',{name:'Aktuelle Spielleitung'});
+ await expect(context).toBeVisible();
+ await expect(page.getByRole('navigation',{name:'Mobile Schnellnavigation'})).toHaveCount(0);
+ await context.getByRole('link',{name:/Spiele/}).click();
+ await expect(page).toHaveURL(/#\/spielen$/);
  await page.getByRole('navigation',{name:'Mobile Schnellnavigation'}).getByRole('link',{name:'Inhalte'}).click();
  await expect(page).toHaveURL(/#\/inhalte$/);
- await expect(page.getByRole('navigation',{name:'Mobile Schnellnavigation'}).getByRole('link',{name:'Inhalte'})).toHaveAttribute('aria-current','page');
 });
 
 test('UX return to a verified original session appears first without creating another event',async({page})=>{
