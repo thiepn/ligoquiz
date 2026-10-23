@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { readPreferences, savePreferences, type Preferences } from './model';
 import {BackupRecovery} from '../resilience/ResilienceCenter';
+import {backupTargetFromHash} from './backstage-model';
 
 export function ExperienceSettings(){
  const [value,setValue]=useState<Preferences>(readPreferences);
@@ -10,9 +11,12 @@ export function ExperienceSettings(){
   catch{setState('Die Einstellungen konnten im Browser nicht gespeichert werden.');}
  }
  return <section className="exp-page" aria-label="Einstellungen">
-  <div className="exp-heading"><div><p className="eyebrow">WERKZEUGE</p><h1>Einstellungen</h1>
-    <p>Voreinstellungen für neue Quizabende. Laufende Spielstände werden nicht verändert.</p></div>
+  <div className="exp-heading"><div><h1>Einstellungen</h1>
+    <p>Gilt für neue Quizabende; laufende Spielstände bleiben unverändert.</p></div>
     <a href="#/spielen" className="exp-quiet">Zur Übersicht</a></div>
+  {backupTargetFromHash(window.location.hash)&&<p className="sp-backstage-settings-hint" role="status">
+   Backstage hat eine lokale Sitzung zur Sicherung vorausgewählt. Es wurde noch kein Export oder Wiederherstellung ausgeführt.
+   <a href="#/spielen">Zurück zur Spielwelt</a></p>}
   <div className="exp-form">
    <h2>Neue Quizabende</h2>
    <div className="exp-settings-grid">
@@ -33,7 +37,6 @@ export function ExperienceSettings(){
        <option value="full">Normale Übergänge</option>
      </select>
    </label>
-   <p className="exp-notice">Vollbild und Ton können aus Sicherheits- und Browsergründen erst nach einer Benutzeraktion aktiviert werden. Unfertige Optionen werden nicht als funktionierende Einstellungen angezeigt.</p>
    <button className="exp-primary" onClick={save}>Einstellungen speichern</button>
    {state&&<p role="status" className="exp-feedback">{state}</p>}
   </div>

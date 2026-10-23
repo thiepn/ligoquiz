@@ -1,0 +1,96 @@
+/* U02: production organizer chrome only. All selectors scoped; public StageView untouched. */
+.sp-shell[data-lq-theme="studio-pop"]{min-height:100dvh;background:#101629;color:white;overflow-x:clip}
+.sp-shell .sp-shell-skip{position:fixed;left:14px;top:-100px;z-index:100;background:#FFE45C;color:#101629;padding:12px 17px;border:2px solid #101629;font-weight:900}
+.sp-shell .sp-shell-skip:focus{top:10px}
+.sp-shell .sp-shell-header{position:relative;z-index:10;background:#101629;border-bottom:1px solid #394972}
+.sp-shell .sp-shell-header-inner{display:flex;align-items:center;gap:clamp(14px,2vw,30px);max-width:1530px;margin:auto;padding:14px clamp(18px,3.5vw,55px)}
+.sp-shell .sp-shell-brand{display:inline-flex;flex:none;align-items:center;text-decoration:none;color:#fff}
+.sp-shell .sp-shell-brand .sp-logo-mark{height:47px;width:47px}
+.sp-shell .sp-shell-brand .sp-logo-word{font-size:clamp(19px,2vw,27px)}
+.sp-shell .sp-shell-brand .sp-logo-word small{font-size:8px;margin-top:5px}
+.sp-shell .sp-shell-mainnav{display:flex;gap:5px;flex:1;justify-content:center;align-items:stretch}
+.sp-shell .sp-shell-nav-link{display:flex;align-items:center;justify-content:center;gap:10px;border-radius:9px;padding:12px 16px;min-height:48px;text-decoration:none;font-size:13px;font-weight:900;color:#D6DDF5;white-space:nowrap;position:relative}
+.sp-shell .sp-shell-nav-link:hover{background:#263A66;color:#fff}
+.sp-shell .sp-shell-nav-link.is-active{background:#FFE45C;color:#101629}
+.sp-shell .sp-shell-nav-symbol{font-size:20px;line-height:1;flex:none}
+.sp-shell .sp-shell-nav-copy{display:grid;gap:3px}
+.sp-shell .sp-shell-nav-copy small{font-size:10px;font-weight:700;opacity:.82}
+.sp-shell .sp-shell-start{display:inline-flex;align-items:center;gap:17px;background:#285BFF;color:#fff;text-decoration:none;padding:13px 16px;border-radius:8px;font-size:12px;font-weight:900;min-height:48px;white-space:nowrap}
+.sp-shell .sp-shell-start:hover{background:#396BFF}
+.sp-shell .sp-shell-start span{font-size:21px;line-height:1}
+.sp-shell .sp-shell-mobile-menu{display:none}
+.sp-shell .sp-shell-region{position:relative;display:flex;align-items:center;justify-content:space-between;gap:22px;padding:clamp(26px,3.4vw,49px) clamp(18px,4vw,70px);background:linear-gradient(118deg,#2454EA,#3157DB 67%,#4331B4);isolation:isolate;overflow:hidden;border-bottom:6px solid #FFE45C}
+.sp-shell--backstage .sp-shell-region{background:linear-gradient(118deg,#4F2FA1,#693CD4 72%,#40358B)}
+.sp-shell--spielleitung .sp-shell-region{background:linear-gradient(118deg,#073E61,#086E81 65%,#0F5875)}
+.sp-shell .sp-shell-region-content{position:relative;z-index:1;max-width:760px;min-width:0}
+.sp-shell .sp-shell-overline{font-size:11px;font-weight:900;letter-spacing:.17em;color:#FFE45C}
+.sp-shell .sp-shell-region-title{font:900 clamp(30px,4vw,62px)/1.04 "Arial Black","Trebuchet MS",system-ui,sans-serif;letter-spacing:-.055em;margin:8px 0 10px;text-transform:uppercase}
+.sp-shell .sp-shell-region-title span{color:#FFE45C}
+.sp-shell .sp-shell-region-description{max-width:55ch;color:#ECF0FF;line-height:1.45;margin:0;font-size:clamp(13px,1.3vw,17px);font-weight:650}
+.sp-shell .sp-shell-shortcuts{display:flex;flex-wrap:wrap;gap:9px;justify-content:flex-end;align-items:center;position:relative;z-index:1}
+.sp-shell .sp-shell-shortcuts a{display:inline-flex;gap:9px;align-items:center;justify-content:center;min-height:46px;background:#111D43d9;border:1px solid #BED0F5;border-radius:8px;padding:12px 14px;font-size:12px;font-weight:900;color:white;text-decoration:none}
+.sp-shell .sp-shell-shortcuts a:hover{background:#283B71}
+.sp-shell .sp-shell-shortcuts a span{font-size:17px;color:#FFE45C}
+.sp-shell .sp-shell-region-pattern{position:absolute;right:12%;top:-77px;line-height:1;font-size:310px;font-family:serif;color:#fff;opacity:.10;transform:rotate(-16deg);z-index:-1;pointer-events:none}
+.sp-shell .sp-shell-subnav{display:flex;gap:10px;align-items:center;justify-content:center;max-width:1530px;margin:-1px auto 0;padding:11px clamp(16px,3.5vw,55px);background:#101629}
+.sp-shell .sp-shell-subnav .sp-shell-nav-link{flex:1;max-width:240px;min-height:46px;font-size:12px;background:#20304E}
+.sp-shell .sp-shell-subnav .sp-shell-nav-link.is-active{background:#FFE45C;color:#101629}
+.sp-shell .sp-shell-workspace{color-scheme:light;width:100%;min-height:380px;max-width:none;margin:0;background:#F3F4F9;color:#202633;padding:clamp(28px,3vw,48px) clamp(17px,4vw,60px) 75px}
+.sp-shell .sp-shell-legacy{width:100%;max-width:1330px;margin:0 auto;color:#202633}
+.sp-shell--spielleitung .sp-shell-workspace{background:#EDF3F7}
+.sp-shell--spielleitung .exp-host-wrapper{min-height:0;padding:0;background:transparent}
+.sp-shell--spielleitung .exp-host-header{max-width:1220px}
+.sp-shell .sp-shell-footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid #34456F;color:#CDD6ED;padding:22px clamp(18px,4vw,70px);font-size:11px;line-height:1.5}
+.sp-shell .sp-shell-footer>span:first-child{color:#FFE45C;font-weight:900;letter-spacing:.07em}
+.sp-shell :where(a,button,summary):focus-visible{outline:3px solid #FFE45C;outline-offset:3px}
+.sp-shell .sp-shell-workspace :where(a,button,summary,input,select,textarea):focus-visible{outline:3px solid #2658DE;outline-offset:3px}
+@media(max-width:1000px){
+.sp-shell .sp-shell-header-inner{gap:12px}
+.sp-shell .sp-shell-brand .sp-logo-word small{display:none}
+.sp-shell .sp-shell-mainnav .sp-shell-nav-link{padding:10px 11px}
+.sp-shell .sp-shell-shortcuts{max-width:330px}
+.sp-shell .sp-shell-region-pattern{right:-5%}
+}
+@media(max-width:760px){
+.sp-shell .sp-shell-header-inner{padding:11px 16px}
+.sp-shell .sp-shell-mainnav,.sp-shell .sp-shell-start{display:none}
+.sp-shell .sp-shell-header-inner{justify-content:space-between}
+.sp-shell .sp-shell-mobile-menu{display:block;position:relative}
+.sp-shell .sp-shell-mobile-menu summary{list-style:none;display:flex;gap:7px;align-items:center;justify-content:center;min-height:46px;border-radius:8px;padding:10px 14px;font-weight:900;font-size:12px;cursor:pointer;background:#FFE45C;color:#101629}
+.sp-shell .sp-shell-mobile-menu summary::-webkit-details-marker{display:none}
+.sp-shell .sp-shell-mobile-menu[open] summary{background:#fff}
+.sp-shell .sp-shell-mobile-menu>nav{position:absolute;right:0;top:calc(100% + 10px);width:min(88vw,360px);display:grid;gap:6px;background:#16213E;border:2px solid #6478A3;border-radius:12px;padding:12px;box-shadow:0 14px 30px #0710249c;max-height:calc(100dvh - 92px);overflow-y:auto}
+.sp-shell .sp-shell-mobile-menu .sp-shell-nav-link{justify-content:flex-start;white-space:normal;background:#25365A}
+.sp-shell .sp-shell-mobile-menu .sp-shell-nav-link.is-active{background:#FFE45C}
+.sp-shell .sp-shell-mobile-label{font-size:10px;font-weight:900;color:#C8D8FC;letter-spacing:.17em;margin:6px 3px 0}
+.sp-shell .sp-shell-region{display:grid;gap:20px;padding:28px 20px 25px}
+.sp-shell .sp-shell-shortcuts{justify-content:flex-start;max-width:100%}
+.sp-shell .sp-shell-region-pattern{right:-10%;font-size:240px}
+.sp-shell .sp-shell-subnav{flex-wrap:wrap;justify-content:flex-start;padding:10px 16px;gap:7px}
+.sp-shell .sp-shell-subnav .sp-shell-nav-link{flex:1 1 40%;max-width:none;white-space:normal;justify-content:flex-start;padding:10px}
+.sp-shell .sp-shell-workspace{padding:29px 16px 55px}
+}
+@media(max-width:400px){
+.sp-shell .sp-shell-brand .sp-logo-mark{width:38px;height:38px}
+.sp-shell .sp-shell-brand .sp-logo-word{font-size:20px}
+.sp-shell .sp-shell-region-title{font-size:34px}
+.sp-shell .sp-shell-shortcuts a{flex:1 1 100%;justify-content:flex-start}
+.sp-shell .sp-shell-subnav .sp-shell-nav-link{font-size:11px}
+.sp-shell .sp-shell-subnav .sp-shell-nav-symbol{font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){.sp-shell *,.sp-shell *::before,.sp-shell *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Focused navigation for the two task-critical journeys. */
+.sp-shell .sp-shell-context{display:flex;align-items:center;gap:18px;padding:12px clamp(18px,3.5vw,55px);background:#192540;color:#fff;border-bottom:1px solid #394972;font-size:14px}
+.sp-shell .sp-shell-context a{color:#FFE45C;text-decoration:none;font-weight:800;min-height:40px;display:inline-flex;align-items:center}
+.sp-shell .sp-shell-context strong{font-weight:900}
+@media(max-width:760px){.sp-shell .sp-shell-context{padding:8px 16px;gap:12px}.sp-shell--spielwelt:has(.sp-shell-context) .sp-shell-workspace,.sp-shell--spielleitung:has(.sp-shell-context) .sp-shell-workspace{padding-bottom:28px}}
+
+/* Game-host next-action navigation: guidance only, never executes a game command. */
+.u07-rail-guidance{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:12px;padding:12px 14px;background:#f5f7ff;border:1px solid #cbd6ef;border-radius:8px;color:#192540}
+.u07-rail-next{margin:0;font-size:clamp(14px,1.1vw,16px);line-height:1.45;font-weight:650}
+.u07-rail-next strong{font-weight:900}
+.u07-rail-focus{flex:none;min-height:44px;padding:9px 15px;border:0;border-radius:6px;background:#2454ea;color:#fff;font-weight:850;cursor:pointer;font-size:14px}
+.u07-rail-focus:hover{background:#173eb7}
+.u07-rail-focus:focus-visible{outline:3px solid #ffdc3e;outline-offset:3px}
+@media(max-width:600px){.u07-rail-guidance{align-items:stretch;flex-direction:column;padding:12px}.u07-rail-focus{width:100%;text-align:center}}

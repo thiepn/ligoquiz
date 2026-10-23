@@ -1,0 +1,17 @@
+# U21 — Finish the original same-device spectator guess-to-reveal interaction
+
+## Exact gap and user-facing result
+U14 already lets a spectator on another tab of the same browser/device enter a private answer and lock it, and displays the original allowlisted public-stage reveal. After that reveal, the original interaction stopped: no local review of the guess was possible. U21 adds **Dein Vergleich** only when a previously locked private guess and its matching genuine published scene are both available. The spectator sees **Dein festgehaltener Tipp** beside the host-published **Veröffentlichte Auflösung**, and explicitly selects **Passt**, **Teilweise** or **Anders**.
+
+This is the user's own reflection. The app **does not infer correctness** (including survey ranked categories and Verbindungen wall groups), calculate any grade, award points, keep a history, or send answers or reflections to the host. The three-way choice is intentionally not a second grader or even a new scoring heuristic.
+
+## Original authority and privacy
+The original \`StageViewer\` still receives only \`PublicStageDto\` allowlisted scenes and **does not acknowledge projector frames** in audience play-along. The original \`retainedGuess\` remains the task/event/game/host-epoch lock and invalidation authority. U21's \`revealedComparison\` and \`retainedReflection\` additionally demand the specific \`reveal\` scene, nonempty published content and the original locked note. Pauses, score screens, different tasks, changed owner epochs, connection conflicts or lost connections revoke eligibility; the UI state disappears. Browser reload unmounts and loses both note and self-reflection. There is no localStorage, sessionStorage, IndexedDB, network submission, backend, new channel or modified public-stage projection.
+
+The original public source can include a single revealed answer, an explanatory Logikleiter public answer, the published Umfrageduell category list, or the already-revealed Verbindungen wall group links. All comparison material comes **only from already-public published fields**. Private frozen tasks, source rights, score receipts, unpublished hints, moderator answers and editorial data never enter the spectator component.
+
+## Original-source and real-browser coverage
+- \`tests/u21-audience-reflection.test.ts\` covers the five original game scene types; locked guess, published-reveal and user choice gates; no automatic textual scoring; valid local retention and explicit invalidation on pause/task change, stale frame, game/event/host epoch switch; four-group wall and survey category comparisons.
+- \`e2e/u21-audience-reflection.spec.mjs\` creates real original five-engine host sessions, uses a second same-browser-profile tab with \`acknowledgeFrames:false\`, confirms guesses and private comparison are hidden until original host publishes, manually changes selection, verifies the host still has zero projector ACKs, 390px mobile layout, no sessionStorage and reload reset, and tests 375px complete host-loss erasure.
+
+Existing G15 projector and G26 release denial contracts, original five game engines and scoring, CAS/host ownership, U13–U20, offline/backup/review/source-rights boundaries remain untouched. NO_GO persists for real physical projector, independent source rights and owner acceptance. Same original open draft PR #25/branch only; no merge, deployment, migrations, credentials, production writes, manually triggered paid CI or costs.

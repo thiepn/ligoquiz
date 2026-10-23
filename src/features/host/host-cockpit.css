@@ -1,0 +1,135 @@
+/* U05 — scoped private host cockpit; public StageView is untouched. */
+.sp-shell--spielleitung .sp-cockpit-wrap{padding:0;background:transparent;min-height:0}
+.sp-shell--spielleitung .sp-cockpit-topline{max-width:1320px;margin:0 auto 17px}
+.sp-shell--spielleitung .sp-cockpit{max-width:1320px;margin:0 auto 16px;color:#14203B}
+.sp-cockpit-hero{position:relative;overflow:hidden;isolation:isolate;display:flex;align-items:center;justify-content:space-between;min-height:200px;padding:clamp(22px,3vw,38px);background:#2158E9;color:#fff;border-bottom:7px solid #FFE45C}
+.sp-cockpit-hero--pink{background:#C52A6A}.sp-cockpit-hero--violet{background:#6030BA}.sp-cockpit-hero--mint{background:#006B63}.sp-cockpit-hero--orange{background:#994900}
+.sp-cockpit-title{position:relative;z-index:1;max-width:750px;min-width:0}
+.sp-cockpit-overline{font-size:10px;font-weight:900;letter-spacing:.15em;color:#FFE45C;margin:0 0 12px}
+.sp-cockpit-overline span{margin:0 7px}
+.sp-cockpit-hero h2{font:950 clamp(32px,4vw,54px)/1.08 "Arial Black","Trebuchet MS",system-ui,sans-serif;letter-spacing:-.05em;margin:0}
+.sp-cockpit-hero h2 span{color:#FFE45C}
+.sp-cockpit-title>p:not(.sp-cockpit-overline){font-size:13px;line-height:1.5;color:#F0F4FF;margin:10px 0 18px;font-weight:750}
+.sp-cockpit-status{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:11px;font-weight:700;color:#EDF3FF}
+.sp-cockpit-state{display:inline-flex;align-items:center;gap:7px;padding:9px 12px;background:#152548;border:1px solid #C0D5FF;color:#fff;font-weight:900}
+.sp-cockpit-state span{color:#FFE45C}
+.sp-cockpit-state.is-warning{background:#65220B;border-color:#FFE45C}
+.sp-cockpit-state.is-paused{background:#4D315F;border-color:#DABFFF}
+.sp-cockpit-art{position:relative;flex:0 0 clamp(135px,21vw,255px);height:180px;display:grid;place-items:center;color:#fff;opacity:.78;pointer-events:none}
+.sp-cockpit-art .sp-motif{position:static;inset:auto;transform:none;width:100%;height:100%;color:inherit}
+.sp-cockpit-warning{background:#FFF2DC;color:#662700;border:2px solid #AA5714;padding:14px 17px;font-size:13px;line-height:1.55;font-weight:850}
+.sp-cockpit-overview{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:3px;margin:13px 0;background:#DCE5F1}
+.sp-cockpit-fact{min-width:0;background:#fff;padding:18px 19px;display:grid;align-content:start;gap:10px;min-height:120px}
+.sp-cockpit-fact>span{font-size:10px;font-weight:950;letter-spacing:.12em;color:#48607F}
+.sp-cockpit-fact strong{font-size:clamp(13px,1.3vw,17px);line-height:1.45;color:#182748;overflow-wrap:anywhere}
+.sp-cockpit-fact--progress{background:#12244D;color:#fff}
+.sp-cockpit-fact--progress>span{color:#FFE45C}
+.sp-cockpit-fact--progress .sp-progress{color:#fff;min-width:0}
+.sp-cockpit-fact--progress .sp-progress-meta{color:white;font-size:12px;line-height:1.5}
+.sp-cockpit-fact--progress .sp-progress-track{background:#364B76}
+.sp-cockpit-fact--progress .sp-progress-track>span{background:#FFE45C}
+.sp-cockpit-scores{background:#101D3A;color:#fff;padding:clamp(19px,2vw,27px);margin-bottom:12px}
+.sp-cockpit-scores-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.sp-cockpit-scores-head h3{font:950 clamp(21px,2.5vw,30px)/1.2 "Arial Black",system-ui,sans-serif;letter-spacing:-.04em;margin:0;color:#fff}
+.sp-cockpit-scores-head span{font-size:11px;color:#C6D5F4}
+.sp-cockpit-scores-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(175px,100%),1fr));gap:9px}
+.sp-cockpit-scores-grid .sp-score-chip{min-width:0;max-width:none;width:100%;box-sizing:border-box}
+.sp-cockpit-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px;background:#fff;border:1px solid #DCE4F2;padding:13px}
+.sp-cockpit-actions :is(a,button){display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:45px;padding:10px 14px;color:#203451;border:1px solid #C8D3E5;text-decoration:none;font-size:12px;font-weight:900}
+.sp-cockpit-actions :is(a,button):hover{background:#EAF0FE}
+.sp-cockpit-actions .sp-cockpit-primary{background:#285BFF;color:#fff;border-color:#285BFF}
+.sp-cockpit-actions .sp-cockpit-primary:hover{background:#1649DE}
+.sp-cockpit-actions .sp-cockpit-stage{background:#FFE45C;color:#101629;border-color:#E6CB3D}
+.sp-cockpit-actions .sp-cockpit-stage:hover{background:#F5D53C}
+.sp-cockpit-private-note{font-size:11px;line-height:1.65;color:#576780;margin:10px 2px 15px}
+.sp-cockpit-loading{border:1px solid #CEDAEB;background:#fff;padding:26px;color:#23436D;font-size:14px}
+.sp-shell--spielleitung .sp-host-game-region{max-width:1320px;margin:0 auto;scroll-margin-top:20px}
+.sp-shell--spielleitung .sp-host-game-region [data-host-game]{scroll-margin-top:20px}
+.sp-shell--spielleitung .sp-host-game-region .rq-host{max-width:none;margin:0 auto 22px}
+.sp-cockpit :where(a,button):focus-visible{outline:3px solid #285BFF;outline-offset:3px}
+@media(max-width:800px){.sp-cockpit-overview{grid-template-columns:1fr 1fr}.sp-cockpit-fact--progress{grid-column:1/-1}.sp-cockpit-art{flex-basis:145px;height:140px}}
+@media(max-width:570px){.sp-cockpit-hero{padding:22px 18px;min-height:0}.sp-cockpit-art{position:absolute;right:-12px;top:0;width:150px;height:175px;opacity:.12}.sp-cockpit-overview{grid-template-columns:1fr}.sp-cockpit-fact--progress{grid-column:auto}.sp-cockpit-fact{min-height:0}.sp-cockpit-scores-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sp-cockpit-actions :is(a,button){flex:1 1 100%;justify-content:space-between}.sp-cockpit-scores-head{display:grid}}
+@media(max-width:370px){.sp-cockpit-scores-grid{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){.sp-cockpit *,.sp-cockpit *::before,.sp-cockpit *::after{animation:none!important;transition:none!important;transform:none!important}}
+
+.sp-cockpit-actions button{font-family:inherit;cursor:pointer}.sp-host-game-region:focus{outline:3px solid #285BFF;outline-offset:3px}
+
+/* U10 long game-title zoom: G15 evidence showed clipping of Verbindungen
+   and Umfrageduell at 200% despite a page-width pass. Preserve the actual
+   Studio Pop font while making the private cockpit heading reflowable. */
+.sp-shell--spielleitung .sp-cockpit-hero h2{
+ max-width:100%;min-width:0;overflow-wrap:anywhere;hyphens:auto;
+}
+@media(max-width:800px){
+ .sp-shell--spielleitung .sp-cockpit-hero h2{
+  font-size:clamp(23px,4vw,38px);
+ }
+}
+
+
+/* U10 G15 200%-zoom evidence: at 640px CSS viewport, decorative art still
+ * consumed a column of the private cockpit and fragmented game names.
+ * Treat art as non-interactive decoration and preserve the full text column. */
+@media(max-width:800px){
+ .sp-shell--spielleitung .sp-cockpit-hero{position:relative;min-width:0}
+ .sp-shell--spielleitung .sp-cockpit-title{width:100%;max-width:none;min-width:0}
+ .sp-shell--spielleitung .sp-cockpit-art{
+  position:absolute;inset:0 0 auto auto;right:-12px;top:0;
+  width:150px;height:160px;flex-basis:auto;opacity:.13;pointer-events:none;
+ }
+ .sp-shell--spielleitung .sp-cockpit-hero h2{
+  font-size:clamp(24px,3.35vw,40px);
+  line-height:1.12;overflow-wrap:normal;word-break:normal;hyphens:auto;
+  max-width:100%;
+ }
+}
+
+.sp-cockpit-density{
+ min-height:44px;padding:8px 13px;background:#fff;color:#102752;border:2px solid #fff;
+ font:850 14px/1.3 system-ui,sans-serif;cursor:pointer;
+}
+.sp-cockpit-density[aria-pressed="true"]{background:#FFE45C;border-color:#FFE45C;color:#17213C}
+.sp-cockpit .sp-cockpit-density:focus-visible{outline:3px solid #FFE45C;outline-offset:3px}
+.sp-cockpit.is-compact .sp-cockpit-hero{min-height:0;padding:12px 18px;border-bottom-width:4px}
+.sp-cockpit.is-compact .sp-cockpit-title{
+ max-width:none;width:100%;display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px;
+}
+.sp-cockpit.is-compact .sp-cockpit-hero h2{font-size:clamp(23px,2.5vw,31px);line-height:1.2}
+.sp-cockpit.is-compact .sp-cockpit-title>p:not(.sp-cockpit-overline){margin:0;font-size:14px}
+.sp-cockpit.is-compact .sp-cockpit-status{margin-left:auto;gap:8px;font-size:14px}
+.sp-cockpit.is-compact .sp-cockpit-art{display:none}
+.sp-cockpit.is-compact .sp-cockpit-overview{grid-template-columns:1.15fr 1fr 1fr;gap:2px;margin:6px 0}
+.sp-cockpit.is-compact .sp-cockpit-fact{min-height:0;padding:10px 13px;gap:4px}
+.sp-cockpit.is-compact .sp-cockpit-fact>span{font-size:12px;letter-spacing:0}
+.sp-cockpit.is-compact .sp-cockpit-fact strong{font-size:14px;line-height:1.4}
+.sp-cockpit.is-compact .sp-cockpit-fact--progress{grid-column:auto}
+.sp-cockpit.is-compact .sp-cockpit-fact .sp-progress-meta{font-size:14px}
+.sp-cockpit.is-compact .sp-cockpit-scores{padding:12px 14px;margin-bottom:6px}
+.sp-cockpit.is-compact .sp-cockpit-scores-head{margin-bottom:8px}
+.sp-cockpit.is-compact .sp-cockpit-scores-head h3{font-size:18px}
+.sp-cockpit.is-compact .sp-cockpit-scores-grid{
+ grid-template-columns:repeat(auto-fit,minmax(min(130px,100%),1fr));gap:6px;
+}
+.sp-cockpit.is-compact .sp-score-chip{padding:7px 10px}
+.sp-cockpit.is-compact .sp-score-label{font-size:14px}
+.sp-cockpit.is-compact .sp-score-value>strong{font-size:25px}
+.sp-cockpit.is-compact .sp-cockpit-actions{padding:8px;gap:7px}
+.sp-cockpit.is-compact .sp-cockpit-actions :is(a,button){min-height:44px;font-size:14px;padding:8px 10px}
+.sp-cockpit-private-note{font-size:14px;line-height:1.5}
+@media(max-width:800px){
+ .sp-cockpit.is-compact .sp-cockpit-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .sp-cockpit.is-compact .sp-cockpit-fact--progress{grid-column:1/-1}
+}
+@media(max-width:570px){
+ .sp-cockpit.is-compact .sp-cockpit-status{margin-left:0;width:100%}
+ .sp-cockpit.is-compact .sp-cockpit-overview{grid-template-columns:1fr}
+ .sp-cockpit.is-compact .sp-cockpit-fact--progress{grid-column:auto}
+ .sp-cockpit.is-compact .sp-cockpit-scores-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .sp-cockpit.is-compact .sp-cockpit-actions :is(a,button){
+  flex:1 1 calc(50% - 7px);justify-content:center;text-align:center;
+ }
+}
+@media(max-width:370px){
+ .sp-cockpit.is-compact .sp-cockpit-scores-grid{grid-template-columns:1fr}
+ .sp-cockpit.is-compact .sp-cockpit-actions :is(a,button){flex-basis:100%}
+}

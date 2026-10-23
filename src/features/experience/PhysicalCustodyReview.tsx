@@ -81,7 +81,7 @@ export function PhysicalCustodyReview(){
   finally{setBusy(false);}
  }
  return <section className="g22-review" aria-label="G22 Physische Abnahme und Originalbelege">
-  <header><div><p className="eyebrow">G22 · PHYSISCHE ORIGINALBELEGE · UNABHÄNGIGE ABNAHME</p>
+  <header><div>
    <h2>Geräte- und Originalbelegprüfung</h2>
    <p>Externe signierte Aussagen samt tatsächlichen Originalbytes auf Hashes prüfen.
     Keine Originale speichern oder exportieren. Ungeprüfte Identitäten, Selbstberichte und simulierte Geräte sind keine Freigabe.</p>

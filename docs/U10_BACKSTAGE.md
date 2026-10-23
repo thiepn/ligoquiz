@@ -1,0 +1,11 @@
+# U10 — Native backstage and postshow integration
+
+Scope: original PR #25, U10 only. A real, read-only backstage desk is embedded in OrganizerHome, with open/finished/recovery counts, original game status, safe host resume, technique/offline checks, consent-gated backup shortcuts and the three most recent completed sessions. Original results spotlight displays only completed reportFor scores, competition ties, original half-points and provenance. There is no second scoring, session, stage, backup or publishing engine.
+
+Per-session backup links use /einstellungen?backup=<canonical event id> and are validated against the existing EventRepository list; they select a session but never download or restore automatically. Original recovery authorization, session identity, receipts and CAS stay intact. The organizer cannot silently take over an old host; existing explicit confirm remains the only path.
+
+Completed-history reports now include sanitized revision/category timeline, original game-audit summary and source hashes. Never display raw audit.detail, private answer, host/command identity or frozen task; full original details survive in encrypted/checksummed original backup, unchanged. Results JSON/CSV are explicitly distinct from a recoverable backup. The original published projector remains isolated and untouched.
+
+Technical backstage navigation links to existing OfflinePreflight, projector rehearsal and G26 release-denial sections; no simulated readiness. All five gameplay hosts, their source content IDs and G15 archived stage baselines remain unchanged. Physical projector and content rights validation are still G26 NO_GO.
+
+Additional focused U10 tests verify pure read-only directory ordering, invalid deep-link rejection, sanitized original audit, actual host-to-backup-to-host continuity, no unauthorized takeover on refusal, and 375px backstage/history/settings geometry. Preserve full original TS, ESLint, Vitest, Vite, Chromium desktop/mobile/projector and installed offline PWA gates.

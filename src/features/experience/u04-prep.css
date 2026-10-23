@@ -1,0 +1,145 @@
+/* U04: organizer-only stage-inspired setup, never applied to host or public projector. */
+.sp-prep.exp-page{max-width:1350px;margin:0 auto;padding:0;color:#19243E}
+.sp-prep .sp-prep-mast{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:clamp(23px,3.5vw,46px);background:#111F47;color:#fff;border-bottom:7px solid #FFE45C}
+.sp-prep .sp-prep-mast>div{position:relative;z-index:1;max-width:780px}
+.sp-prep .sp-prep-overline{font-size:11px;font-weight:950;letter-spacing:.13em;color:#FFE45C}
+.sp-prep .sp-prep-mast h1{font:950 clamp(30px,4vw,54px)/1.08 "Arial Black","Trebuchet MS",system-ui,sans-serif;letter-spacing:-.06em;margin:13px 0}
+.sp-prep .sp-prep-mast h1 em{font-style:normal;color:#FFE45C}
+.sp-prep .sp-prep-mast p{font-size:clamp(13px,1.3vw,16px);line-height:1.55;color:#DBE4F9;margin:0 0 19px}
+.sp-prep .sp-prep-local{display:inline-block;background:#27395F;border:1px solid #7187B4;padding:9px 12px;font-size:10px;font-weight:900;letter-spacing:.05em}
+.sp-prep .sp-prep-exit{position:relative;z-index:1;flex:none;color:white;background:#FFFFFF1C;border:1px solid #B5C5E8;text-decoration:none;padding:12px;font-size:12px;font-weight:900}
+.sp-prep .sp-prep-decor{position:absolute;right:12%;top:-90px;transform:rotate(-12deg);pointer-events:none;font:900 360px system-ui;color:#5F78BC;opacity:.15;z-index:-1}
+.sp-prep .sp-prep-steps{margin:0 0 22px;background:#E5EAF6;border:0;gap:3px}
+.sp-prep .sp-prep-steps>button{border:0;background:#fff;color:#53627D;gap:12px;padding:16px;font-weight:900}
+.sp-prep .sp-prep-steps>button b{display:grid;place-items:center;width:36px;height:36px;flex:none;color:#3F5272;border:2px solid #D5E0F1}
+.sp-prep .sp-prep-steps>button span{display:grid;gap:3px}
+.sp-prep .sp-prep-steps>button small{font-weight:700;font-size:10px;color:#6D7890}
+.sp-prep .sp-prep-steps>button.exp-current{background:#285BFF;color:white}
+.sp-prep .sp-prep-steps>button.exp-current b{color:#111E42;background:#FFE45C;border-color:#FFE45C}
+.sp-prep .sp-prep-steps>button.exp-current small{color:#DFEAFF}
+.sp-prep .sp-prep-steps>button.sp-prep-done{background:#E6F8F3;color:#075E55}
+.sp-prep .sp-prep-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(235px,285px);gap:clamp(14px,2vw,27px);align-items:start}
+.sp-prep .sp-prep-main{min-width:0}
+.sp-prep .sp-prep-panel{padding:clamp(20px,3vw,35px);margin:0;background:#fff;border:1px solid #D6DEEE}
+.sp-prep .sp-prep-kicker{display:block;color:#285BFF;font-size:11px;font-weight:950;letter-spacing:.14em;margin-bottom:13px}
+.sp-prep .sp-prep-panel h2{font:950 clamp(23px,2.5vw,32px)/1.17 "Arial Black",system-ui,sans-serif;letter-spacing:-.045em;color:#12213F;margin:0 0 12px}
+.sp-prep .sp-prep-panel>p{font-size:13px;color:#596984;line-height:1.6;margin:0 0 19px}
+.sp-prep .exp-field{font-size:12px;font-weight:850;color:#2A3956}
+.sp-prep .exp-field :is(input,select){height:49px;border:2px solid #C9D6E9;border-radius:6px;background:#fff;color:#162440;font-size:15px}
+.sp-prep .sp-prep-roster{gap:13px}
+.sp-prep .sp-prep-team{padding:15px;background:#F7F9FD;border:1px solid #DFE6F1}
+.sp-prep .sp-prep-team>span{display:flex;align-items:center;gap:10px}
+.sp-prep .sp-prep-team-number{display:grid;place-items:center;width:30px;height:30px;background:#285BFF;color:#fff;font-size:12px}
+.sp-prep .sp-prep-team-number--1{background:#DA2C70}.sp-prep .sp-prep-team-number--2{background:#00786A}.sp-prep .sp-prep-team-number--3{background:#713FD2}.sp-prep .sp-prep-team-number--4{background:#A34C00}
+.sp-prep .sp-prep-team input{width:100%}
+.sp-prep .sp-prep-team input[aria-invalid=true]{border-color:#BA204D}
+.sp-prep .sp-prep-game-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 20px}
+.sp-prep .sp-prep-game{display:grid;grid-template-columns:65px minmax(0,1fr);gap:8px 14px;text-align:left;margin:0;padding:14px;min-height:117px;border:2px solid #DDE5F3;border-radius:8px;background:#F9FBFF;color:#18243E}
+.sp-prep .sp-prep-game:hover{border-color:#436EF6;background:#F1F5FF}
+.sp-prep .sp-prep-game.chosen{border:3px solid #285BFF;background:#EDF3FF;padding:13px}
+.sp-prep .sp-prep-game--pink.chosen{border-color:#DA2C70;background:#FFF0F6}
+.sp-prep .sp-prep-game--violet.chosen{border-color:#713FD2;background:#F7F1FF}
+.sp-prep .sp-prep-game--mint.chosen{border-color:#00786A;background:#EDFCF6}
+.sp-prep .sp-prep-game--orange.chosen{border-color:#A34C00;background:#FFF6E9}
+.sp-prep .sp-prep-game-art{display:grid;place-items:center;width:65px;height:65px;border-radius:6px;background:#285BFF;color:#fff}
+.sp-prep .sp-prep-game--pink .sp-prep-game-art{background:#DA2C70}
+.sp-prep .sp-prep-game--violet .sp-prep-game-art{background:#713FD2}
+.sp-prep .sp-prep-game--mint .sp-prep-game-art{background:#00786A}
+.sp-prep .sp-prep-game--orange .sp-prep-game-art{background:#A34C00}
+.sp-prep .sp-prep-game-art .sp-motif{width:61px;height:59px}
+.sp-prep .sp-prep-game-copy{display:grid;gap:4px;min-width:0}
+.sp-prep .sp-prep-game-copy small{font-size:9px;font-weight:900;color:#65718A}
+.sp-prep .sp-prep-game-copy strong{font-size:17px;font-weight:950;color:#14223F}
+.sp-prep .sp-prep-game-copy>span{font-size:11px;line-height:1.4;color:#53617D}
+.sp-prep .sp-prep-game>b{grid-column:2;justify-self:start;color:#194ACC;font-size:11px}
+.sp-prep .sp-prep-profile-note{display:flex;align-items:center;gap:10px;padding:10px 15px;background:#FFE45C;color:#121F3D;margin:2px 0 18px}
+.sp-prep .sp-prep-profile-note strong{font:950 29px system-ui}
+.sp-prep .sp-prep-profile-note span{display:grid;gap:2px;font-size:12px;font-weight:900}
+.sp-prep .sp-prep-profile-note small{font-size:10px;font-weight:700}
+.sp-prep .sp-prep-sources{margin:21px 0;border:1px solid #D9E2F2;padding:14px}
+.sp-prep .sp-prep-sources legend{font-weight:900;font-size:13px;padding:0 7px;color:#14284C}
+.sp-prep .sp-prep-sources label{display:flex;align-items:start;gap:11px;padding:13px;background:#F7F9FD;border:1px solid #DDE5F0;cursor:pointer;line-height:1.55}
+.sp-prep .sp-prep-sources label:has(input:checked){border:2px solid #285BFF;padding:12px;background:#EDF4FF}
+.sp-prep .sp-prep-sources input{flex:none;accent-color:#285BFF;width:18px;height:18px;margin-top:2px}
+.sp-prep .sp-prep-safety{display:flex;align-items:center;gap:12px;background:#182746;color:white;padding:18px;margin:13px 0}
+.sp-prep .sp-prep-safety strong{display:grid;place-items:center;flex:none;width:34px;height:34px;background:#FFE45C;color:#111B36;font-size:20px}
+.sp-prep .sp-prep-safety span{font-size:12px;line-height:1.6}
+.sp-prep .sp-prep-ack{border:2px solid #C3D2F1;background:#F0F5FF;color:#192A4B;font-size:13px;padding:17px}
+.sp-prep .sp-prep-ack input{accent-color:#285BFF;width:20px;height:20px}
+.sp-prep .sp-prep-summary>div{border:1px solid #DEE6F3;background:#F7F9FF}
+.sp-prep .sp-prep-summary strong{color:#14223D}
+.sp-prep .sp-prep-actions{margin:16px 0;gap:10px}
+.sp-prep .sp-prep-actions button{min-height:52px;padding:12px 23px;font-weight:900;border-radius:6px}
+.sp-prep .sp-prep-next{background:#285BFF;color:white;border:2px solid #285BFF;min-width:200px}
+.sp-prep .sp-prep-next:hover{background:#1646DD}
+.sp-prep .sp-prep-back{border:2px solid #C7D1E4;background:white;color:#233651}
+.sp-prep .sp-prep-aside{display:grid;gap:12px;position:sticky;top:22px;min-width:0}
+.sp-prep .sp-prep-preview{position:relative;display:flex;flex-direction:column;min-height:280px;padding:20px;background:#285BFF;color:#fff;overflow:hidden}
+.sp-prep .sp-prep-preview--pink{background:#C52568}.sp-prep .sp-prep-preview--violet{background:#6337B8}.sp-prep .sp-prep-preview--mint{background:#00786A}.sp-prep .sp-prep-preview--orange{background:#A34C00}
+.sp-prep .sp-prep-preview>span{display:flex;justify-content:space-between;font-size:10px;font-weight:900;letter-spacing:.11em}
+.sp-prep .sp-prep-preview-art{display:grid;place-items:center;height:130px}
+.sp-prep .sp-prep-preview-art .sp-motif{height:118px;max-width:100%}
+.sp-prep .sp-prep-preview>small{font-size:9px;font-weight:900;letter-spacing:.1em}
+.sp-prep .sp-prep-preview>strong{font:900 27px "Arial Black",system-ui,sans-serif;letter-spacing:-.04em;margin:6px 0}
+.sp-prep .sp-prep-preview>p{font-size:12px;line-height:1.5;margin:0;color:#F3F5FF}
+.sp-prep .sp-prep-aside-details{padding:19px;border:1px solid #DDE5F0;background:white}
+.sp-prep .sp-prep-aside-details h3{font-size:10px;font-weight:950;letter-spacing:.08em;color:#192B4A;margin:0}
+.sp-prep .sp-prep-aside-details h3 small{color:#00786A}
+.sp-prep .sp-prep-aside-details dl{margin:16px 0}
+.sp-prep .sp-prep-aside-details dl>div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid #E7EDF6;padding:10px 0}
+.sp-prep .sp-prep-aside-details dt,.sp-prep .sp-prep-aside-details dd{font-size:12px;margin:0}
+.sp-prep .sp-prep-aside-details dt{color:#5B6A84}
+.sp-prep .sp-prep-aside-details dd{font-weight:900;color:#1A2B4B;text-align:right}
+.sp-prep .sp-prep-aside-details p{font-size:11px;line-height:1.6;color:#5A6A83;margin:0}
+.sp-prep :where(input,select,button,a):focus-visible{outline:3px solid #285BFF;outline-offset:3px}
+
+/* U01 motifs are absolutely positioned for full-size GameTile artwork.
+   In U04 they are content inside bounded icon boxes: reset positioning there,
+   not on shared U01 tiles or the public stage. */
+.sp-prep .sp-prep-game-art .sp-motif,
+.sp-prep .sp-prep-preview-art .sp-motif{
+  position:static;
+  inset:auto;
+  display:block;
+  transform:none;
+  color:#fff;
+  opacity:1;
+  flex:none;
+}
+
+/* The older global .exp-choice-games .exp-program is a flexbox rule. The U04
+   art/card layout must outrank it on every import order to prevent mobile overflow. */
+.sp-prep .exp-choice-games .exp-program.sp-prep-game{
+  display:grid;
+  grid-template-columns:65px minmax(0,1fr);
+  width:100%;max-width:100%;min-width:0;
+  box-sizing:border-box;
+}
+.sp-prep .sp-prep-game-copy{min-width:0;overflow-wrap:anywhere}
+.sp-prep .sp-prep-game-choices,.sp-prep .sp-prep-panel,
+.sp-prep .sp-prep-sources{min-width:0;max-width:100%;box-sizing:border-box}
+.sp-prep .sp-prep-sources label{min-width:0;overflow-wrap:anywhere}
+@media(max-width:570px){
+  .sp-prep .exp-choice-games .exp-program.sp-prep-game{
+    grid-template-columns:56px minmax(0,1fr);
+    gap:8px;
+  }
+  .sp-prep .sp-prep-game-choices{grid-template-columns:minmax(0,1fr)}
+  .sp-prep .sp-prep-game>b{white-space:normal;overflow-wrap:anywhere}
+}
+
+@media(max-width:1120px){.sp-prep .sp-prep-layout{grid-template-columns:minmax(0,1fr) 230px}.sp-prep .sp-prep-game-choices{grid-template-columns:1fr}}
+@media(max-width:800px){.sp-prep .sp-prep-layout{grid-template-columns:minmax(0,1fr)}.sp-prep .sp-prep-aside{position:static;grid-template-columns:1fr 1fr}.sp-prep .sp-prep-preview{min-height:230px}}
+@media(max-width:570px){.sp-prep .sp-prep-mast{padding:22px 17px;flex-direction:column}.sp-prep .sp-prep-steps>button{display:grid;gap:6px;padding:13px 8px;font-size:11px}.sp-prep .sp-prep-steps>button b{width:28px;height:28px}.sp-prep .sp-prep-steps>button small{font-size:9px}.sp-prep .sp-prep-roster{grid-template-columns:1fr}.sp-prep .sp-prep-aside{grid-template-columns:1fr}.sp-prep .sp-prep-game{grid-template-columns:56px minmax(0,1fr);padding:12px;gap:8px}.sp-prep .sp-prep-game.chosen{padding:11px}.sp-prep .sp-prep-game-art{width:56px;height:56px}.sp-prep .sp-prep-game-art .sp-motif{width:51px;height:51px}.sp-prep .sp-prep-actions{flex-wrap:wrap}.sp-prep .sp-prep-actions button{flex:1 1 100%}.sp-prep .sp-prep-mast h1{font-size:32px}}
+@media(prefers-reduced-motion:reduce){.sp-prep *,.sp-prep *::before,.sp-prep *::after{transition:none!important;animation:none!important}}
+
+
+/* Earlier steps remain directly accessible; future steps cannot bypass setup validation. */
+.sp-prep .sp-prep-steps>button{font-family:inherit;cursor:pointer;text-align:left;border-radius:0}
+.sp-prep .sp-prep-steps>button:disabled{cursor:default;opacity:.75}
+.sp-prep .sp-prep-steps>button.exp-current{cursor:default}
+.sp-prep .sp-prep-switch-game{display:inline-flex;align-items:center;min-height:44px;
+ border:2px solid #A8BAE2;background:#fff;color:#2049A0;padding:9px 14px;margin:0 0 18px;
+ font:850 15px/1.3 system-ui;cursor:pointer}
+.sp-prep .sp-prep-switch-game:hover{border-color:#285BFF;background:#EDF3FF}
+.sp-prep .sp-prep-steps>button:focus-visible{outline:3px solid #285BFF;outline-offset:3px}

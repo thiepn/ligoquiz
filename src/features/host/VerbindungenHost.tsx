@@ -1,7 +1,10 @@
 import {CorrectionProvenance,SafeErrorRecovery} from './CorrectionProvenance';
 import {ScoreDecisionPanel} from './ScoreDecisionPanel';
 import {loadSafelyPausedVerbindungen} from './verbindungen-load';
-import {HostModerationGuide} from './HostModerationGuide';
+import {HostModerationGuide,hostPhaseLabel,hostContentLabel} from './HostModerationGuide';
+import {HostGameplayRail} from './HostGameplayRail';
+import {StudioPopMotif} from '../../design-system/StudioPop';
+import './u08-play.css';
 import {useEffect,useRef,useState} from 'react';
 import {EventRepository} from '../../infrastructure/db/event-repository';
 import {HostSessionController} from '../../application/host-controller/host-session';
@@ -13,6 +16,7 @@ import {
  type Action
 } from '../../games/verbindungen/engine';
 import {readHostIdentity} from '../experience/model';
+import {countdownScope,useHostCountdown} from './useHostCountdown';
 
 const errorText=(error:unknown)=>error instanceof Error?error.message:'Aktion fehlgeschlagen';
 export function VerbindungenHost(){
@@ -21,12 +25,12 @@ export function VerbindungenHost(){
  const [error,setError]=useState('');
  const [ready,setReady]=useState(false),[busy,setBusy]=useState(false),[viewers,setViewers]=useState(0);
  const controllerRef=useRef<HostSessionController|null>(null);
- const [seconds,setSeconds]=useState(0),[clock,setClock]=useState(false);
- const lastTick=useRef(Date.now());
  const vb=event?.verbindungen;
  const task=vb?.phase==='complete'?null:vb?active(vb):null;
  const timerLimit=task?.puzzle.kind==='wall'?180:task?.puzzle.kind==='sequence'?45:30;
-
+ const {seconds,clock,setClock,setSeconds}=useHostCountdown(
+  countdownScope(event?.id,event?.hostEpoch,task?.puzzle.id,vb?.phase,vb?.clueIndex),
+  timerLimit,Boolean(!ready||vb?.paused||event?.recoveryRequired));
  useEffect(()=>{
   if(!identity)return;
   const db=new EventRepository();let disposed=false;
@@ -50,23 +54,10 @@ export function VerbindungenHost(){
   return ()=>{disposed=true;controllerRef.current=null;window.clearInterval(interval);publisher.stop();void db.close();};
  },[identity?.eventId,identity?.hostId]);
 
- useEffect(()=>{setClock(false);setSeconds(timerLimit);},[vb?.index,vb?.phase,vb?.clueIndex,vb?.paused,timerLimit]);
- useEffect(()=>{
-  if(!clock||vb?.paused||seconds===0)return;
-  lastTick.current=Date.now();
-  const timer=window.setInterval(()=>{
-   const now=Date.now(),delta=Math.floor((now-lastTick.current)/1000);
-   if(delta<1)return;lastTick.current+=delta*1000;
-   setSeconds(n=>Math.max(0,n-delta));
-  },250);
-  return ()=>window.clearInterval(timer);
- },[clock,vb?.paused,vb?.index,vb?.phase,seconds===0]);
- useEffect(()=>{if(seconds===0)setClock(false);},[seconds]);
-
  async function send(action:Action){
   if(!ready||busy||!event||event.recoveryRequired)return;
   const controller=controllerRef.current;if(!controller)return;
-  if(['JUDGE','CLOSE_WALL','REVEAL_WALL_GROUP','REVEAL','CONFIRM','PAUSE','NEXT'].includes(action.type))
+  if(['NEXT_CLUE','JUDGE','CLOSE_WALL','REVEAL_WALL_GROUP','REVEAL','CONFIRM','PAUSE','NEXT'].includes(action.type))
    setClock(false);
   setBusy(true);setError('');
   try{
@@ -101,25 +92,30 @@ export function VerbindungenHost(){
  const sectionName=task?.puzzle.kind==='clues'?'Vier Hinweise':
    task?.puzzle.kind==='sequence'?'Folge ergänzen':'Verbindungswand';
  const activeTeam=teams.find(t=>t.id===task?.assignment.teamId);
- return <section className="vb-host" data-host-game="verbindungen" aria-label="Verbindungen Spielleitung">
-  <header className="vb-host-head"><div><span className="eyebrow">G7 · SPIELMODUS IM TEST</span>
-   <h2>Verbindungen</h2><p>Gemeinsam Zusammenhänge erkennen – mit fairen Teamaufgaben und einer Verbindungswand.</p></div>
-   <span className="g3-tech-tag">PROBEINHALTE</span></header>
-  <div className="vb-host-toolbar">
+ return <section className="vb-host u08-vb" data-host-phase={vb?.phase??'loading'} data-host-game="verbindungen" aria-label="Verbindungen Spielleitung">
+  <header className="vb-host-head u08-mode-head u08-mode-head--vb">
+   <div className="u08-mode-copy">
+    <h2>Verbindungen<span aria-hidden="true">.</span></h2>
+    <span className="g3-tech-tag">{hostContentLabel(event)}</span></div>
+   <span className="u08-mode-art" aria-hidden="true"><StudioPopMotif game="verbindungen"/></span></header>
+  <div className="vb-host-toolbar u08-utility">
    <a href={stageUrl(identity.eventId)} className="g3-tech-link" target="_blank" rel="noopener noreferrer">Beamer öffnen ↗</a>
    <span>{viewers} Beamer bestätigt</span><span>Revision {event?.revision??0}</span>
    <a href="#/spielen">Zur Übersicht</a></div>
   {!vb?<p role="status">Sitzung wird geprüft …</p>:<>
+   <HostGameplayRail game="verbindungen" phase={vb.phase} paused={vb.paused}
+    recovery={Boolean(event?.recoveryRequired)} completed={vb.phase==='complete'?vb.assignments.length:vb.index} total={vb.assignments.length}/>
    <HostModerationGuide game="verbindungen" phase={vb.phase} paused={vb.paused}
       recovery={Boolean(event?.recoveryRequired)} completed={vb.phase==='complete'?vb.assignments.length:vb.index} total={vb.assignments.length}
       viewers={viewers} ready={ready} busy={busy}/>
     {event&&<CorrectionProvenance event={event}/>}
     <ScoreDecisionPanel source={{game:'verbindungen',session:vb}} blocked={Boolean(disabled)}/>
-    <div className="vb-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span>
+    <div className="u08-block-title"><div><h3>Teamwertung</h3></div><span>Bestätigte Spielpunkte · lokal</span></div>
+    <div className="vb-scorebar u08-scorebar">{teams.map(t=><div key={t.id}><span>{t.name}</span>
     <strong>{totals[t.id]??0}</strong></div>)}</div>
-   <div className="vb-active-row"><div><small>TEIL / AUFGABE</small><strong>{task?sectionName:'Endstand'} · {Math.min(vb.index+1,vb.assignments.length)}/{vb.assignments.length}</strong></div>
+   <div className="vb-active-row u08-status-row"><div><small>TEIL / AUFGABE</small><strong>{task?sectionName:'Endstand'} · {Math.min(vb.index+1,vb.assignments.length)}/{vb.assignments.length}</strong></div>
     <div><small>AKTIVES TEAM</small><strong>{activeTeam?.name??'Alle Teams'}</strong></div>
-    <div><small>SPIELSTATUS</small><strong>{vb.paused?'PAUSIERT':vb.phase.toUpperCase()}</strong></div></div>
+    <div><small>SPIELSTATUS</small><strong>{hostPhaseLabel('verbindungen',vb.phase,vb.paused,Boolean(event?.recoveryRequired))}</strong></div></div>
    {event?.recoveryRequired&&<div className="rq-recovery" role="alert"><strong>Wiederhergestellten Spielstand prüfen</strong>
     <p>Kontrolliere Wertungen, Hinweise und Gruppen. Die Projektion bleibt bis zur Bestätigung ausgeblendet.</p>
     <button disabled={!ready||busy} data-host-next className="g3-tech-primary" onClick={()=>void reviewRecovery()}>Prüfung bestätigen — pausiert bleiben</button>
@@ -128,47 +124,52 @@ export function VerbindungenHost(){
     {vb.paused?<button data-host-resume disabled={!ready||busy||event?.recoveryRequired} onClick={()=>void send({type:'RESUME'})}>Spiel ausdrücklich fortsetzen</button>
       :<button disabled={disabled} onClick={()=>void send({type:'PAUSE'})}>Pausieren</button>}
    </div>}
-   {vb.phase==='setup'&&<div className="vb-card"><h3>Verbindungen vorbereiten</h3>
+   {vb.phase==='setup'&&<div className="vb-card u08-vb-card"><h3>Verbindungen vorbereiten</h3>
     <p>{NEEDS[vb.profile].clues}× Vier Hinweise und {NEEDS[vb.profile].sequences}× Folge ergänzen pro Team; anschließend eine gemeinsame Wand.</p>
     <button data-host-next className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void send({type:'START'})}>Aufgabenreihenfolge bestätigen</button></div>}
-   {task&&vb.phase!=='setup'&&vb.phase!=='complete'&&<div className="vb-card">
-    <div className="eyebrow">{sectionName} · {task.assignment.teamId?activeTeam?.name:'Alle Teams'}</div>
+   {task&&vb.phase!=='setup'&&vb.phase!=='complete'&&<div className="vb-card u08-vb-card">
+    <div className="u08-task-kicker"><span>{sectionName} · {task.assignment.teamId?activeTeam?.name:'Alle Teams'}</span><span>Aufgabe {Math.min(vb.index+1,vb.assignments.length)} / {vb.assignments.length}</span></div>
     {task.puzzle.kind==='clues'&&<>
      <h3>Welche Person ist gesucht?</h3>
-     <div className="vb-private"><small>PRIVATE LÖSUNG</small><strong>{task.puzzle.target}</strong><span>{task.puzzle.reference}</span></div>
-     {vb.phase!=='ready'&&<div className="vb-clues">{task.puzzle.clues.slice(0,vb.clueIndex).map((clue,i)=>
-       <p key={i}><b>{i+1}.</b> {clue}</p>)}</div>}
+     <div className="vb-private u08-private"><small>PRIVATE LÖSUNG · NICHT AUF DEM BEAMER</small><strong>{task.puzzle.target}</strong><span>{task.puzzle.reference}</span></div>
+     {vb.phase!=='ready'&&<div className="u08-clue-round" aria-label="Veröffentlichte Hinweise">
+       <div className="u08-round-count"><strong>{vb.clueIndex} / {task.puzzle.clues.length}</strong><span>Hinweise veröffentlicht</span></div>
+       <div className="vb-clues u08-vb-clues">{task.puzzle.clues.slice(0,vb.clueIndex).map((clue,i)=>
+       <p key={i}><b>{String(i+1).padStart(2,'0')}</b><span>{clue}</span></p>)}</div></div>}
      {vb.phase==='clue-open'&&<p className="vb-potential">Punktwert bei sofort richtiger Antwort: <strong>{(5-vb.clueIndex)*10}</strong></p>}
     </>}
     {task.puzzle.kind==='sequence'&&<>
      <h3>{task.puzzle.prompt}</h3>
-     <div className="vb-sequence-items">{task.puzzle.items.map((item,i)=><span key={i}>{item}</span>)}<b>?</b></div>
-     <div className="vb-private"><small>PRIVATE LÖSUNG</small><strong>{task.puzzle.answer}</strong><span>{task.puzzle.explanation} · {task.puzzle.reference}</span></div>
+     <div className="vb-sequence-items u08-sequence-items" aria-label="Geöffnete Folge">{task.puzzle.items.map((item,i)=><span key={i}>{item}</span>)}<b>?</b></div>
+     <div className="vb-private u08-private"><small>PRIVATE LÖSUNG · NICHT AUF DEM BEAMER</small><strong>{task.puzzle.answer}</strong><span>{task.puzzle.explanation} · {task.puzzle.reference}</span></div>
     </>}
     {wall&&<>
      <h3>Verbindungswand</h3>
      <p>Alle Teams ordnen 16 Begriffe in vier Vierergruppen und benennen die jeweilige Verbindung (je 5 + 5 Punkte).</p>
-     <div className="vb-wall-grid">{wall.tiles.map(tile=>{
+     <div className="u08-wall-progress" aria-label="Auflösung der Verbindungswand"><strong>{vb.revealedGroups} / 4</strong><span>Vierergruppen bewusst veröffentlicht</span>
+      <div className="u08-wall-meter" aria-hidden="true"><span style={{width:(vb.revealedGroups/4*100)+'%'}}/></div></div>
+     <div className="vb-wall-grid u08-wall-grid">{wall.tiles.map(tile=>{
       const solved=wall.groups.find((g,i)=>i<vb.revealedGroups&&g.tileIds.includes(tile.id));
       return <div key={tile.id} className={solved?'solved':''}><strong>{tile.label}</strong>
        {solved&&<small>{solved.link}</small>}</div>;
      })}</div>
      {vb.phase==='wall-reveal'&&vb.revealedGroups>0&&wall.groups.slice(0,vb.revealedGroups).map((group,groupIndex)=>
-      <div className="vb-marking" key={group.id}>
-       <h4>Gruppe {groupIndex+1}: {group.link}</h4>
+      <div className="vb-marking u08-marking" key={group.id}>
+       <div className="u08-marking-head"><h4>Gruppe {groupIndex+1}: {group.link}</h4>
+        <strong>{teams.filter(t=>Boolean(vb.wallMarks[t.id]?.[group.id])).length} / {teams.length} Teams bewertet</strong></div>
        <p>{group.tileIds.map(id=>wall.tiles.find(t=>t.id===id)?.label??id).join(' · ')}</p>
        {teams.map(t=>{
         const mark=vb.wallMarks[t.id]?.[group.id];
-        return <div className="vb-mark-row" key={t.id}>
+        return <div className="vb-mark-row u08-mark-row" key={t.id} role="group" aria-label={'Gruppenwertung für '+t.name}>
          <strong>{t.name}</strong>
          <button disabled={disabled} aria-pressed={mark?.group===true}
           onClick={()=>void send({type:'MARK_GROUP',teamId:t.id,groupId:group.id,correct:true})}>Vierergruppe richtig</button>
          <button disabled={disabled} aria-pressed={mark?.group===false}
           onClick={()=>void send({type:'MARK_GROUP',teamId:t.id,groupId:group.id,correct:false})}>Nicht richtig</button>
-         {mark?.group&&<>
-           <button disabled={disabled} aria-pressed={mark.link}
+         {mark?.group===true&&<>
+           <button disabled={disabled} aria-pressed={mark.link===true}
             onClick={()=>void send({type:'MARK_LINK',teamId:t.id,groupId:group.id,correct:true})}>Verbindung richtig</button>
-           <button disabled={disabled} aria-pressed={!mark.link}
+           <button disabled={disabled} aria-pressed={mark.link===false}
             onClick={()=>void send({type:'MARK_LINK',teamId:t.id,groupId:group.id,correct:false})}>Verbindung nicht richtig</button>
          </>}
         </div>;
@@ -176,26 +177,27 @@ export function VerbindungenHost(){
       </div>
      )}
     </>}
-    {(vb.phase==='clue-open'||vb.phase==='sequence-open'||vb.phase==='wall-open')&&<div className="vb-timer">
+    {(vb.phase==='clue-open'||vb.phase==='sequence-open'||vb.phase==='wall-open')&&<div className="vb-timer u08-vb-timer" data-timer-warning={seconds<=10}>
      <div><small>OPTIONALER TIMER</small><strong>{seconds} s</strong>
       <span>Keine automatische Abgabe oder Enthüllung.</span></div>
      <button disabled={disabled||clock||seconds===0} onClick={()=>setClock(true)}>Start</button>
      <button disabled={!clock} onClick={()=>setClock(false)}>Stopp</button>
      <button disabled={disabled} onClick={()=>{setClock(false);setSeconds(timerLimit);}}>Zurücksetzen</button>
+     <div className="u08-timer-meter" aria-hidden="true"><span style={{width:(timerLimit>0?Math.min(100,seconds/timerLimit*100):0)+'%'}}/></div>
     </div>}
-    <div className="vb-actions">
+    <div className="vb-actions u08-vb-actions">
      {vb.phase==='ready'&&<button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'PUBLISH'})}>Aufgabe veröffentlichen</button>}
      {vb.phase==='clue-open'&&<>
       {!vb.judgement&&vb.clueIndex<4&&<button disabled={disabled} onClick={()=>void send({type:'NEXT_CLUE'})}>Nächster Hinweis</button>}
-      {!vb.judgement&&<><button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'correct'})}>Richtige Antwort</button>
-       <button disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'wrong'})}>Falsche Antwort</button>
-       <button disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'none'})}>Keine Antwort</button></>}
+      {!vb.judgement&&<><button data-host-choice disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'correct'})}>Richtige Antwort</button>
+       <button data-host-choice disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'wrong'})}>Falsche Antwort</button>
+       <button data-host-choice disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'none'})}>Keine Antwort</button></>}
       {vb.judgement&&<button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'REVEAL'})}>Lösung veröffentlichen</button>}
      </>}
      {vb.phase==='sequence-open'&&<>
-      {!vb.judgement&&<><button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'correct'})}>Richtig (+20)</button>
-       <button disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'wrong'})}>Falsch (0)</button>
-       <button disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'none'})}>Keine Antwort (0)</button></>}
+      {!vb.judgement&&<><button data-host-choice disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'correct'})}>Richtig (+20)</button>
+       <button data-host-choice disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'wrong'})}>Falsch (0)</button>
+       <button data-host-choice disabled={disabled} onClick={()=>void send({type:'JUDGE',value:'none'})}>Keine Antwort (0)</button></>}
       {vb.judgement&&<button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'REVEAL'})}>Lösung veröffentlichen</button>}
      </>}
      {vb.phase==='wall-open'&&<button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'CLOSE_WALL'})}>Alle Antworten schließen</button>}
@@ -207,7 +209,7 @@ export function VerbindungenHost(){
       <p>Punktevorschau: {vb.judgement==='correct'?(task.puzzle.kind==='clues'?(5-vb.clueIndex)*10:20):0} Punkte.</p>
       <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void send({type:'CONFIRM'})}>Wertung verbindlich bestätigen</button></>}
      {vb.phase==='wall-reveal'&&vb.revealedGroups===4&&<>
-      <div className="vb-preview">{teams.map(t=>{
+      <div className="vb-preview u08-wall-preview" aria-label="Teamweise Gruppenvorschau">{teams.map(t=>{
        const marks=vb.wallMarks[t.id]??{};
        const pts=wall?.groups.reduce((sum,g)=>sum+(marks[g.id]?.group?5+(marks[g.id]?.link?5:0):0),0)??0;
        return <span key={t.id}>{t.name}: {pts} / 40</span>;
@@ -222,15 +224,14 @@ export function VerbindungenHost(){
         {vb.index===vb.assignments.length-1?'Verbindungen abschließen':'Nächste Aufgabe'}
       </button>
      </>}
-     {!['graded'].includes(vb.phase)&&<button disabled={disabled} className="vb-annul" onClick={annul}>Aufgabe begründet annullieren</button>}
+     {!['graded'].includes(vb.phase)&&<button disabled={disabled} className="vb-annul u08-danger-action" onClick={annul}>Aufgabe begründet annullieren</button>}
     </div>
    </div>}
-   {vb.phase==='complete'&&<div className="vb-final"><h3>Verbindungen abgeschlossen</h3>
+   {vb.phase==='complete'&&<div className="vb-final u08-final"><h3>Verbindungen abgeschlossen</h3>
     {teams.map(t=><p key={t.id}>{t.name}: {totals[t.id]??0} Spielpunkte · {(eveningHalfPoints(vb)[t.id]??0)/2} Abendpunkte</p>)}
     <a href="#/verlauf" className="exp-primary">Abendbericht ansehen</a></div>}
   </>}
   {error&&<p className="g3-tech-error" role="alert">{error}</p>}
    {error&&<SafeErrorRecovery message={String(error)}/>}
-  <p className="exp-footnote">G7 Probeinhalte. Keine automatische Wertung, keine unbegrenzten Rateversuche und keine teilrichtigen Vierergruppen.</p>
  </section>;
 }

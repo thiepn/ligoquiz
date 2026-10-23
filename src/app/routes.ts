@@ -1,8 +1,8 @@
 export type Route =
   | 'spielen' | 'setup' | 'host' | 'demo' | 'inhalte' | 'verlauf' | 'bericht'
-  | 'einstellungen' | 'technik' | 'stage';
+  | 'einstellungen' | 'technik' | 'stage' | 'mitspielen';
 const ROUTES: readonly Route[] = [
-  'spielen','setup','host','demo','inhalte','verlauf','bericht','einstellungen','technik','stage',
+  'spielen','setup','host','demo','inhalte','verlauf','bericht','einstellungen','technik','stage','mitspielen',
 ];
 export function parseRoute(hash: string): Route {
   const key = hash.replace(/^#\/?/, '').split('?')[0]?.toLowerCase() ?? '';

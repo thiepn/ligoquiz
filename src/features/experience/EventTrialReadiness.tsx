@@ -80,14 +80,14 @@ export function EventTrialReadiness(){
  }
  return <section className="g18-trial" aria-label="G18 Generalprobe und Release-Sperren">
   <header className="g18-head"><div>
-   <p className="eyebrow">G18 / 15 REAL-SZENARIEN · 5 SPIELMODI</p>
+   
    <h2>Generalprobe und Freigabesperren</h2>
    <p>Probiere jeden Spielmodus mit 3, 4 und 5 Teams. Halte echte Beobachtungen, Rückweg und Quellenprüfung
     fest. Synthetische CI-Läufe und lokal notierte Beobachtungen ersetzen keine unabhängige Abnahme.</p></div>
    <strong className="g18-nogo">NO-GO · KEINE FREIGABE</strong>
   </header>
   <section className="g24-pilot" aria-label="G24 Spielabend-Operator">
-   <header><div><p className="eyebrow">G24 · SPIELABEND / ABLAUFKARTE</p>
+   <header><div>
     <h3>Probeabend schneller durchführen</h3>
     <p>Spielmodus und Teamzahl auswählen, den nächsten offenen Fall finden und eine Laufkarte drucken.
      Änderungen werden nur in dieser Browser-Registerkarte gesichert; kein Server und keine Abnahme.</p>

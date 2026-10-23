@@ -1,0 +1,94 @@
+/*
+ * V2 host UX: reorders ORIGINAL moderation controls ahead of passive status panels.
+ * No engine actions, scores, projection frames or data are recreated here.
+ */
+[data-host-game]:not(.rq-host){display:flex;flex-direction:column;align-items:stretch;gap:0}
+[data-host-game]:not(.rq-host)>:is(.rq-head,.qt-host-header,.vb-host-head,.ll-host-head,.ud-host-head){order:-40}
+[data-host-game]:not(.rq-host)>:is(.qt-host-toolbar,.vb-host-toolbar,.ll-toolbar,.ud-toolbar){order:-39}
+[data-host-game]:not(.rq-host)>.u07-phase-rail{order:-38}
+[data-host-game]:not(.rq-host)>.g14-guide{order:-37}
+[data-host-game]:not(.rq-host)>.rq-recovery{order:-36}
+[data-host-game]:not(.rq-host)>:is(.qt-active-row,.vb-active-row,.ll-rung-strip,.ll-status,.ud-progress,.ud-phase){order:-35}
+[data-host-game]:not(.rq-host)>:is(.qt-board-host,.qt-question-host,.vb-card,.ll-card,.ud-card,.vb-final,.ll-final,.ud-final,.qt-final){order:-34}
+[data-host-game]:not(.rq-host)>:is(.qt-pauser,.vb-pause,.ll-pause,.ud-pause){order:-33}
+[data-host-game]:not(.rq-host)>:is(.qt-pauser,.vb-pause,.ll-pause,.ud-pause):has([data-host-resume]){order:-36}
+[data-host-game]>.rq-live{display:flex;flex-direction:column;min-width:0}
+[data-host-game]>.rq-live>.rq-utility{order:-40}
+[data-host-game]>.rq-live>.u07-phase-rail{order:-39}
+[data-host-game]>.rq-live>.g14-guide{order:-38}
+[data-host-game]>.rq-live>.rq-recovery{order:-37}
+[data-host-game]>.rq-live>.rq-status{order:-36}
+[data-host-game]>.rq-live>.rq-control{order:-35}
+[data-host-game]>.rq-live>.rq-end{order:-34}
+
+/* The host always sees the current phase and action above passive facts. */
+[data-host-game] .g14-guide{padding:13px 16px;margin:10px 0 12px;border-left:5px solid #285bff;background:#f4f7ff}
+[data-host-game] .g14-guide-head{align-items:center}
+[data-host-game] .g14-current-step{font:800 13px/1.3 system-ui;color:#314b84}
+[data-host-game] .g14-guide h3{font:900 clamp(18px,2vw,24px)/1.25 system-ui;margin:4px 0 0;color:#152d59;letter-spacing:-.02em}
+[data-host-game] .g14-connect strong{font-size:21px;color:#152d59}
+[data-host-game] .g14-connect span{font-size:12px;line-height:1.3;color:#3f5275}
+[data-host-game] .g14-guide-foot{align-items:center;margin-top:8px}
+[data-host-game] .g14-progress span{font-size:13px;font-weight:700}
+[data-host-game] .g14-optional{margin-top:8px}
+[data-host-game] .g14-optional summary{cursor:pointer;display:inline-flex;align-items:center;padding:7px 3px;min-height:38px;color:#2c457d;font:700 13px/1.3 system-ui}
+[data-host-game] .g14-optional .g14-facts{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:4px}
+[data-host-game] .g14-facts strong{font-size:14px;line-height:1.35}
+[data-host-game] .g14-facts small{font-size:11px}
+[data-host-game] .g14-focus{font-size:13px!important}
+[data-host-game] .u07-phase-rail{margin-bottom:8px}
+
+/* Decisions must not imply that the first, 'correct' answer is recommended. */
+[data-host-game] [data-host-choice]{
+ min-height:48px;
+ border:2px solid #8099c9!important;
+ background:#fff!important;
+ color:#1c345e!important;
+ padding:10px 14px;
+ font:800 15px/1.3 system-ui;
+ box-shadow:none!important;
+}
+[data-host-game] [data-host-choice]:hover:not(:disabled){background:#e9f1ff!important;border-color:#285bff!important}
+[data-host-game] [data-host-choice][aria-pressed=true]{background:#244bd0!important;border-color:#193baf!important;color:#fff!important}
+[data-host-game] [data-host-choice]:disabled{opacity:.48}
+[data-host-game] :is(.qt-decisions,.u08-vb-actions,.vb-actions,.ll-grades) [data-host-choice]{flex:1 1 130px;min-width:0}
+[data-host-game] [data-host-next]:not(:disabled){
+ background:#285bff!important;color:white!important;border:2px solid #153aaf!important;
+ font:900 16px/1.35 system-ui;
+ min-height:54px;
+ padding:13px 18px;
+ box-shadow:0 3px 0 #142e83;
+}
+[data-host-game] [data-host-next]:disabled{opacity:.55}
+[data-host-game] [data-host-next]:hover:not(:disabled){background:#1745d8!important}
+[data-host-game] [data-host-resume]:not(:disabled){font:900 16px/1.35 system-ui;background:#196550;color:white;border:2px solid #114638;min-height:52px;padding:12px 16px}
+
+/* Passive sections come after the active question: they remain available, not concealed. */
+[data-host-game] :is(.qt-scorebar,.vb-scorebar,.ll-scorebar,.ud-scorebar,.rq-scoreboard){min-width:0}
+[data-host-game] :is(.qt-question-host,.qt-board-host,.vb-card,.ll-card,.ud-card,.rq-control){
+ border-color:#8da9e9;min-width:0;
+}
+[data-host-game] :is(.rq-utility,.qt-host-toolbar,.vb-host-toolbar,.ll-toolbar,.ud-toolbar){
+ font-size:13px;
+}
+[data-host-game] :is(.rq-utility,.qt-host-toolbar,.vb-host-toolbar,.ll-toolbar,.ud-toolbar) :is(button,a){min-height:44px}
+@media(max-width:700px){
+ [data-host-game] .g14-guide{padding:11px 12px}
+ [data-host-game] .g14-guide-head{gap:9px}
+ [data-host-game] .g14-guide-foot{flex-direction:column;align-items:stretch;gap:10px}
+ [data-host-game] .g14-guide-foot button{width:100%;min-height:44px}
+ [data-host-game] .g14-optional .g14-facts{grid-template-columns:1fr}
+ [data-host-game] [data-host-next]{width:100%;white-space:normal;max-width:100%}
+ [data-host-game] [data-host-resume]{width:100%;white-space:normal}
+ [data-host-game] :is(.qt-decisions,.vb-actions,.ll-grades){display:flex;flex-wrap:wrap;gap:9px}
+ [data-host-game] [data-host-choice]{flex:1 1 130px}
+ [data-host-game] .u07-phase-steps{gap:3px}
+ [data-host-game] .u07-rail-top{gap:8px}
+}
+@media(max-width:390px){
+ [data-host-game] .g14-connect{min-width:0;display:flex;gap:7px;align-items:baseline}
+ [data-host-game] .g14-guide-head{flex-wrap:wrap}
+ [data-host-game] .g14-guide h3{font-size:18px}
+ [data-host-game] [data-host-next]{font-size:15px}
+}
+@media(prefers-reduced-motion:reduce){[data-host-game] *{scroll-behavior:auto!important}}

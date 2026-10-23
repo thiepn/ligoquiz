@@ -74,22 +74,22 @@ test('Standard Top 3 maps rank positions and duplicate-category guesses accurate
  await host.getByRole('button',{name:'Aufgabenfolge bestätigen'}).click();
  for(let i=0;i<5;i++){
   await expect(host.locator('.ud-phase')).toContainText('AUFGABE '+(i+1)+' / 6');
-  await expect(host.locator('.ud-phase')).toContainText('READY');
+  await expect(host.locator('.ud-phase')).toContainText('Vorbereitung');
   await host.getByRole('button',{name:'Aufgabe veröffentlichen'}).click();
-  await expect(host.locator('.ud-phase')).toContainText('OPEN');
+  await expect(host.locator('.ud-phase')).toContainText('Antwortphase');
   await host.getByRole('button',{name:'Alle Antworten schließen'}).click();
-  await expect(host.locator('.ud-phase')).toContainText('CLOSED');
+  await expect(host.locator('.ud-phase')).toContainText('Teamwertung');
   for(let j=0;j<3;j++){
    const row=host.locator('.ud-team').nth(j);
    await row.getByRole('button',{name:'Antwort erfassen'}).click();
    await expect(row).toContainText('Erfasst: 0 Punkte');
-   await expect(host.locator('.ud-phase')).toContainText('CLOSED');
+   await expect(host.locator('.ud-phase')).toContainText('Teamwertung');
   }
   await expect(host.getByRole('button',{name:'Kategorien und Rangfolge veröffentlichen'})).toBeEnabled();
   await host.getByRole('button',{name:'Kategorien und Rangfolge veröffentlichen'}).click();
-  await expect(host.locator('.ud-phase')).toContainText('REVEALED');
+  await expect(host.locator('.ud-phase')).toContainText('Wertung prüfen');
   await host.getByRole('button',{name:'Teamwertungen verbindlich bestätigen'}).click();
-  await expect(host.locator('.ud-phase')).toContainText('GRADED');
+  await expect(host.locator('.ud-phase')).toContainText('Punkte bestätigt');
   await host.getByRole('button',{name:'Nächste Aufgabe'}).click();
   await expect(host.locator('.ud-phase')).toContainText('AUFGABE '+(i+2)+' / 6');
  }

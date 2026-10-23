@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import {GAME_ORDER,GAME_VISUALS} from '../../design-system/theme';
+import type {GameType} from '../../domain/game/contracts';
+import {FourGameTryout} from './FourGameTryout';
+import './u13-rehearsal.css';
 import { createSession, transition, currentQuestion, publicScene, scores, type Action, type Session } from '../../games/rundenquiz/engine';
 import { RQ_TRIAL_BANK } from '../../games/rundenquiz/trial-bank';
 
@@ -27,7 +31,7 @@ function stageView(s:Session){
 }
 
 /** No repository, storage, session IDs, or public BroadcastChannel. */
-export function DisposableDemo(){
+function RundenquizDemo(){
  const [session,setSession]=useState<Session>(firstDemo);
  const [error,setError]=useState('');
  const q=currentQuestion(session);
@@ -43,8 +47,8 @@ export function DisposableDemo(){
  const points=scores(session);
  return <section className="exp-page" aria-label="Disposable demo">
   <div className="exp-heading">
-   <div><p className="eyebrow">DEMO · NICHT GESPEICHERT</p><h1>Rundenquiz ausprobieren</h1>
-    <p>Eine Beispielfrage im echten Ablauf, mit drei erfundenen Teams und ohne gespeicherte Ergebnisse.</p></div>
+   <div><p className="eyebrow">Demo · nicht gespeichert</p><h1>Rundenquiz ausprobieren</h1>
+    </div>
    <a className="exp-secondary" href="#/spielen">Demo beenden</a>
   </div>
   <div className="exp-demo-grid">
@@ -84,6 +88,20 @@ export function DisposableDemo(){
      <span>BEAMER-VORSCHAU</span>{stageView(session)}
    </div>
   </div>
-  <p className="exp-footnote">Die Demo schreibt weder in IndexedDB noch in den Verlauf oder deine Einstellungen. Sie wird beim Verlassen verworfen.</p>
  </section>;
+}
+
+export function DisposableDemo(){
+ const [game,setGame]=useState<GameType>('rundenquiz');
+ return <div className="u13-demo" data-u13-selected={game}>
+  <header className="u13-demo-header">
+   <h1>Spielmodi ausprobieren</h1>
+   <a href="#/spielen">← Zur Spielwelt</a>
+  </header>
+  <nav className="u13-mode-picker" aria-label="Spielmodus für die Übung wählen">
+   {GAME_ORDER.map(item=><button type="button" key={item} aria-pressed={game===item}
+    onClick={()=>setGame(item)}>{GAME_VISUALS[item].label}</button>)}
+  </nav>
+  {game==='rundenquiz'?<RundenquizDemo/>:<FourGameTryout key={game} game={game}/>}
+ </div>;
 }
