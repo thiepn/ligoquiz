@@ -1,4 +1,4 @@
-import {describeHostStep, type HostGame} from './HostModerationGuide';
+import {describeHostStep, focusHostAction, type HostGame} from './HostModerationGuide';
 
 const PHASES:Record<'rundenquiz'|'quiztafel'|'verbindungen'|'logikleiter'|'umfrageduell',Readonly<Record<string,number>>>={
  rundenquiz:{setup:0,ready:0,open:1,closed:1,revealed:2,graded:3,complete:3},
@@ -30,9 +30,14 @@ export function HostGameplayRail({game,phase,paused,recovery,completed,total}:Ho
   [{name:'Vorbereiten',hint:'Format & Herkunft'},{name:'Antworten',hint:'Teamantworten schließen'},{name:'Werten',hint:'Zuordnung & Auflösung'},{name:'Weiter',hint:'Nächste Umfrage'}]:LABELS;
  return <section className={'u07-phase-rail u07-phase-rail--'+game} data-u07-phase={phase}
    aria-label="Spielablauf" aria-roledescription="Moderationsschritte">
-   <div className="u07-rail-top">
+   <div className="u07-rail-top" aria-live="polite" aria-atomic="true">
      <strong>{recovery?'Wiederherstellung prüfen':paused?'Spiel pausiert':guidance.step}</strong>
      <small>{safeCompleted} / {total} {game==='quiztafel'?'Felder':game==='logikleiter'?'Stufen':'Aufgaben'} abgeschlossen</small>
+   </div>
+   <div className="u07-rail-guidance"><p className="u07-rail-next" role="status"><strong>Als Nächstes:</strong> {guidance.next}</p>
+    {phase!=='complete'&&<button type="button" className="u07-rail-focus" onClick={()=>focusHostAction(document.querySelector(`[data-host-game="${game}"]`),paused,recovery)}>
+      {recovery?'Prüfung finden ↓':paused?'Fortsetzen finden ↓':'Nächste Aktion finden ↓'}
+    </button>}
    </div>
    <ol className="u07-phase-steps">
      {steps.map((step,i)=><li key={step.name} className={i===active?'is-current':i<active?'is-complete':''}

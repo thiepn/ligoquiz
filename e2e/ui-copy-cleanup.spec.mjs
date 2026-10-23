@@ -59,7 +59,10 @@ test('private host, backstage, technical and recovery screens preserve functiona
  await page.getByRole('checkbox').check();
  await page.getByRole('button',{name:'Spielleitung öffnen'}).click();
  await expect(page.locator('.sp-cockpit')).toBeVisible();
- await expect(page.locator('.sp-cockpit-overline,.u07-rail-next,.g14-eyebrow')).toHaveCount(0);
+ // The base branch may show a functional next-action rail; only reject ornamental captions.
+ await expect(page.locator('.sp-cockpit-overline,.g14-eyebrow')).toHaveCount(0);
+ const nextAction=page.locator('.u07-rail-next');
+ if(await nextAction.count())await expect(nextAction).toContainText('Als Nächstes:');
  await expect(page.locator('.sp-cockpit-scores-grid .sp-score-chip')).toHaveCount(4);
  await expect(page.locator('.sp-cockpit-private-note')).toContainText('nicht auf den Beamer spiegeln');
  await fit(page,'mobile host');

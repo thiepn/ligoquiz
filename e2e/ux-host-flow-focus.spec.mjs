@@ -90,7 +90,24 @@ for(const mode of modes.filter(m=>m.game==='quiztafel'||m.game==='verbindungen')
   await expect(picks.first()).toBeFocused();
   expect(await progress(host)).toEqual(phases);
   await picks.last().click();
-  await expect(host).not.toHaveAttribute('data-host-phase',phases.phase);
+  await expect(picks).toHaveCount(0);
+  expect((await progress(host)).scoreText).toBe(phases.scoreText);
+  if(mode.game==='quiztafel'){
+   // No first answer opens the original single takeover, not an automatic reveal.
+   await expect(host).toHaveAttribute('data-host-phase','steal-offer');
+   await host.getByRole('button',{name:'Übernahme anbieten'}).click();
+   await expect(host).toHaveAttribute('data-host-phase','steal');
+   const takeover=host.locator('[data-host-choice]:not(:disabled)');
+   await expect(takeover).toHaveCount(4);
+   await takeover.last().click();
+   await expect(host).toHaveAttribute('data-host-phase','adjudicated');
+   await host.getByRole('button',{name:'Lösung ausdrücklich zeigen'}).click();
+  }else{
+   // Verbindungen stores the judgment without advancing or revealing by itself.
+   await expect(host).toHaveAttribute('data-host-phase',phases.phase);
+   await host.getByRole('button',{name:'Lösung veröffentlichen'}).click();
+  }
+  await expect(host).toHaveAttribute('data-host-phase','revealed');
   await expect(host.getByRole('region',{name:'Moderationsübersicht'})).toBeVisible();
  });
 }
