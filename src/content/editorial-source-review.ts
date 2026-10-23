@@ -23,6 +23,7 @@ const PRIMARY_LEADS:Readonly<Record<string,PrimaryReference>>={
   comparison:'Konstantinopel, Spätantike, Mittelalter und das Jahr 1453 gegenprüfen.'},
 };
 const originals=new Map(trialDraftItems().map(item=>[item.id,item]));
+const EARLIER_RQ_SOURCE='v2-original-trial-banks-v1';
 
 export type HistoricalCorrection={reason:string;sourceName:string;url:string;prompt:string;reference:string};
 /** Only the two unmodified original V1 trial prompts qualify for these corrections. */
@@ -63,7 +64,8 @@ export type SourceReviewTask={item:ContentItem;route:ReviewRoute;lead:PrimaryRef
 export function originalSourceLead(item:ContentItem):PrimaryReference|null{
  const baseline=originals.get(item.id),lead=PRIMARY_LEADS[item.id];
  if(!baseline||!lead||(item.game!=='rundenquiz'&&item.game!=='quiztafel')||item.provenance.origin!=='sample'||
-    item.provenance.sourceVersion!==TRIAL_DRAFT_SOURCE||
+    !(item.provenance.sourceVersion===TRIAL_DRAFT_SOURCE||
+      (item.game==='rundenquiz'&&item.provenance.sourceVersion===EARLIER_RQ_SOURCE))||
     item.provenance.sourceKey!==baseline.provenance.sourceKey||
     JSON.stringify(item.payload)!==JSON.stringify(baseline.payload))return null;
  return lead;

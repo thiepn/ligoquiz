@@ -253,6 +253,19 @@ describe('Source leads are review work, never content approvals',()=>{
    expect(task.issues.some(x=>x.code==='RIGHTS_NOT_DOCUMENTED')).toBe(true);
   }
  });
+ it('preserves the four unchanged primary leads for previously imported v1 Rundenquiz drafts',()=>{
+  for(const id of ['rq-w4','rq-w6','rq-s1','rq-s4']){
+   const latest=trialDraftItems().find(item=>item.id===id)!;
+   const prior=validateItem({...latest,provenance:{...latest.provenance,
+    sourceVersion:'v2-original-trial-banks-v1'}});
+   expect(originalSourceLead(prior)?.url).toBe(originalSourceLead(latest)?.url);
+   expect(prior.status).toBe('draft');
+   expect(prior.review).toBeUndefined();
+  }
+  const olderHistory=trialDraftItems().find(item=>item.id==='qt-geschichte-4')!;
+  expect(originalSourceLead({...olderHistory,provenance:{...olderHistory.provenance,
+   sourceVersion:'v2-original-trial-banks-v1'}})).toBeNull();
+ });
  it('invalidates the linked source after edits, changed ID or replaced provenance',()=>{
   const base=trialDraftItems().find(x=>x.id==='rq-w4')!;
   expect(originalSourceLead(base)?.name).toContain('Bundes-Verfassungsgesetz');
