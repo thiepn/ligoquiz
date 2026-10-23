@@ -6,6 +6,7 @@ import {legacyBackup,previewFile,exportLibrary,type Preview} from '../../content
 import '../../styles/content-studio.css';
 import {EditorialAuditPanel} from './EditorialAuditPanel';
 import {StructuredQuestionEditor} from './StructuredQuestionEditor';
+import {trialDraftBundle} from '../../content/trial-draft-bundle';
 
 
 const LABELS:Record<GameType,string>={
@@ -153,8 +154,18 @@ export function ContentStudio(){
    setMessage(backup.rawEntries.length+' alte Browser-Schlüssel unverändert exportiert. Das Original bleibt erhalten.');
   });
  }
+ async function prepareTrialDrafts(){
+  setPreview(null);setImportConsent(false);
+  await act(async()=>{
+   const proposal=await previewFile(trialDraftBundle(),items);
+   setPreview(proposal);
+   setMessage(proposal.items.length+' vorhandene Probeaufgaben als Entwürfe prüfbar; '+
+    proposal.quarantined.length+' Kollisionen zurückgestellt. Noch nichts importiert.');
+  });
+ }
  async function loadImport(file:File|undefined){
   if(!file)return;
+  setPreview(null);setImportConsent(false);
   await act(async()=>{
    if(file.size>12*1024*1024)throw Error('Datei größer als 12 MiB; Import abgelehnt');
    const proposal=await previewFile(await file.text(),items);
@@ -189,6 +200,7 @@ export function ContentStudio(){
   <div className="cx-actions"><label>Neuer Inhalt <select value={templateGame} onChange={e=>setTemplateGame(e.target.value as GameType)}>
     {GAME_TYPES.map(game=><option key={game} value={game}>{LABELS[game]}</option>)}</select></label>
    <button className="exp-primary" onClick={()=>void add()} disabled={busy}>Aufgabe anlegen</button>
+   <button className="exp-secondary" onClick={()=>void prepareTrialDrafts()} disabled={busy}>Probeaufgaben als Entwürfe prüfen</button>
    <button className="exp-secondary" onClick={()=>void exportCurrent()} disabled={busy}>v2-Bibliothek exportieren</button>
    <button className="exp-secondary" onClick={()=>void backupLegacy()} disabled={busy}>v1-Rohbackup erstellen</button>
    <label className="cx-file">Datei prüfen <input type="file" accept=".json,application/json"
@@ -199,6 +211,7 @@ export function ContentStudio(){
      <p>{preview.records} Quelldatensätze · {preview.items.length} gültige Entwürfe · {preview.quarantined.length} Quarantäne</p>
      <small>Quelltyp {preview.sourceType} · SHA-256 {preview.bundleHash}</small></div>
     {preview.warnings.map((v,i)=><p key={i} className="cx-warning">{v}</p>)}
+    {preview.items.some(item=>item.provenance.origin==='sample')&&<p className="cx-warning">Probedaten sind ungeprüft. Antworten, Quellen und Nutzungsrechte vor Freigabe prüfen.</p>}
     {preview.quarantined.length>0&&<details><summary>Zurückgestellte Datensätze ({preview.quarantined.length})</summary>
       {preview.quarantined.slice(0,50).map(q=><p key={q.index}>{q.sourceId}: {q.reason}</p>)}
     </details>}
