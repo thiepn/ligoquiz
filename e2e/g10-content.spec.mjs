@@ -122,7 +122,7 @@ test('G10 original source leads select editor and expire on substantive edits',a
  await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
  const queue=page.getByRole('region',{name:'Quellenprüfung'});
  await expect(queue.getByRole('combobox',{name:'Prüfgruppe'})).toHaveValue('primary');
- await expect(queue.locator('.cx-source-item')).toHaveCount(4);
+ await expect(queue.locator('.cx-source-item')).toHaveCount(6);
  await queue.getByRole('button',{name:/rq-w4/}).click();
  const detail=page.getByRole('region',{name:'Quellenabgleich'});
  await expect(detail.getByRole('link',{name:/Bundes-Verfassungsgesetz/}))
@@ -131,11 +131,26 @@ test('G10 original source leads select editor and expire on substantive edits',a
  await expect(page.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
  await page.getByRole('textbox',{name:'Lösung',exact:true}).fill('Salzburg');
  await page.getByRole('button',{name:'Änderungen als Entwurf speichern'}).click();
- await expect(queue.locator('.cx-source-item')).toHaveCount(3);
+ await expect(queue.locator('.cx-source-item')).toHaveCount(5);
  await expect(detail.getByRole('link',{name:/Bundes-Verfassungsgesetz/})).toHaveCount(0);
  await queue.getByRole('combobox',{name:'Prüfgruppe'}).selectOption('illustrative');
  await expect(queue.locator('.cx-source-item')).toHaveCount(10);
  await queue.getByRole('button',{name:/ud-01/}).click();
  await expect(detail).toContainText('Nur illustrative Rangfolge');
  await expect(page.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
+});
+
+test('source queue search narrows original Quiztafel questions without changing approval',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ await queue.getByRole('searchbox',{name:'Quellenprüfung durchsuchen'}).fill('qt-geschichte');
+ await expect(queue.locator('.cx-source-item')).toHaveCount(2);
+ await queue.getByRole('button',{name:/qt-geschichte-4/}).click();
+ const ed=page.getByRole('region',{name:'Aufgabe bearbeiten'});
+ await expect(ed).toContainText('Amphitheater');
+ await expect(page.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
+ await expect(queue).toContainText('2 Treffer');
 });

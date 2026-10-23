@@ -7,7 +7,7 @@ import {trialLogikleiter} from '../games/logikleiter/trial-bank';
 import {trialUmfrageduell} from '../games/umfrageduell/trial-bank';
 import type {GameType} from '../domain/game/contracts';
 
-export const TRIAL_DRAFT_SOURCE='v2-original-trial-banks-v1';
+export const TRIAL_DRAFT_SOURCE='v2-original-trial-banks-v2';
 const teams=Array.from({length:5},(_,i)=>({id:'trial-'+(i+1),name:'Team '+(i+1),order:i}));
 
 /** Pure, stable source snapshot. No storage writes, certification or automatic approvals. */

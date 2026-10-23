@@ -7,7 +7,7 @@ import '../../styles/content-studio.css';
 import {EditorialAuditPanel} from './EditorialAuditPanel';
 import {StructuredQuestionEditor} from './StructuredQuestionEditor';
 import {trialDraftBundle} from '../../content/trial-draft-bundle';
-import {contentReviewTasks,type ReviewRoute} from '../../content/editorial-source-review';
+import {contentReviewTasks,historicalTrialCorrection,type ReviewRoute} from '../../content/editorial-source-review';
 
 
 const LABELS:Record<GameType,string>={
@@ -58,6 +58,7 @@ export function ContentStudio(){
  const [checklist,setChecklist]=useState<boolean[]>([false,false,false,false]);
  const [profile,setProfile]=useState<GameProfile>('kurz'),[teamCount,setTeamCount]=useState(3);
  const [reviewRoute,setReviewRoute]=useState<ReviewRoute>('primary');
+ const [reviewSearch,setReviewSearch]=useState('');
  async function refresh(){
   const [all,quarantined,imports]=await Promise.all([repo.list(),repo.quarantined(),repo.receipts()]);
   setItems(all.sort((a,b)=>b.updatedAt-a.updatedAt));
@@ -82,8 +83,15 @@ export function ContentStudio(){
   duplicates:findDuplicates(items).length,
  }),[items]);
  const sourceTasks=useMemo(()=>contentReviewTasks(items),[items]);
- const visibleSourceTasks=sourceTasks.filter(x=>x.route===reviewRoute);
+ const normalizedReviewSearch=reviewSearch.toLocaleLowerCase('de-DE').trim();
+ const visibleSourceTasks=sourceTasks.filter(x=>{
+  const payload=x.item.payload as {prompt?:string;target?:string;answer?:string};
+  return x.route===reviewRoute&&(!normalizedReviewSearch||
+   [x.item.id,payload.prompt??'',payload.target??'',payload.answer??'']
+    .join(' ').toLocaleLowerCase('de-DE').includes(normalizedReviewSearch));
+ });
  const selectedSourceTask=current?sourceTasks.find(x=>x.item.id===current.id):null;
+ const historicalCorrection=current?historicalTrialCorrection(current):null;
  const pack=useMemo(()=>{
   const games=GAME_TYPES.map(game=>{
    const result=coverage(items,game,profile,teamCount);
@@ -237,6 +245,11 @@ export function ContentStudio(){
       <option value="illustrative">Illustrative Umfragen ({sourceTasks.filter(x=>x.route==='illustrative').length})</option>
     </select></label>
    </div>
+   <div className="cx-source-filter">
+    <input type="search" aria-label="Quellenprüfung durchsuchen" value={reviewSearch}
+      onChange={e=>setReviewSearch(e.target.value)} placeholder="Frage oder Kennung"/>
+    <span>{visibleSourceTasks.length} Treffer</span>
+   </div>
    <div className="cx-source-items">
     {visibleSourceTasks.map(task=><button type="button" className="cx-source-item"
       key={task.item.id} aria-pressed={current?.id===task.item.id} onClick={()=>choose(task.item)}>
@@ -300,6 +313,20 @@ export function ContentStudio(){
        <ul>{selectedSourceTask.issues.map((issue,i)=><li key={issue.code+'-'+i}>
         {issue.message}</li>)}</ul></div>}
       <p>Quellenlink und Prüfliste sind keine Fakten- oder Rechtefreigabe.</p>
+     </section>}
+     {historicalCorrection&&<section className="cx-source-evidence" aria-label="Historische Frage korrigieren">
+      <strong>Mehrdeutige Probefrage · Korrekturvorschlag</strong>
+      <p>{historicalCorrection.reason}</p>
+      <p>Neue Frage: {historicalCorrection.prompt}</p>
+      <a href={historicalCorrection.url} target="_blank" rel="noopener noreferrer">
+       Quelle: {historicalCorrection.sourceName}</a>
+      <button type="button" className="exp-secondary" disabled={busy||
+       json!==JSON.stringify(current.payload,null,2)}
+       onClick={()=>{
+        setJson(JSON.stringify({...current.payload as object,prompt:historicalCorrection.prompt,
+         reference:historicalCorrection.reference},null,2));
+        setMessage('Korrektur im Editor vorbereitet. Erst „Änderungen als Entwurf speichern“ schreibt sie; keine Freigabe.');
+       }}>Korrektur in Editor übernehmen</button>
      </section>}
      <StructuredQuestionEditor game={current.game} value={structured} onChange={next=>{
       setJson(JSON.stringify(next,null,2));setError('');setMessage('');

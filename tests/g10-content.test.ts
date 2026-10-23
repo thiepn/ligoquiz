@@ -11,7 +11,7 @@ import {trialVerbindungen} from '../src/games/verbindungen/trial-bank';
 import {sampleQuiztafel} from '../src/games/quiztafel/trial-bank';
 import type {GameType} from '../src/domain/game/contracts';
 import {trialDraftBundle,trialDraftItems} from '../src/content/trial-draft-bundle';
-import {contentReviewTasks,originalSourceLead} from '../src/content/editorial-source-review';
+import {contentReviewTasks,originalSourceLead,historicalTrialCorrection} from '../src/content/editorial-source-review';
 
 const teams=Array.from({length:5},(_,i)=>({id:'team-'+i,name:'Team '+(i+1),order:i}));
 const item=(game:GameType,payload:unknown):ContentItem=>createDraft(game,payload,123);
@@ -238,15 +238,15 @@ describe('Five existing trial banks enter editorial storage only as unapproved d
 });
 
 describe('Source leads are review work, never content approvals',()=>{
- it('routes 79 trial questions to 4 exact-match primary leads, 10 illustrative and 65 other checks',()=>{
+ it('routes 79 trial questions to 6 exact-match primary leads, 10 illustrative and 63 other checks',()=>{
   const records=trialDraftItems(),queue=contentReviewTasks(records);
   expect(queue).toHaveLength(79);
   expect(queue.filter(x=>x.route==='primary').map(x=>x.item.id))
-   .toEqual(['rq-s1','rq-s4','rq-w4','rq-w6']);
+   .toEqual(['qt-geschichte-4','qt-geschichte-5','rq-s1','rq-s4','rq-w4','rq-w6']);
   expect(queue.filter(x=>x.route==='illustrative')).toHaveLength(10);
-  expect(queue.filter(x=>x.route==='lookup')).toHaveLength(65);
+  expect(queue.filter(x=>x.route==='lookup')).toHaveLength(63);
   for(const task of queue.filter(x=>x.route==='primary')){
-   expect(task.lead?.url).toMatch(/^https:\/\/(www\.)?(ris\.bka\.gv\.at|science\.nasa\.gov|bipm\.org|worldathletics\.org)\//);
+   expect(task.lead?.url).toMatch(/^https:\/\/(www\.)?(ris\.bka\.gv\.at|science\.nasa\.gov|bipm\.org|worldathletics\.org|whc\.unesco\.org|guides\.loc\.gov)\//);
    expect(task.item.status).toBe('draft');
    expect(task.item.review).toBeUndefined();
    expect(task.item.provenance.rights).toBeUndefined();
@@ -270,5 +270,42 @@ describe('Source leads are review work, never content approvals',()=>{
   expect(tasks.every(x=>!Object.hasOwn(x,'approved')&&!Object.hasOwn(x,'verified'))).toBe(true);
   expect(tasks.filter(x=>x.route==='illustrative').every(x=>
    (x.item.payload as {source?:{kind?:string}}).source?.kind==='illustrative')).toBe(true);
+ });
+});
+
+describe('Two original Quiztafel ambiguity repairs retain IDs without granting rights or approval',()=>{
+ it('specifies Pompeii with its forum and amphitheatre and dates Byzantium through 1453',()=>{
+  const q4=trialDraftItems().find(x=>x.id==='qt-geschichte-4')!;
+  const q5=trialDraftItems().find(x=>x.id==='qt-geschichte-5')!;
+  const p4=q4.payload as {prompt:string;answer:string;reference:string};
+  const p5=q5.payload as {prompt:string;answer:string;reference:string};
+  expect(p4.prompt).toMatch(/Forum und ein Amphitheater/);
+  expect(p4.reference).toContain('whc.unesco.org/en/list/829');
+  expect(p4.answer).toBe('Pompeji');
+  expect(p5.prompt).toMatch(/Mittelalters.*1453/);
+  expect(p5.reference).toContain('guides.loc.gov/byzantine-empire/introduction');
+  expect(p5.answer).toBe('Das Byzantinische Reich');
+  expect(q4.status).toBe('draft');
+  expect(q5.status).toBe('draft');
+  expect(q4.provenance.sourceVersion).toBe('v2-original-trial-banks-v2');
+  expect(q4.review).toBeUndefined();
+ });
+ it('offers stale imported V1 sample repairs only for exact unchanged matching records',()=>{
+  for(const [id,oldPrompt,oldRef] of [
+   ['qt-geschichte-4','Welche Stadt wurde im Jahr 79 beim Ausbruch des Vesuvs verschüttet?',
+    'UNESCO: Archaeological Areas of Pompei'],
+   ['qt-geschichte-5','Welches antike Reich hatte Konstantinopel als Hauptstadt?',
+    'Encyclopaedia Britannica: Byzantine Empire'],
+  ] as const){
+   const current=trialDraftItems().find(x=>x.id===id)!;
+   const old=validateItem({...current,payload:{...current.payload as object,prompt:oldPrompt,
+    reference:oldRef},provenance:{...current.provenance,sourceVersion:'v2-original-trial-banks-v1'}});
+   const c=historicalTrialCorrection(old);
+   expect(c?.prompt).not.toBe(oldPrompt);
+   expect(c?.url).toMatch(/^https:\/\//);
+   expect(historicalTrialCorrection({...old,payload:{...old.payload as object,answer:'Other'}})).toBeNull();
+   expect(historicalTrialCorrection({...old,provenance:{...old.provenance,sourceVersion:'different'}})).toBeNull();
+   expect(historicalTrialCorrection(current)).toBeNull();
+  }
  });
 });

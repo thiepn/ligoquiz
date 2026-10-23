@@ -28,3 +28,24 @@ flags; the original four human checks remain mandatory. Review steps cover the
 precise passage, accepted answers, ambiguity, fair grading and rights evidence.
 Neither external URLs nor this queue write approvals, modify scored events or
 change the NO_GO release decision.
+
+## Source-backed question repairs — original trial version 2
+
+- `qt-geschichte-4`: The original 79 CE question admits both Pompeii and
+  Herculaneum. UNESCO confirms both were buried, while Pompeii's forum
+  and amphitheatre distinguish the intended answer.
+  Source: https://whc.unesco.org/en/list/829/
+- `qt-geschichte-5`: Calling Byzantium only an ancient empire suppresses
+  its medieval duration. The Library of Congress confirms that the empire
+  continued to 1453 with Constantinople as capital.
+  Source: https://guides.loc.gov/byzantine-empire/introduction
+
+The original question IDs and engine shapes remain unchanged. The trial intake
+source version changes to v2 so old imports are never silently overwritten;
+their IDs collide safely in the existing preview/quarantine gate.
+For an older exactly-matching v1 editorial record, the existing editor offers
+an explicit source-linked correction to **prepare in the editor only**. The
+operator must still save the revision as a draft through the unchanged CAS
+repository. Edited variants and unknown provenance do not qualify. Neither
+correction grants any fact/rights approval. Source-review search filters the
+same live queue without a parallel scheduler or database.

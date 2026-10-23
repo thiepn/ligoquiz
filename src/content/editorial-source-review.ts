@@ -15,15 +15,54 @@ const PRIMARY_LEADS:Readonly<Record<string,PrimaryReference>>={
  'rq-s4':{name:'World Athletics · Marathon',
   url:'https://worldathletics.org/disciplines/relays/marathon',
   comparison:'42,195 km, Dezimalnotation, Einheit und Auswertung gegenprüfen.'},
+ 'qt-geschichte-4':{name:'UNESCO · Pompeji und Herculaneum',
+  url:'https://whc.unesco.org/en/list/829/',
+  comparison:'Pompeji und Herculaneum sind beide betroffen; Forum und Amphitheater grenzen Pompeji ab.'},
+ 'qt-geschichte-5':{name:'Library of Congress · Byzantine Empire',
+  url:'https://guides.loc.gov/byzantine-empire/introduction',
+  comparison:'Konstantinopel, Spätantike, Mittelalter und das Jahr 1453 gegenprüfen.'},
 };
 const originals=new Map(trialDraftItems().map(item=>[item.id,item]));
+
+export type HistoricalCorrection={reason:string;sourceName:string;url:string;prompt:string;reference:string};
+/** Only the two unmodified original V1 trial prompts qualify for these corrections. */
+const LEGACY_AMBIGUITIES:Readonly<Record<string,HistoricalCorrection & {before:string;beforeReference:string;answer:string;row:number}>>={
+ 'qt-geschichte-4':{
+  before:'Welche Stadt wurde im Jahr 79 beim Ausbruch des Vesuvs verschüttet?',
+  beforeReference:'UNESCO: Archaeological Areas of Pompei',answer:'Pompeji',row:4,
+  reason:'Herculaneum wurde ebenfalls 79 verschüttet. Die neue Frage identifiziert Pompeji mit Forum und Amphitheater.',
+  sourceName:'UNESCO World Heritage Centre',url:'https://whc.unesco.org/en/list/829/',
+  prompt:'Welche beim Vesuvausbruch 79 n. Chr. verschüttete römische Stadt besaß ein Forum und ein Amphitheater?',
+  reference:'UNESCO World Heritage Centre: Archaeological Areas of Pompei, Herculaneum and Torre Annunziata; https://whc.unesco.org/en/list/829/',
+ },
+ 'qt-geschichte-5':{
+  before:'Welches antike Reich hatte Konstantinopel als Hauptstadt?',
+  beforeReference:'Encyclopaedia Britannica: Byzantine Empire',answer:'Das Byzantinische Reich',row:5,
+  reason:'Die rein antike Einordnung ist irreführend; das Reich bestand auch im Mittelalter bis 1453.',
+  sourceName:'Library of Congress · Byzantine Empire',url:'https://guides.loc.gov/byzantine-empire/introduction',
+  prompt:'Welches Reich der Spätantike und des Mittelalters hatte Konstantinopel als Hauptstadt und bestand bis 1453?',
+  reference:'Library of Congress: Byzantine Empire — Introduction; https://guides.loc.gov/byzantine-empire/introduction',
+ },
+};
+export function historicalTrialCorrection(item:ContentItem):HistoricalCorrection|null{
+ const c=LEGACY_AMBIGUITIES[item.id],p=item.payload as Record<string,unknown>;
+ if(!c||item.game!=='quiztafel'||item.status==='quarantined'||
+  item.provenance.origin!=='sample'||item.provenance.sourceVersion!=='v2-original-trial-banks-v1'||
+  item.provenance.sourceKey!=='src/games/quiztafel/trial-bank.ts'||
+  item.provenance.sourceId!==item.id||
+  p.id!==item.id||p.categoryId!=='geschichte'||p.categoryName!=='Geschichte'||
+  p.row!==c.row||p.value!==c.row*100||p.prompt!==c.before||
+  p.answer!==c.answer||p.reference!==c.beforeReference)return null;
+ return {reason:c.reason,sourceName:c.sourceName,url:c.url,prompt:c.prompt,reference:c.reference};
+}
+
 export type ReviewRoute='primary'|'lookup'|'illustrative';
 export type SourceReviewTask={item:ContentItem;route:ReviewRoute;lead:PrimaryReference|null;issues:AuditIssue[]};
 
 /** Research leads only. Changed content invalidates the original source match. */
 export function originalSourceLead(item:ContentItem):PrimaryReference|null{
  const baseline=originals.get(item.id),lead=PRIMARY_LEADS[item.id];
- if(!baseline||!lead||item.game!=='rundenquiz'||item.provenance.origin!=='sample'||
+ if(!baseline||!lead||(item.game!=='rundenquiz'&&item.game!=='quiztafel')||item.provenance.origin!=='sample'||
     item.provenance.sourceVersion!==TRIAL_DRAFT_SOURCE||
     item.provenance.sourceKey!==baseline.provenance.sourceKey||
     JSON.stringify(item.payload)!==JSON.stringify(baseline.payload))return null;

@@ -93,3 +93,8 @@
 .cx-source-evidence strong{font-size:14px}.cx-source-evidence p,.cx-source-evidence li{font-size:14px;line-height:1.5}
 .cx-source-evidence p,.cx-source-evidence ul{margin:0}.cx-source-evidence ul{padding-left:21px}
 .cx-source-evidence a{color:#1c526e;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
+
+.cx-source-filter{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #dce2de}
+.cx-source-filter input{flex:1;min-width:130px;font-size:14px}
+.cx-source-filter span{font-size:13px;color:#52626b}
+.cx-source-evidence button{justify-self:start;font-size:14px}
