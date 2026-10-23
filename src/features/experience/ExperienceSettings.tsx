@@ -18,7 +18,7 @@ export function ExperienceSettings(){
    Backstage hat eine lokale Sitzung zur Sicherung vorausgewählt. Es wurde noch kein Export oder Wiederherstellung ausgeführt.
    <a href="#/spielen">Zurück zur Spielwelt</a></p>}
   <div className="exp-form">
-   <h2>Neue Quizabende</h2>
+   <h2>Vorgaben</h2>
    <div className="exp-settings-grid">
      <label className="exp-field">Teams (Vorgabe)
        <select value={value.defaultTeams} onChange={e=>{setState('');setValue(p=>({...p,defaultTeams:Number(e.target.value) as Preferences['defaultTeams']}));}}>

@@ -107,7 +107,7 @@ test('U09 Top 3 source disclosure and original rule stay guarded before explicit
  await expect(host.locator('.u09-origin')).toContainText('BEISPIELDATEN');
  await expect(host.locator('.u09-progress>span')).toHaveCount(6);
  await expect(host.locator('.u09-progress>span').last()).toContainText('TOP 3');
- await expect(host.locator('.ud-phase')).toContainText('Vorbereitung');
+ await expect(host.locator('.g14-current-step')).toContainText('Vorbereitung');
  await expect(host.locator('.u09-private')).toContainText('NICHT VOR FREIGABE ZEIGEN');
  await expect(host.locator('.u09-ranking')).toHaveCount(0);
 });

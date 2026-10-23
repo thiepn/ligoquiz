@@ -461,7 +461,7 @@
  .sp-shell--spielleitung .u07-phase-copy strong{font-size:12px}
  .sp-shell--spielleitung .u07-phase-copy small{font-size:9px}
  .sp-shell--spielleitung .u07-qt .qt-active-row{grid-template-columns:repeat(2,minmax(0,1fr))}
- .sp-shell--spielleitung .u07-qt .qt-active-row>div:last-child{grid-column:1/-1}
+ 
 }
 @media(max-width:700px){
  .sp-shell--spielleitung :is(.u07-rq,.u07-qt){padding:12px!important}

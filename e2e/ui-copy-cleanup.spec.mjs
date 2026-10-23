@@ -83,3 +83,20 @@ test('private host, backstage, technical and recovery screens preserve functiona
  await expect(page.getByRole('region',{name:'Sicherung und Wiederherstellung'})).toBeVisible();
  await fit(page,'mobile backup');
 });
+test('mobile five-game copy retains host phase ownership and public stage status',async({page})=>{
+ await page.setViewportSize({width:375,height:812});
+ await setup(page);
+ await page.getByRole('button',{name:'Weiter'}).click();
+ await page.getByRole('button',{name:'Weiter'}).click();
+ await page.getByRole('checkbox').check();
+ await page.getByRole('button',{name:'Spielleitung öffnen'}).click();
+ await expect(page.locator('.rq-status')).toHaveCount(0);
+ await expect(page.locator('.u07-phase-rail')).toBeVisible();
+ await expect(page.getByRole('region',{name:'Moderationsübersicht'})).toBeVisible();
+ await expect(page.locator('.sp-cockpit-private-note')).toContainText('nicht auf den Beamer spiegeln');
+ await page.goto('/#/stage');
+ await expect(page.locator('.stage-topline')).toBeVisible();
+ await expect(page.locator('.stage-topline')).not.toContainText('LIGOQUIZ · BEAMER');
+ await expect(page.locator('.stage-bottom')).toBeVisible();
+ await fit(page,'public stage');
+});

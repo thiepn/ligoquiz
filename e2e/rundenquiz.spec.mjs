@@ -88,7 +88,7 @@ test('three-team Kurz completes all seven questions including clues and estimate
 
   for (let question = 0; question < 7; question++) {
     await workbench.getByRole('button', { name: 'Frage auf Beamer zeigen' }).click();
-    const status = await workbench.locator('.rq-status strong').innerText();
+    const status = await workbench.locator('.rq-question .u07-question-kicker span').first().innerText();
     if (status.includes('Hinweise')) {
       await workbench.getByRole('button', { name: 'Team 1: Antwort abgegeben' }).click();
       await workbench.getByRole('button', { name: 'Nächsten Hinweis zeigen' }).click();

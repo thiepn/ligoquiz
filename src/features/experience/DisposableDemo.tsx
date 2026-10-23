@@ -21,7 +21,7 @@ function firstDemo():Session{
 }
 function stageView(s:Session){
  const scene=publicScene(s);
- if(scene.kind==='waiting')return <div><p>DER QUIZABEND</p><h2>{scene.title}</h2></div>;
+ if(scene.kind==='waiting')return <h2>{scene.title}</h2>;
  if(scene.kind==='paused')return <h2>Pause</h2>;
  if(scene.kind==='question')return <div><p>WISSEN</p><h2>{scene.prompt}</h2></div>;
  if(scene.kind==='answer')return <div><p>RICHTIGE ANTWORT</p><h2>{scene.solution}</h2></div>;

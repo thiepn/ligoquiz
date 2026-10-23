@@ -73,25 +73,25 @@ test('Standard Top 3 maps rank positions and duplicate-category guesses accurate
  const host=await setup(page,'standard'),stage=await projector(page,host);
  await host.getByRole('button',{name:'Aufgabenfolge bestätigen'}).click();
  for(let i=0;i<5;i++){
-  await expect(host.locator('.ud-phase')).toContainText('AUFGABE '+(i+1)+' / 6');
-  await expect(host.locator('.ud-phase')).toContainText('Vorbereitung');
+  await expect(host.locator('.u09-progress>span').nth(i)).toHaveAttribute('aria-current','step');
+  await expect(host.locator('.g14-current-step')).toContainText('Vorbereitung');
   await host.getByRole('button',{name:'Aufgabe veröffentlichen'}).click();
-  await expect(host.locator('.ud-phase')).toContainText('Antwortphase');
+  await expect(host.locator('.g14-current-step')).toContainText('Antwortphase');
   await host.getByRole('button',{name:'Alle Antworten schließen'}).click();
-  await expect(host.locator('.ud-phase')).toContainText('Teamwertung');
+  await expect(host.locator('.g14-current-step')).toContainText('Teamwertung');
   for(let j=0;j<3;j++){
    const row=host.locator('.ud-team').nth(j);
    await row.getByRole('button',{name:'Antwort erfassen'}).click();
    await expect(row).toContainText('Erfasst: 0 Punkte');
-   await expect(host.locator('.ud-phase')).toContainText('Teamwertung');
+   await expect(host.locator('.g14-current-step')).toContainText('Teamwertung');
   }
   await expect(host.getByRole('button',{name:'Kategorien und Rangfolge veröffentlichen'})).toBeEnabled();
   await host.getByRole('button',{name:'Kategorien und Rangfolge veröffentlichen'}).click();
-  await expect(host.locator('.ud-phase')).toContainText('Wertung prüfen');
+  await expect(host.locator('.g14-current-step')).toContainText('Wertung prüfen');
   await host.getByRole('button',{name:'Teamwertungen verbindlich bestätigen'}).click();
-  await expect(host.locator('.ud-phase')).toContainText('Punkte bestätigt');
+  await expect(host.locator('.g14-current-step')).toContainText('Punkte bestätigt');
   await host.getByRole('button',{name:'Nächste Aufgabe'}).click();
-  await expect(host.locator('.ud-phase')).toContainText('AUFGABE '+(i+2)+' / 6');
+  await expect(host.locator('.u09-progress>span').nth(i+1)).toHaveAttribute('aria-current','step');
  }
  await host.getByRole('button',{name:'Aufgabe veröffentlichen'}).click();
  await expect(stage.locator('.ud-stage')).toContainText('TOP 3');

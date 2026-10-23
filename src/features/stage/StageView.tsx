@@ -180,12 +180,12 @@ export function StageView() {
     <div className="stage-topline">
       <span className="sp-stage-logo">LiGo<span className="stage-yellow">Quiz</span><b aria-hidden="true">!</b></span>
       <span className="sp-stage-phase"><span className="sp-stage-phase-dot" aria-hidden="true"/>{presentation.label}</span>
-      <span>LIGOQUIZ · BEAMER</span>
+      
     </div>
     <div className="stage-center" aria-live="polite" aria-atomic="true">
       {scene ? <Scene scene={scene}/> : <>
         <div className="stage-mark sp-stage-mark" aria-hidden="true"><span>?</span><span>✳</span><span>★</span></div>
-        <p className="stage-kicker">{presentation.label}</p>
+        
         <h1>Warte auf die<br/><span>Spielleitung</span></h1>
         <p>{!eventId ? 'Öffne diesen Bildschirm über die Spielleitung.'
           : error ?? (state.status === 'conflict'
