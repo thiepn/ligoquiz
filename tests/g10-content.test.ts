@@ -10,6 +10,7 @@ import {trialUmfrageduell} from '../src/games/umfrageduell/trial-bank';
 import {trialVerbindungen} from '../src/games/verbindungen/trial-bank';
 import {sampleQuiztafel} from '../src/games/quiztafel/trial-bank';
 import type {GameType} from '../src/domain/game/contracts';
+import {trialDraftBundle,trialDraftItems} from '../src/content/trial-draft-bundle';
 
 const teams=Array.from({length:5},(_,i)=>({id:'team-'+i,name:'Team '+(i+1),order:i}));
 const item=(game:GameType,payload:unknown):ContentItem=>createDraft(game,payload,123);
@@ -180,5 +181,57 @@ describe('G10 dedicated transactional content store',()=>{
    expect(await db.list()).toHaveLength(1);
    expect(await db.receipts()).toHaveLength(1);
   }finally{await db.close();}
+ });
+});
+
+describe('Five existing trial banks enter editorial storage only as unapproved drafts',()=>{
+ it('produces a deterministic, source-traceable typed source for 79 original trial tasks',()=>{
+  const all=trialDraftItems();
+  expect(all).toHaveLength(79);
+  expect(new Set(all.map(x=>x.id)).size).toBe(79);
+  expect(Object.fromEntries(['rundenquiz','quiztafel','verbindungen','logikleiter','umfrageduell']
+   .map(g=>[g,all.filter(x=>x.game===g).length]))).toEqual({
+    rundenquiz:16,quiztafel:30,verbindungen:16,logikleiter:7,umfrageduell:10});
+  expect(all.every(x=>x.status==='draft'&&x.revision===0&&!x.review&&
+   !x.provenance.rights&&x.provenance.origin==='sample'&&
+   x.provenance.sourceKey?.startsWith('src/games/')&&validatePayload(x.game,x.payload).length===0)).toBe(true);
+  expect(trialDraftBundle()).toBe(trialDraftBundle());
+ });
+ it('uses original G10 preview, consent, receipt, collision quarantine and safe undo',async()=>{
+  const bytes=trialDraftBundle(),p=await previewFile(bytes);
+  expect([p.items.length,p.quarantined.length,p.records]).toEqual([79,0,79]);
+  const db=new ContentRepository(fakeIndexedDB,'five-mode-trials-'+crypto.randomUUID());
+  try{
+   await expect(db.importPreview(p,false)).rejects.toMatchObject({code:'UNSAFE'});
+   expect(await db.list()).toHaveLength(0);
+   expect(await db.importPreview(p,true)).toBe('created');
+   const stored=await db.list();
+   expect(stored).toHaveLength(79);
+   expect(stored.every(x=>x.status==='draft'&&!x.review&&!x.provenance.rights)).toBe(true);
+   const again=await previewFile(bytes,stored);
+   expect([again.items.length,again.quarantined.length]).toEqual([0,79]);
+   expect(again.bundleHash).toBe(p.bundleHash);
+   expect(await db.importPreview(again,true)).toBe('already-imported');
+   expect(await db.list()).toHaveLength(79);
+   await db.undo(p.bundleHash);
+   expect(await db.list()).toHaveLength(0);
+  }finally{await db.close();}
+ });
+ it('covers original long five-team engine structures, without persisting synthetic approvals',()=>{
+  const synthetic=trialDraftItems().map(x=>validateItem({...x,status:'approved',review:{
+   reviewer:'Fictitious test only',checkedAt:0,
+   note:'Nonpersistent fixture for checking five engine structures',
+   fingerprint:'f'.repeat(64),checklist:[true,true,true,true]}}));
+  for(const game of ['rundenquiz','quiztafel','verbindungen','logikleiter','umfrageduell'] as const){
+   expect(coverage(synthetic,game,'lang',5).ready,game).toBe(true);
+   switch(game){
+    case 'rundenquiz':expect(selectReviewedPack(synthetic,game,'lang',5)).toHaveLength(16);break;
+    case 'quiztafel':expect(selectReviewedPack(synthetic,game,'lang',5).tiles).toHaveLength(30);break;
+    case 'verbindungen':expect(selectReviewedPack(synthetic,game,'lang',5)).toHaveLength(16);break;
+    case 'logikleiter':expect(selectReviewedPack(synthetic,game,'lang',5)).toHaveLength(7);break;
+    case 'umfrageduell':expect(selectReviewedPack(synthetic,game,'lang',5)).toHaveLength(10);break;
+   }
+  }
+  expect(trialDraftItems().every(x=>x.status==='draft')).toBe(true);
  });
 });
