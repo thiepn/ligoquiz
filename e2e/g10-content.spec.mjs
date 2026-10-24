@@ -362,10 +362,10 @@ test('offline CSV structural wall corrections stage tile and group without chang
  await queue.getByRole('button',{name:'Alle Aufgaben als CSV'}).click();
  const download=await start,source=await readFile(await download.path(),'utf8');
  const note='Wandfeld 1: Redaktionell präzisierter Begriff\nVerbindung 1: Evangelien des Neuen Testaments';
- const escaped='"'+note.replace(/"/g,'""')+'"';
+ const reviewCells=['','https://example.org/primary','',note,'']
+  .map(value=>'"'+value.replace(/"/g,'""')+'"').join(',');
  const csv=source.split('\r\n').map(line=>line.startsWith('"vb-wall-1",')?
-  line.replace(/,"","","","",""$/,' ,"","https://example.org/primary","",'+escaped+'," "'.trimStart().replace(/," "$/,' ,""')):line)
-  .join('\r\n');
+  line.replace(/,"","","","",""$/,','+reviewCells):line).join('\r\n');
  const notes=page.getByRole('region',{name:'CSV-Prüfnotizen'});
  await notes.getByLabel('CSV-Prüfnotizen öffnen').setInputFiles({
   name:'original-wall.csv',mimeType:'text/csv',buffer:Buffer.from(csv),

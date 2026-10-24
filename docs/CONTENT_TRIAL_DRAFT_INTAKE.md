@@ -210,3 +210,5 @@ accepted links only when the original 15-synonym limit permits it.
 No new puzzle engine, source authority, scored-content publication or
 new persistence is introduced: original G10 draft save + CAS, four-check
 manual rights/editorial review and G26 NO_GO remain intact.
+
+The offline CSV reader rejects reviewer note cells longer than 1,500 characters instead of silently truncating a proposed correction. Invalid files never stage changes.

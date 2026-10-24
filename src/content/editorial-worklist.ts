@@ -124,9 +124,11 @@ export function previewReviewWorksheet(source:string,tasks:readonly SourceReview
   const id=row[0]!;
   if(!id||seen.has(id))throw Error('CSV enthält doppelte oder leere Aufgaben-IDs');
   seen.add(id);
-  const notes=HEADER.slice(14).map((heading,j)=>({
-   heading,text:row[14+j]!.trim().slice(0,1500),
-  })).filter(note=>note.text!=='');
+  const notes=HEADER.slice(14).map((heading,j)=>{
+   const text=row[14+j]!.trim();
+   if(text.length>1500)throw Error('CSV-Prüfnotiz zu lang: '+heading);
+   return {heading,text};
+  }).filter(note=>note.text!=='');
   if(!notes.length)continue;
   const current=index.get(id);
   const identityFields=[0,1,2,4,5,6,7,11,12,13];

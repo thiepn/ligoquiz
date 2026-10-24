@@ -666,7 +666,8 @@ describe('Source-matched original structural editorial repairs',()=>{
   expect(worksheetDetailProposal({...note,id:'other'},ll)).toBeNull();
   expect(worksheetDetailProposal(note,{...ll,status:'approved'})).toBeNull();
   expect(worksheetDetailProposal(entry(ll,'Zusatzhinweis: Gleich\nZusatzhinweis: Nochmal'),ll)).toBeNull();
-  expect(worksheetDetailProposal(entry(ll,'Zusatzhinweis: '+'a'.repeat(3001)),ll)).toBeNull();
+  expect(()=>entry(ll,'Zusatzhinweis: '+'x'.repeat(1500))).toThrow(/zu lang/);
+  expect(()=>entry(ll,'Zusatzhinweis: '+'a'.repeat(3001))).toThrow(/zu lang/);
   expect(worksheetDetailProposal(entry(ll,'Antwort: Ungültig'),ll)).toBeNull();
   expect(worksheetDetailProposal(entry(ll,'Erklärungsvorschlag: Neue Erklärung',
    'Vorschlag: Nein'),ll)).toBeNull();
