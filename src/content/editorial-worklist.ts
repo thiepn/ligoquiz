@@ -1,4 +1,4 @@
-import type {ContentItem} from './contracts';
+import {validatePayload,type ContentItem} from './contracts';
 import type {SourceReviewTask} from './editorial-source-review';
 
 /** A local-only research worksheet; blank reviewer fields are deliberately not decisions. */
@@ -162,4 +162,25 @@ export function worksheetSourceProposal(note:ImportedReviewNote,item:ContentItem
     p.reference.includes(url.href))return null;
  const proposed=p.reference.trim()+'; '+url.href;
  return proposed.length<=1000?proposed:null;
+}
+
+export type WorksheetAnswerProposal={field:'answer'|'target';before:string;after:string;reference:string};
+/** Exact current draft + explicit correction marker + cited HTTPS evidence only. */
+export function worksheetAnswerProposal(note:ImportedReviewNote,item:ContentItem):WorksheetAnswerProposal|null{
+ const reference=worksheetSourceProposal(note,item);
+ if(!reference||note.status!=='current'||note.id!==item.id||item.status!=='draft')return null;
+ const marked=note.notes.find(x=>x.heading==='Antwort geprüft')?.text.trim();
+ if(!marked?.startsWith('Vorschlag: '))return null;
+ const after=marked.slice('Vorschlag: '.length).trim();
+ if(!after||after.length>500||/[\r\n\x00-\x1F]/u.test(after))return null;
+ const source=item.payload as {kind?:string;answer?:unknown;target?:unknown};
+ const field=item.game==='verbindungen'?
+  source.kind==='clues'?'target':source.kind==='sequence'?'answer':null:
+  item.game==='umfrageduell'?null:'answer';
+ if(!field||typeof source[field]!=='string')return null;
+ const before=source[field] as string;
+ if(before.trim()===after)return null;
+ const payload={...item.payload as object,[field]:after,reference};
+ if(validatePayload(item.game,payload).length)return null;
+ return {field,before,after,reference};
 }

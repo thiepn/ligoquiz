@@ -8,7 +8,7 @@ import {EditorialAuditPanel} from './EditorialAuditPanel';
 import {StructuredQuestionEditor} from './StructuredQuestionEditor';
 import {trialDraftBundle} from '../../content/trial-draft-bundle';
 import {contentReviewTasks,historicalTrialCorrection,draftSourceCitation,type ReviewRoute} from '../../content/editorial-source-review';
-import {exportReviewWorksheet,previewReviewWorksheet,worksheetSourceProposal} from '../../content/editorial-worklist';
+import {exportReviewWorksheet,previewReviewWorksheet,worksheetSourceProposal,worksheetAnswerProposal} from '../../content/editorial-worklist';
 
 
 const LABELS:Record<GameType,string>={
@@ -187,6 +187,23 @@ export function ContentStudio(){
     proposal.quarantined.length+' Kollisionen zurückgestellt. Noch nichts importiert.');
   });
  }
+
+ function stageReviewAnswer(entry:NonNullable<typeof reviewerNotes>['rows'][number]){
+  const task=sourceTasks.find(x=>x.item.id===entry.id);
+  if(!task||entry.status!=='current')return;
+  const proposal=worksheetAnswerProposal(entry,task.item);
+  if(!proposal)return;
+  if(current&&(json!==JSON.stringify(current.payload,null,2)||
+   rightsDraft!==(current.provenance.rights??'')||reviewNote.trim()||
+   reviewer.trim()||checklist.some(Boolean))){
+   setError('Ungespeicherte Änderungen zuerst speichern oder verwerfen; Antwortvorschlag nicht übernommen.');
+   return;
+  }
+  choose(task.item);
+  setJson(JSON.stringify({...task.item.payload as object,
+   [proposal.field]:proposal.after,reference:proposal.reference},null,2));
+  setMessage('Antwort und Quellenbeleg aus Prüfnotiz im Editor vorbereitet; vor dem Speichern unabhängig prüfen.');
+ }
  function stageReviewCitation(entry:NonNullable<typeof reviewerNotes>['rows'][number]){
   const task=sourceTasks.find(x=>x.item.id===entry.id);
   if(!task||entry.status!=='current')return;
@@ -315,6 +332,7 @@ export function ContentStudio(){
       {reviewerNotes.rows.map(entry=>{
        const task=sourceTasks.find(task=>task.item.id===entry.id);
        const proposal=task?worksheetSourceProposal(entry,task.item):null;
+       const answerProposal=task?worksheetAnswerProposal(entry,task.item):null;
        const hasSourceNote=entry.notes.some(note=>note.heading==='Beleg geprüft');
        return <section key={entry.id} className="cx-worksheet-note">
        <div><strong>{entry.id} · {entry.status==='current'?'Aktuell':'Veraltet'}</strong>
@@ -326,6 +344,13 @@ export function ContentStudio(){
         }}>Aufgabe zu Notizen öffnen</button>
        {proposal&&<button type="button" className="exp-secondary" disabled={busy}
         onClick={()=>stageReviewCitation(entry)}>Quellenlink im Entwurf vorbereiten</button>}
+       {answerProposal&&<div className="cx-answer-proposal">
+        <strong>Antwortkorrektur · ungeprüfter Vorschlag</strong>
+        <p><b>Bisher:</b> {answerProposal.before}</p>
+        <p><b>Vorgeschlagen:</b> {answerProposal.after}</p>
+        <button type="button" className="exp-secondary" disabled={busy}
+         onClick={()=>stageReviewAnswer(entry)}>Antwort und Quelle im Entwurf vorbereiten</button>
+       </div>
        {hasSourceNote&&!proposal&&entry.status==='current'&&
         <p>Für einen Quellenlink eine vollständige HTTPS-URL in „Beleg geprüft“ eintragen.</p>}
       </section>;})}

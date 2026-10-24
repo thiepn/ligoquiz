@@ -290,3 +290,33 @@ test('manual CSV source proposal stages a citation without losing unsaved work o
  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig'))
   .toHaveCount(5);
 });
+
+test('offline CSV answer correction prepares unsaved draft without grading or approval',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ const downloading=page.waitForEvent('download');
+ await queue.getByRole('button',{name:'Alle Aufgaben als CSV'}).click();
+ const file=await downloading,csv=await readFile(await file.path(),'utf8');
+ const reviewed=csv.split('\r\n').map(line=>line.startsWith('"rq-w4",')?
+  line.replace(/,"","","","",""$/,' ,"Vorschlag: Redaktioneller Testwert","https://example.org/primary","","",""'.trimStart()):line)
+  .join('\r\n');
+ const notes=page.getByRole('region',{name:'CSV-Prüfnotizen'});
+ await notes.getByLabel('CSV-Prüfnotizen öffnen').setInputFiles({
+  name:'answer-review.csv',mimeType:'text/csv',buffer:Buffer.from(reviewed),
+ });
+ await expect(notes).toContainText('1 zugeordnet · 0 veraltet · 0 fehlen');
+ await expect(notes).toContainText('Bisher: Wien');
+ await expect(notes).toContainText('Vorgeschlagen: Redaktioneller Testwert');
+ await notes.getByRole('button',{name:'Antwort und Quelle im Entwurf vorbereiten'}).click();
+ const editor=page.getByRole('region',{name:'Aufgabe bearbeiten'});
+ await expect(editor.getByRole('textbox',{name:'Lösung',exact:true})).toHaveValue('Redaktioneller Testwert');
+ await expect(editor.getByRole('textbox',{name:'Quelle',exact:true})).toHaveValue(/example.org\/primary/);
+ await expect(editor.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
+ await page.reload();
+ await page.getByRole('region',{name:'Aufgabenbestand'}).getByRole('button',{name:/rq-w4/}).click();
+ await expect(page.getByRole('textbox',{name:'Lösung',exact:true})).toHaveValue('Wien');
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+});

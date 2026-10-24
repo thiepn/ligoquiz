@@ -12,7 +12,7 @@ import {sampleQuiztafel} from '../src/games/quiztafel/trial-bank';
 import type {GameType} from '../src/domain/game/contracts';
 import {trialDraftBundle,trialDraftItems} from '../src/content/trial-draft-bundle';
 import {contentReviewTasks,originalSourceLead,historicalTrialCorrection,draftSourceCitation} from '../src/content/editorial-source-review';
-import {exportReviewWorksheet,worksheetCell,previewReviewWorksheet,worksheetSourceProposal} from '../src/content/editorial-worklist';
+import {exportReviewWorksheet,worksheetCell,previewReviewWorksheet,worksheetSourceProposal,worksheetAnswerProposal} from '../src/content/editorial-worklist';
 
 const teams=Array.from({length:5},(_,i)=>({id:'team-'+i,name:'Team '+(i+1),order:i}));
 const item=(game:GameType,payload:unknown):ContentItem=>createDraft(game,payload,123);
@@ -485,5 +485,56 @@ describe('CSV research notes safely stage reviewer-provided HTTPS citations',()=
   }
   const survey=contentReviewTasks(trialDraftItems()).find(t=>t.item.id==='ud-01')!;
   expect(worksheetSourceProposal(read(survey,url).entry,survey.item)).toBeNull();
+ });
+});
+
+describe('Reviewer answer corrections require current G10 draft and source evidence',()=>{
+ const entry=(item:ContentItem,answer:string,source='https://example.org/primary')=>{
+  const task=contentReviewTasks([item])[0]!;
+  const csv=exportReviewWorksheet([task]).replace(/,"","","","",""\r\n$/u,
+   ',"'+answer.replace(/"/g,'""')+'",'+worksheetCell(source)+',"","",""\r\n');
+  return previewReviewWorksheet(csv,[task]).rows[0]!;
+ };
+ it('creates valid unsaved source-linked answer proposals across original supported games',()=>{
+  const all=trialDraftItems(),snapshot=JSON.stringify(all);
+  for(const id of ['rq-w4','qt-natur-6','ll-02','vb-a-david','vb-b-week']){
+   const item=all.find(i=>i.id===id)!;
+   const proposed=worksheetAnswerProposal(entry(item,'Vorschlag: Redaktioneller Testwert'),item);
+   expect(proposed).not.toBeNull();
+   expect(proposed?.after).toBe('Redaktioneller Testwert');
+   expect(proposed?.reference).toContain('https://example.org/primary');
+   expect(validatePayload(item.game,{...item.payload as object,
+    [proposed!.field]:proposed!.after,reference:proposed!.reference})).toEqual([]);
+   expect(item.status).toBe('draft');
+   expect(item.review).toBeUndefined();
+  }
+  expect(JSON.stringify(all)).toBe(snapshot);
+ });
+ it('refuses stale, unmarked, changed, non-draft, invalid evidence, survey and wall updates',()=>{
+  const item=trialDraftItems().find(i=>i.id==='rq-w4')!;
+  const yes=entry(item,'Vorschlag: Ungeprüfte Testantwort');
+  expect(worksheetAnswerProposal(yes,item)?.before).toBe('Wien');
+  expect(worksheetAnswerProposal({...yes,status:'changed'},item)).toBeNull();
+  expect(worksheetAnswerProposal({...yes,id:'rq-w6'},item)).toBeNull();
+  expect(worksheetAnswerProposal(yes,{...item,status:'approved'})).toBeNull();
+  expect(worksheetAnswerProposal(entry(item,'Wien geprüft'),item)).toBeNull();
+  expect(worksheetAnswerProposal(entry(item,'Vorschlag: Wien'),item)).toBeNull();
+  expect(worksheetAnswerProposal(entry(item,'Vorschlag: Neu','http://example.org'),item)).toBeNull();
+  expect(worksheetAnswerProposal(entry(item,'Vorschlag: '+'x'.repeat(501)),item)).toBeNull();
+  expect(worksheetAnswerProposal(entry(item,'Vorschlag: a\nb'),item)).toBeNull();
+  for(const id of ['ud-01','vb-wall-1']){
+   const original=trialDraftItems().find(i=>i.id===id)!;
+   expect(worksheetAnswerProposal(entry(original,'Vorschlag: Neu'),original)).toBeNull();
+  }
+ });
+ it('refuses reviewer notes if the question or original source changes before staging',()=>{
+  const item=trialDraftItems().find(i=>i.id==='qt-natur-6')!;
+  const task=contentReviewTasks([item])[0]!;
+  const csv=exportReviewWorksheet([task]).replace(/,"","","","",""\r\n$/u,
+   ',"Vorschlag: Anderer Wert","https://example.org/primary","","",""\r\n');
+  const changed={...item,payload:{...item.payload as object,reference:'Geänderter Beleg'}};
+  const stale=previewReviewWorksheet(csv,contentReviewTasks([changed])).rows[0]!;
+  expect(stale.status).toBe('changed');
+  expect(worksheetAnswerProposal(stale,changed)).toBeNull();
  });
 });

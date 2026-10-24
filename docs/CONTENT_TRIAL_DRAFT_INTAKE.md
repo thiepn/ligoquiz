@@ -144,3 +144,21 @@ blocks navigation and staging when the current editor has outstanding question,
 rights, reviewer or checklist edits, to avoid losing unsent work.
 The original explicit Save as Draft with revision CAS remains the only write.
 G26 publication stays NO_GO.
+
+## Reviewer answer suggestions in original G10 editor
+
+In a CSV worksheet, an editor may write "Vorschlag: neue Antwort" in
+Antwort geprüft and a single valid HTTPS source link in Beleg geprüft.
+For an exact matching, still-unapproved original question the G10 source
+worklist displays previous versus proposed answer. An explicit action
+prepares both the new answer and citation in the UNSAVED native editor.
+
+Only valid single-line answer proposals (up to 500 characters) are
+accepted for Rundenquiz, Quiztafel, Logikleiter, Verbindungen clues and
+Verbindungen sequence. Umfrageduell illustrative/observed ranks, wall
+puzzles, modified or missing records and non-draft items cannot take this
+shortcut. The original G10 game schemas validate staged content; existing
+unsent edits/reviewer data must be resolved before switching questions.
+Manual Save as Draft with revision CAS is the sole persistence path.
+The reviewer note and its HTTPS citation are not fact, rights or content
+approval. Original IDs, grading, engine contracts and G26 NO_GO remain.

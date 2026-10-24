@@ -121,3 +121,7 @@
 .cx-worksheet-note button{justify-self:start;min-height:36px}
 
 .cx-worksheet-note button{white-space:normal;text-align:left}
+
+.cx-answer-proposal{border-left:3px solid #826f56;padding:12px;background:#f5f3ee;display:grid;gap:8px}
+.cx-answer-proposal strong,.cx-answer-proposal p{font-size:14px;line-height:1.5;overflow-wrap:anywhere;margin:0}
+.cx-answer-proposal button{justify-self:start;min-height:36px}
