@@ -187,3 +187,26 @@ changes must be dealt with before staging another question. The only
 persistence path remains an **explicit** G10 Save as Draft with CAS;
 reviewer evidence is unverified, rights/approval are not inherited and
 G26 release remains NO_GO.
+
+## Source-linked original puzzle-detail correction
+
+For original non-survey questions still in G10 draft status, the offline CSV
+`Spielleitung geprüft` field now accepts **up to six separate lines** naming
+targeted corrections with an unchanged source-grounded question fingerprint:
+`Zusatzhinweis: ...` and `Erklärungsvorschlag: ...` for Logikleiter;
+`Folgenelement 1: ...` through `Folgenelement 3: ...` and
+`Erklärungsvorschlag: ...` for Verbindungen sequences;
+`Wandfeld 1: ...` through `Wandfeld 16: ...` and `Verbindung 1: ...`
+through `Verbindung 4: ...` for the existing Verbindungen wall. A reviewer
+must also provide a valid HTTPS URL in `Beleg geprüft`.
+
+The author sees a per-field **before/after** comparison and may explicitly
+stage the whole correction batch into the **unsaved** original G10 editor.
+The source-backed validator rejects duplicate or unknown fields, unchanged
+values, invalid game schemas and a second field with a conflicting answer
+proposal. Wall revisions preserve the original 16 tile IDs, group IDs and
+group memberships; a renamed group title is appended to its pre-existing
+accepted links only when the original 15-synonym limit permits it.
+No new puzzle engine, source authority, scored-content publication or
+new persistence is introduced: original G10 draft save + CAS, four-check
+manual rights/editorial review and G26 NO_GO remain intact.

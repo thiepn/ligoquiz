@@ -227,3 +227,81 @@ export function worksheetWordingProposal(note:ImportedReviewNote,item:ContentIte
  if(validatePayload(item.game,payload).length)return null;
  return {kind,before,after,...(clueIndex!==undefined?{clueIndex}:{}),reference,payload};
 }
+
+export type WorksheetDetailChange={field:string;before:string;after:string};
+export type WorksheetDetailProposal={
+ changes:readonly WorksheetDetailChange[];reference:string;payload:Record<string,unknown>;
+};
+/** Source-bound corrections for original explanation, help and grouping content.
+ * No second authoring store, save operation or authority to approve materials. */
+export function worksheetDetailProposal(note:ImportedReviewNote,item:ContentItem):WorksheetDetailProposal|null{
+ const reference=worksheetSourceProposal(note,item);
+ if(!reference||note.status!=='current'||note.id!==item.id||item.status!=='draft')return null;
+ const input=note.notes.find(x=>x.heading==='Spielleitung geprüft')?.text.trim();
+ if(!input)return null;
+ const lines=input.split(/\r?\n/u).map(x=>x.trim()).filter(Boolean);
+ if(lines.length===0||lines.length>6)return null;
+ const base=item.payload as Record<string,unknown>;
+ const payload:Record<string,unknown>={...base,reference},changes:WorksheetDetailChange[]=[];
+ const seen=new Set<string>();
+ for(const line of lines){
+  let field='',before='',after='',max=3000;
+  let path:'hint'|'explanation'|'item'|'tile'|'group'|null=null,index=-1;
+  const colon=line.indexOf(': ');
+  if(colon<1)return null;
+  const key=line.slice(0,colon),value=line.slice(colon+2).trim();
+  if(key==='Zusatzhinweis'&&item.game==='logikleiter'&&typeof base.hint==='string'){
+   path='hint';field='Zusatzhinweis';before=base.hint;max=3000;
+  }else if(key==='Erklärungsvorschlag'&&
+   (item.game==='logikleiter'||item.game==='verbindungen'&&base.kind==='sequence')&&
+   typeof base.explanation==='string'){
+   path='explanation';field='Erklärung';before=base.explanation;
+  }else if(item.game==='verbindungen'&&base.kind==='sequence'&&/^Folgenelement [1-3]$/u.test(key)){
+   index=Number(key.slice('Folgenelement '.length))-1;
+   if(!Array.isArray(base.items)||typeof base.items[index]!=='string')return null;
+   path='item';field=key;before=base.items[index];max=3000;
+  }else if(item.game==='verbindungen'&&base.kind==='wall'&&/^Wandfeld (?:[1-9]|1[0-6])$/u.test(key)){
+   index=Number(key.slice('Wandfeld '.length))-1;
+   const tile=Array.isArray(base.tiles)?base.tiles[index] as {id?:string;label?:string}|undefined:undefined;
+   if(!tile||typeof tile.label!=='string'||typeof tile.id!=='string')return null;
+   path='tile';field=key;before=tile.label;max=3000;
+  }else if(item.game==='verbindungen'&&base.kind==='wall'&&/^Verbindung [1-4]$/u.test(key)){
+   index=Number(key.slice('Verbindung '.length))-1;
+   const group=Array.isArray(base.groups)?base.groups[index] as
+    {id?:string;link?:string;acceptedLinks?:string[]}|undefined:undefined;
+   if(!group||typeof group.link!=='string'||!Array.isArray(group.acceptedLinks))return null;
+   path='group';field=key;before=group.link;max=3000;
+  }else return null;
+  after=value;
+  if(!after||after.length>max||after===before.trim()||
+   [...after].some(ch=>ch.charCodeAt(0)<32)||seen.has(field))return null;
+  seen.add(field);
+  if(path==='hint')payload.hint=after;
+  else if(path==='explanation')payload.explanation=after;
+  else if(path==='item'){
+   const items=(payload.items as string[]|undefined)??(base.items as string[]);
+   const next=items.slice();next[index]=after;payload.items=next;
+  }else if(path==='tile'){
+   const tiles=((payload.tiles??base.tiles) as {id:string;label:string}[]).map(t=>({...t}));
+   tiles[index]={...tiles[index]!,label:after};payload.tiles=tiles;
+  }else if(path==='group'){
+   const groups=((payload.groups??base.groups) as {
+    id:string;link:string;acceptedLinks:string[];tileIds:string[]}[]).map(g=>({
+     ...g,acceptedLinks:[...g.acceptedLinks],
+    }));
+   const g=groups[index]!;
+   if(!g.acceptedLinks.includes(after))g.acceptedLinks.push(after);
+   groups[index]={...g,link:after};payload.groups=groups;
+  }
+  changes.push({field,before,after});
+ }
+ const markedAnswer=note.notes.some(x=>x.heading==='Antwort geprüft'&&x.text.trim().startsWith('Vorschlag:'));
+ if(markedAnswer){
+  const answer=worksheetAnswerProposal(note,item);
+  if(!answer)return null;
+  payload[answer.field]=answer.after;
+  changes.push({field:'Antwort',before:answer.before,after:answer.after});
+ }
+ if(validatePayload(item.game,payload).length)return null;
+ return {changes,reference,payload};
+}

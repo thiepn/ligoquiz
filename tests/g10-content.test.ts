@@ -12,7 +12,7 @@ import {sampleQuiztafel} from '../src/games/quiztafel/trial-bank';
 import type {GameType} from '../src/domain/game/contracts';
 import {trialDraftBundle,trialDraftItems} from '../src/content/trial-draft-bundle';
 import {contentReviewTasks,originalSourceLead,historicalTrialCorrection,draftSourceCitation} from '../src/content/editorial-source-review';
-import {exportReviewWorksheet,worksheetCell,previewReviewWorksheet,worksheetSourceProposal,worksheetAnswerProposal,worksheetWordingProposal} from '../src/content/editorial-worklist';
+import {exportReviewWorksheet,worksheetCell,previewReviewWorksheet,worksheetSourceProposal,worksheetAnswerProposal,worksheetWordingProposal,worksheetDetailProposal} from '../src/content/editorial-worklist';
 
 const teams=Array.from({length:5},(_,i)=>({id:'team-'+i,name:'Team '+(i+1),order:i}));
 const item=(game:GameType,payload:unknown):ContentItem=>createDraft(game,payload,123);
@@ -606,5 +606,76 @@ describe('Source-linked CSV prompt and individual clue repairs',()=>{
   const stale=previewReviewWorksheet(csv,contentReviewTasks([changed])).rows[0]!;
   expect(stale.status).toBe('changed');
   expect(worksheetWordingProposal(stale,changed)).toBeNull();
+ });
+});
+
+describe('Source-matched original structural editorial repairs',()=>{
+ const entry=(item:ContentItem,detail:string,answer='')=>{
+  const task=contentReviewTasks([item])[0]!;
+  const csv=exportReviewWorksheet([task]).replace(/,"","","","",""\r\n$/u,
+   ','+[answer,'https://example.org/research/original','',detail,''].map(worksheetCell).join(',')+'\r\n');
+  return previewReviewWorksheet(csv,[task]).rows[0]!;
+ };
+ it('edits original Logikleiter hint and proof explanation together with no persisted authority',()=>{
+  const item=trialDraftItems().find(x=>x.id==='ll-02')!,snapshot=JSON.stringify(item);
+  const note=entry(item,'Zusatzhinweis: Betrachte zunächst zwei verschiedene Farben.\n'+
+   'Erklärungsvorschlag: Die dritte Socke hat sicher eine der beiden ersten Farben.');
+  const p=worksheetDetailProposal(note,item);
+  expect(p?.changes.map(x=>x.field)).toEqual(['Zusatzhinweis','Erklärung']);
+  expect(p?.payload.hint).toBe('Betrachte zunächst zwei verschiedene Farben.');
+  expect(p?.payload.explanation).toContain('dritte Socke');
+  expect(validatePayload(item.game,p!.payload)).toEqual([]);
+  expect(JSON.stringify(item)).toBe(snapshot);
+  expect(item.status).toBe('draft');
+  expect(item.review).toBeUndefined();
+ });
+ it('edits sequence elements and explanation while retaining immutable identifiers and original response',()=>{
+  const item=trialDraftItems().find(x=>x.id==='vb-b-week')!;
+  const p=worksheetDetailProposal(entry(item,'Folgenelement 2: Dienstag\n'+
+   'Erklärungsvorschlag: Montag, Dienstag, Mittwoch, Donnerstag.'),item);
+  // Unchanged second sequence element is rejected; independently test changed sequence.
+  expect(p).toBeNull();
+  const next=worksheetDetailProposal(entry(item,'Folgenelement 2: Zweiter Wochentag\n'+
+   'Erklärungsvorschlag: Montag, Dienstag, Mittwoch, Donnerstag.'),item);
+  expect(next?.payload.items).toEqual(['Montag','Zweiter Wochentag','Mittwoch']);
+  expect(next?.payload.answer).toBe('Donnerstag');
+  expect(next?.changes).toHaveLength(2);
+  expect(validatePayload(item.game,next!.payload)).toEqual([]);
+ });
+ it('repairs one original wall tile and group label while keeping groups/tile IDs and former accepted links',()=>{
+  const item=trialDraftItems().find(x=>x.id==='vb-wall-1')!;
+  const before=JSON.stringify(item),old=item.payload as {
+   tiles:{id:string;label:string}[];groups:{id:string;tileIds:string[];link:string;acceptedLinks:string[]}[]};
+  const p=worksheetDetailProposal(entry(item,'Wandfeld 1: Redaktionell präzisierter Begriff\n'+
+   'Verbindung 1: Evangelien des Neuen Testaments'),item);
+  expect(p?.changes.map(x=>x.field)).toEqual(['Wandfeld 1','Verbindung 1']);
+  const newPayload=p!.payload as typeof old;
+  expect(newPayload.tiles[0]?.label).toBe('Redaktionell präzisierter Begriff');
+  expect(newPayload.tiles.map(t=>t.id)).toEqual(old.tiles.map(t=>t.id));
+  expect(newPayload.groups.map(g=>g.tileIds)).toEqual(old.groups.map(g=>g.tileIds));
+  expect(newPayload.groups.map(g=>g.id)).toEqual(old.groups.map(g=>g.id));
+  expect(newPayload.groups[0]?.acceptedLinks).toEqual([
+   ...old.groups[0]!.acceptedLinks,'Evangelien des Neuen Testaments']);
+  expect(validatePayload(item.game,p!.payload)).toEqual([]);
+  expect(JSON.stringify(item)).toBe(before);
+ });
+ it('refuses stale rows, invalid markup, collisions, unsupported game and source-less records',()=>{
+  const ll=trialDraftItems().find(x=>x.id==='ll-02')!;
+  const note=entry(ll,'Zusatzhinweis: Präzisierter Hinweis');
+  expect(worksheetDetailProposal({...note,status:'changed'},ll)).toBeNull();
+  expect(worksheetDetailProposal({...note,id:'other'},ll)).toBeNull();
+  expect(worksheetDetailProposal(note,{...ll,status:'approved'})).toBeNull();
+  expect(worksheetDetailProposal(entry(ll,'Zusatzhinweis: Gleich\nZusatzhinweis: Nochmal'),ll)).toBeNull();
+  expect(worksheetDetailProposal(entry(ll,'Zusatzhinweis: '+'a'.repeat(3001)),ll)).toBeNull();
+  expect(worksheetDetailProposal(entry(ll,'Antwort: Ungültig'),ll)).toBeNull();
+  expect(worksheetDetailProposal(entry(ll,'Erklärungsvorschlag: Neue Erklärung',
+   'Vorschlag: Nein'),ll)).toBeNull();
+  const survey=trialDraftItems().find(x=>x.id==='ud-01')!;
+  expect(worksheetDetailProposal(entry(survey,'Zusatzhinweis: Nicht erlaubt'),survey)).toBeNull();
+  const w=trialDraftItems().find(x=>x.id==='vb-wall-1')!;
+  expect(worksheetDetailProposal(entry(w,'Wandfeld 17: Extra'),w)).toBeNull();
+  expect(worksheetDetailProposal(entry(w,'Verbindung 0: Null'),w)).toBeNull();
+  expect(worksheetDetailProposal(entry(w,'Wandfeld 1: Neue Bezeichnung\n'+
+   'Unbekannt: Abbruch'),w)).toBeNull();
  });
 });

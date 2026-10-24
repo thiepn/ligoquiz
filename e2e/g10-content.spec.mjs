@@ -351,3 +351,37 @@ test('CSV source-grounded wording revision stages exact current question prompt 
   .not.toHaveValue('Welche Stadt ist die Hauptstadt Österreichs?');
  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
 });
+
+test('offline CSV structural wall corrections stage tile and group without changing source IDs or approvals',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ const start=page.waitForEvent('download');
+ await queue.getByRole('button',{name:'Alle Aufgaben als CSV'}).click();
+ const download=await start,source=await readFile(await download.path(),'utf8');
+ const note='Wandfeld 1: Redaktionell präzisierter Begriff\nVerbindung 1: Evangelien des Neuen Testaments';
+ const escaped='"'+note.replace(/"/g,'""')+'"';
+ const csv=source.split('\r\n').map(line=>line.startsWith('"vb-wall-1",')?
+  line.replace(/,"","","","",""$/,' ,"","https://example.org/primary","",'+escaped+'," "'.trimStart().replace(/," "$/,' ,""')):line)
+  .join('\r\n');
+ const notes=page.getByRole('region',{name:'CSV-Prüfnotizen'});
+ await notes.getByLabel('CSV-Prüfnotizen öffnen').setInputFiles({
+  name:'original-wall.csv',mimeType:'text/csv',buffer:Buffer.from(csv),
+ });
+ await expect(notes).toContainText('1 zugeordnet · 0 veraltet · 0 fehlen');
+ await expect(notes).toContainText('Wandfeld 1 bisher');
+ await notes.getByRole('button',{name:'Detailkorrekturen im Entwurf vorbereiten'}).click();
+ const editor=page.getByRole('region',{name:'Aufgabe bearbeiten'});
+ await expect(editor.getByRole('textbox',{name:'Feld 1',exact:true}))
+  .toHaveValue('Redaktionell präzisierter Begriff');
+ await expect(editor.getByRole('textbox',{name:'Verbindung',exact:false}).first())
+  .toHaveValue('Evangelien des Neuen Testaments');
+ await expect(editor.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
+ await page.reload();
+ await page.getByRole('region',{name:'Aufgabenbestand'}).getByRole('button',{name:/vb-wall-1/}).click();
+ await expect(page.getByRole('region',{name:'Aufgabe bearbeiten'})
+  .getByRole('textbox',{name:'Feld 1',exact:true})).not.toHaveValue('Redaktionell präzisierter Begriff');
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+});
