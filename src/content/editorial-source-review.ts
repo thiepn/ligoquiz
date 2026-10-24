@@ -15,6 +15,18 @@ const PRIMARY_LEADS:Readonly<Record<string,PrimaryReference>>={
  'rq-s4':{name:'World Athletics · Marathon',
   url:'https://worldathletics.org/disciplines/relays/marathon',
   comparison:'42,195 km, Dezimalnotation, Einheit und Auswertung gegenprüfen.'},
+ 'qt-natur-1':{name:'NASA · Sun Facts',url:'https://science.nasa.gov/sun/facts/',
+  comparison:'Sonne als Stern im Zentrum unseres Sonnensystems gegen die NASA-Angabe prüfen.'},
+ 'qt-natur-2':{name:'IUPAC · Periodensystem',url:'https://list.iupac.org/reports/periodic_table/index.html',
+  comparison:'Sauerstoff und das Elementsymbol O im Periodensystem überprüfen.'},
+ 'qt-natur-5':{name:'BIPM · SI Brochure 9',url:'https://www.bipm.org/en/si-brochure-9',
+  comparison:'Ohm als abgeleitete SI-Einheit des elektrischen Widerstands prüfen.'},
+ 'qt-natur-6':{name:'IUPAC · Periodensystem',url:'https://list.iupac.org/reports/periodic_table/index.html',
+  comparison:'Gold/Au mit Ordnungszahl 79 und mögliche Antwortvarianten prüfen.'},
+ 'qt-geschichte-2':{name:'Bundesregierung · Mauerfall',url:'https://www.bundesregierung.de/breg-de/schwerpunkte/deutsche-einheit/die-mauer-ist-offen--403858',
+  comparison:'Berliner Maueröffnung am 9. November 1989 gegenprüfen.'},
+ 'qt-geschichte-3':{name:'Bundeskanzleramt · Adenauer',url:'https://www.bundeskanzler.de/bk-de/kanzleramt/bundeskanzler-seit-1949/konrad-adenauer',
+  comparison:'Ersten Bundeskanzler der Bundesrepublik ab 1949 anhand Originalquelle prüfen.'},
  'qt-geschichte-4':{name:'UNESCO · Pompeji und Herculaneum',
   url:'https://whc.unesco.org/en/list/829/',
   comparison:'Pompeji und Herculaneum sind beide betroffen; Forum und Amphitheater grenzen Pompeji ab.'},
@@ -67,8 +79,17 @@ export function originalSourceLead(item:ContentItem):PrimaryReference|null{
     !(item.provenance.sourceVersion===TRIAL_DRAFT_SOURCE||
       (item.game==='rundenquiz'&&item.provenance.sourceVersion===EARLIER_RQ_SOURCE))||
     item.provenance.sourceKey!==baseline.provenance.sourceKey||
+    item.provenance.sourceId!==baseline.provenance.sourceId||
     JSON.stringify(item.payload)!==JSON.stringify(baseline.payload))return null;
  return lead;
+}
+/** Prepares a source suggestion only; no fact, copyright, or editorial certification. */
+export function draftSourceCitation(item:ContentItem):string|null{
+ const lead=originalSourceLead(item),payload=item.payload as {reference?:unknown};
+ if(!lead||typeof payload.reference!=='string'||!payload.reference.trim()||
+  payload.reference.includes(lead.url))return null;
+ const proposed=payload.reference.trim()+'; '+lead.name+': '+lead.url;
+ return proposed.length<=1000?proposed:null;
 }
 export function contentReviewTasks(items:readonly ContentItem[]):SourceReviewTask[]{
  const issues=auditLibrary(items).issues,perItem=new Map<string,AuditIssue[]>();

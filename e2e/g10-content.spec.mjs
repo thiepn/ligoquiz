@@ -123,7 +123,7 @@ test('G10 original source leads select editor and expire on substantive edits',a
  await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
  const queue=page.getByRole('region',{name:'Quellenprüfung'});
  await expect(queue.getByRole('combobox',{name:'Prüfgruppe'})).toHaveValue('primary');
- await expect(queue.locator('.cx-source-item')).toHaveCount(6);
+ await expect(queue.locator('.cx-source-item')).toHaveCount(12);
  await queue.getByRole('button',{name:/rq-w4/}).click();
  const detail=page.getByRole('region',{name:'Quellenabgleich'});
  await expect(detail.getByRole('link',{name:/Bundes-Verfassungsgesetz/}))
@@ -132,7 +132,7 @@ test('G10 original source leads select editor and expire on substantive edits',a
  await expect(page.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
  await page.getByRole('textbox',{name:'Lösung',exact:true}).fill('Salzburg');
  await page.getByRole('button',{name:'Änderungen als Entwurf speichern'}).click();
- await expect(queue.locator('.cx-source-item')).toHaveCount(5);
+ await expect(queue.locator('.cx-source-item')).toHaveCount(11);
  await expect(detail.getByRole('link',{name:/Bundes-Verfassungsgesetz/})).toHaveCount(0);
  await queue.getByRole('combobox',{name:'Prüfgruppe'}).selectOption('illustrative');
  await expect(queue.locator('.cx-source-item')).toHaveCount(10);
@@ -203,5 +203,29 @@ test('explicit local CSV worksheet exports filtered questions with source warnin
  expect(whole.split('\r\n')).toHaveLength(81);
  expect(whole).toContain('https://whc.unesco.org/en/list/829/');
  expect(whole).toContain('"ud-01","umfrageduell","draft","illustrative"');
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+});
+
+test('primary-source suggestion prepares a citation locally, without approval or automatic persistence',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ await expect(queue.locator('.cx-source-item')).toHaveCount(12);
+ await queue.getByRole('button',{name:/qt-natur-6/}).click();
+ const ed=page.getByRole('region',{name:'Aufgabe bearbeiten'});
+ const source=ed.getByRole('textbox',{name:'Quelle',exact:true});
+ await expect(source).not.toHaveValue(/list\.iupac\.org/);
+ await ed.getByRole('button',{name:'Quellenangabe im Entwurf vorbereiten'}).click();
+ await expect(source).toHaveValue(/list\.iupac\.org\/reports\/periodic_table/);
+ await expect(queue.locator('.cx-source-item')).toHaveCount(12);
+ await expect(ed.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
+ await ed.getByRole('button',{name:'Änderungen als Entwurf speichern'}).click();
+ await expect(queue.locator('.cx-source-item')).toHaveCount(11);
+ await page.reload();
+ await page.getByRole('region',{name:'Aufgabenbestand'}).getByRole('button',{name:/qt-natur-6/}).click();
+ await expect(page.getByRole('region',{name:'Aufgabe bearbeiten'})
+  .getByRole('textbox',{name:'Quelle',exact:true})).toHaveValue(/list\.iupac\.org/);
  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
 });

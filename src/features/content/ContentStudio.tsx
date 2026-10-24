@@ -7,7 +7,7 @@ import '../../styles/content-studio.css';
 import {EditorialAuditPanel} from './EditorialAuditPanel';
 import {StructuredQuestionEditor} from './StructuredQuestionEditor';
 import {trialDraftBundle} from '../../content/trial-draft-bundle';
-import {contentReviewTasks,historicalTrialCorrection,type ReviewRoute} from '../../content/editorial-source-review';
+import {contentReviewTasks,historicalTrialCorrection,draftSourceCitation,type ReviewRoute} from '../../content/editorial-source-review';
 import {exportReviewWorksheet} from '../../content/editorial-worklist';
 
 
@@ -333,6 +333,14 @@ export function ContentStudio(){
         onClick={()=>{const related=items.find(item=>item.id===issue.other);
          if(related)choose(related);
         }}>Zugehörige Frage öffnen: {issue.other}</button>)}
+      {draftSourceCitation(current)&&<button type="button" className="exp-secondary"
+       disabled={busy||json!==JSON.stringify(current.payload,null,2)}
+       onClick={()=>{
+        const citation=draftSourceCitation(current);
+        if(!citation)return;
+        setJson(JSON.stringify({...current.payload as object,reference:citation},null,2));
+        setMessage('Quellenvorschlag im Editor vorbereitet. Antwort und genaue Belegstelle vor dem Speichern unabhängig prüfen.');
+       }}>Quellenangabe im Entwurf vorbereiten</button>}
       <p>Quellenlink und Prüfliste sind keine Fakten- oder Rechtefreigabe.</p>
      </section>}
      {historicalCorrection&&<section className="cx-source-evidence" aria-label="Historische Frage korrigieren">

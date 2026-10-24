@@ -86,3 +86,22 @@ The worksheet includes all playable prompt details (clues, sequence items,
 choices, extra hints, wall tiles), solution/explanation context, and for
 any genuinely observed survey the entered method/population/date/limitations.
 This is copied as unverified source data, never independently certified.
+
+## Six additional official-source research leads and citation staging
+
+Exactly source-matched research leads now cover 12 original trial questions.
+New: `qt-natur-1` NASA Sun Facts, `qt-natur-2` and `qt-natur-6`
+IUPAC periodic table, `qt-natur-5` BIPM SI Brochure, `qt-geschichte-2`
+German Federal Government Wall opening (9 November 1989), and
+`qt-geschichte-3` Federal Chancellery's Konrad Adenauer profile.
+The remaining 57 originals need source lookup; 10 Umfrageduell ranks remain
+purely illustrative.
+
+On an unchanged first-party question only, the editor can explicitly
+prepare a specific official-source link in the unsaved reference field.
+The original editor and G10 Save as Draft remain the only persistence
+mechanism. The original source fingerprint stops matching on modification.
+Already-linked, edited, provenance-substituted and non-question items cannot
+repeat this operation. The source text still needs independently reviewed
+passage accuracy, answer variants, rights and manual approval; staging
+does not certify, store rights, publish, fetch external pages or approve.

@@ -11,7 +11,7 @@ import {trialVerbindungen} from '../src/games/verbindungen/trial-bank';
 import {sampleQuiztafel} from '../src/games/quiztafel/trial-bank';
 import type {GameType} from '../src/domain/game/contracts';
 import {trialDraftBundle,trialDraftItems} from '../src/content/trial-draft-bundle';
-import {contentReviewTasks,originalSourceLead,historicalTrialCorrection} from '../src/content/editorial-source-review';
+import {contentReviewTasks,originalSourceLead,historicalTrialCorrection,draftSourceCitation} from '../src/content/editorial-source-review';
 import {exportReviewWorksheet,worksheetCell} from '../src/content/editorial-worklist';
 
 const teams=Array.from({length:5},(_,i)=>({id:'team-'+i,name:'Team '+(i+1),order:i}));
@@ -239,15 +239,16 @@ describe('Five existing trial banks enter editorial storage only as unapproved d
 });
 
 describe('Source leads are review work, never content approvals',()=>{
- it('routes 79 trial questions to 6 exact-match primary leads, 10 illustrative and 63 other checks',()=>{
+ it('routes 79 trial questions to 12 exact-match primary leads, 10 illustrative and 57 other checks',()=>{
   const records=trialDraftItems(),queue=contentReviewTasks(records);
   expect(queue).toHaveLength(79);
   expect(queue.filter(x=>x.route==='primary').map(x=>x.item.id))
-   .toEqual(['qt-geschichte-4','qt-geschichte-5','rq-s1','rq-s4','rq-w4','rq-w6']);
+   .toEqual(['qt-geschichte-2','qt-geschichte-3','qt-geschichte-4','qt-geschichte-5',
+    'qt-natur-1','qt-natur-2','qt-natur-5','qt-natur-6','rq-s1','rq-s4','rq-w4','rq-w6']);
   expect(queue.filter(x=>x.route==='illustrative')).toHaveLength(10);
-  expect(queue.filter(x=>x.route==='lookup')).toHaveLength(63);
+  expect(queue.filter(x=>x.route==='lookup')).toHaveLength(57);
   for(const task of queue.filter(x=>x.route==='primary')){
-   expect(task.lead?.url).toMatch(/^https:\/\/(www\.)?(ris\.bka\.gv\.at|science\.nasa\.gov|bipm\.org|worldathletics\.org|whc\.unesco\.org|guides\.loc\.gov)\//);
+   expect(task.lead?.url).toMatch(/^https:\/\/(www\.)?(ris\.bka\.gv\.at|science\.nasa\.gov|bipm\.org|worldathletics\.org|whc\.unesco\.org|guides\.loc\.gov|list\.iupac\.org|www\.bundesregierung\.de|www\.bundeskanzler\.de)\//);
    expect(task.item.status).toBe('draft');
    expect(task.item.review).toBeUndefined();
    expect(task.item.provenance.rights).toBeUndefined();
@@ -370,5 +371,36 @@ describe('Explicit local editorial worksheet exports actual source-bound draft w
    '"\'=WEBSERVICE(""https://evil.example"")"');
   expect(worksheetCell('  +CMD')).toBe('"\'  +CMD"');
   expect(worksheetCell('safe,"text"\nline')).toBe('"safe,""text""\nline"');
+ });
+});
+
+describe('Staging source-backed citations in the original editorial draft engine',()=>{
+ it('offers six additional exact-source proposals and leaves drafts, rights and reviews untouched',()=>{
+  const originals=trialDraftItems(),snapshot=JSON.stringify(originals);
+  const ids=['qt-natur-1','qt-natur-2','qt-natur-5','qt-natur-6','qt-geschichte-2','qt-geschichte-3'];
+  for(const id of ids){
+   const item=originals.find(x=>x.id===id)!;
+   const proposed=draftSourceCitation(item);
+   expect(proposed).toContain('https://');
+   expect(proposed).toContain((item.payload as {reference:string}).reference);
+   const changed={...item,payload:{...item.payload as object,reference:proposed}};
+   expect(validatePayload(item.game,changed.payload)).toEqual([]);
+   expect(originalSourceLead(changed)).toBeNull();
+   expect(draftSourceCitation(changed)).toBeNull();
+   expect(item.status).toBe('draft');
+   expect(item.review).toBeUndefined();
+   expect(item.provenance.rights).toBeUndefined();
+  }
+  expect(JSON.stringify(originals)).toBe(snapshot);
+ });
+ it('rejects changed payload, unauthorized origin, changed original source ID and already linked questions',()=>{
+  const item=trialDraftItems().find(x=>x.id==='qt-natur-6')!;
+  const citation=draftSourceCitation(item);
+  expect(citation).toContain('list.iupac.org');
+  expect(draftSourceCitation({...item,payload:{...item.payload as object,prompt:'Wrong question'}})).toBeNull();
+  expect(draftSourceCitation({...item,provenance:{...item.provenance,origin:'legacy'}})).toBeNull();
+  expect(draftSourceCitation({...item,provenance:{...item.provenance,sourceId:'wrong'}})).toBeNull();
+  expect(draftSourceCitation({...item,payload:{...item.payload as object,reference:citation}})).toBeNull();
+  expect(draftSourceCitation(trialDraftItems().find(x=>x.id==='qt-geschichte-4')!)).toBeNull();
  });
 });
