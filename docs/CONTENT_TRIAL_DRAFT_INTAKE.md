@@ -162,3 +162,28 @@ unsent edits/reviewer data must be resolved before switching questions.
 Manual Save as Draft with revision CAS is the sole persistence path.
 The reviewer note and its HTTPS citation are not fact, rights or content
 approval. Original IDs, grading, engine contracts and G26 NO_GO remain.
+
+## Reviewer-led prompt and four-clue wording corrections
+
+The existing CSV review column `Spielleitung geprüft` can now include
+`Fragevorschlag: <new prompt>`, or, for original four-clue items,
+`Hinweis 1: <new clue>` through `Hinweis 4: <new clue>`.
+Each proposal requires a separately entered valid HTTPS citation in
+`Beleg geprüft`, an unchanged exact-question snapshot and an original
+unapproved draft. G10 shows the old and suggested wording with a
+single explicit action to stage the original question's new prompt (or one
+clue) and source in the **unsaved** native editor. An optional separately
+marked `Vorschlag: <answer>` is staged in the same revision, not dropped.
+
+Rundenquiz, Quiztafel and Logikleiter support question prompts; Verbindungen
+sequence supports its original prompt; Rundenquiz hint rounds and
+Verbindungen clue puzzles support one of their four original clues.
+No rearrangement of other clues, answer engines, wall groupings or survey
+responses occurs. Original game validation runs before showing the action.
+Stale or missing records, changed provenance, unsupported formats,
+source-less submissions, incorrect answer proposals, invalid control
+characters or lengths are rejected. All pre-existing unsent G10 editor
+changes must be dealt with before staging another question. The only
+persistence path remains an **explicit** G10 Save as Draft with CAS;
+reviewer evidence is unverified, rights/approval are not inherited and
+G26 release remains NO_GO.

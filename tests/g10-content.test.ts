@@ -12,7 +12,7 @@ import {sampleQuiztafel} from '../src/games/quiztafel/trial-bank';
 import type {GameType} from '../src/domain/game/contracts';
 import {trialDraftBundle,trialDraftItems} from '../src/content/trial-draft-bundle';
 import {contentReviewTasks,originalSourceLead,historicalTrialCorrection,draftSourceCitation} from '../src/content/editorial-source-review';
-import {exportReviewWorksheet,worksheetCell,previewReviewWorksheet,worksheetSourceProposal,worksheetAnswerProposal} from '../src/content/editorial-worklist';
+import {exportReviewWorksheet,worksheetCell,previewReviewWorksheet,worksheetSourceProposal,worksheetAnswerProposal,worksheetWordingProposal} from '../src/content/editorial-worklist';
 
 const teams=Array.from({length:5},(_,i)=>({id:'team-'+i,name:'Team '+(i+1),order:i}));
 const item=(game:GameType,payload:unknown):ContentItem=>createDraft(game,payload,123);
@@ -536,5 +536,75 @@ describe('Reviewer answer corrections require current G10 draft and source evide
   const stale=previewReviewWorksheet(csv,contentReviewTasks([changed])).rows[0]!;
   expect(stale.status).toBe('changed');
   expect(worksheetAnswerProposal(stale,changed)).toBeNull();
+ });
+});
+
+describe('Source-linked CSV prompt and individual clue repairs',()=>{
+ const entry=(item:ContentItem,wording:string,source='https://example.org/primary',answer='')=>{
+  const task=contentReviewTasks([item])[0]!;
+  const csv=exportReviewWorksheet([task]).replace(/,"","","","",""\r\n$/u,
+   ','+[answer,source,'',wording,''].map(worksheetCell).join(',')+'\r\n');
+  return previewReviewWorksheet(csv,[task]).rows[0]!;
+ };
+ it('stages exact-source prompt changes in four original source question formats',()=>{
+  const items=trialDraftItems(),before=JSON.stringify(items);
+  for(const id of ['rq-w4','qt-natur-6','ll-02','vb-b-week']){
+   const item=items.find(i=>i.id===id)!;
+   const v=worksheetWordingProposal(entry(item,'Fragevorschlag: Eine eindeutige redaktionelle Testfrage?'),item);
+   expect(v?.kind).toBe('prompt');
+   expect(v?.payload.prompt).toBe('Eine eindeutige redaktionelle Testfrage?');
+   expect(v?.reference).toContain('https://example.org/primary');
+   expect(validatePayload(item.game,v!.payload)).toEqual([]);
+   expect(item.status).toBe('draft');
+   expect(item.review).toBeUndefined();
+  }
+  expect(JSON.stringify(items)).toBe(before);
+ });
+ it('changes one original clue, keeps the other three, and can combine an explicit answer correction',()=>{
+  for(const id of ['rq-h1','vb-a-david']){
+   const item=trialDraftItems().find(i=>i.id===id)!;
+   const p=worksheetWordingProposal(entry(item,'Hinweis 2: Redaktionell neu formulierter Hinweis',
+    'https://example.org/source', 'Vorschlag: Alternativer Testwert'),item);
+   expect(p?.kind).toBe('clue');
+   expect(p?.clueIndex).toBe(1);
+   expect((p?.payload.clues as string[])[1]).toBe('Redaktionell neu formulierter Hinweis');
+   const original=(item.payload as {clues:string[]}).clues;
+   expect((p?.payload.clues as string[])[0]).toBe(original[0]);
+   expect((p?.payload.clues as string[])[2]).toBe(original[2]);
+   expect((p?.payload.clues as string[])[3]).toBe(original[3]);
+   expect(p?.payload[item.game==='verbindungen'?'target':'answer']).toBe('Alternativer Testwert');
+   expect(validatePayload(item.game,p!.payload)).toEqual([]);
+  }
+ });
+ it('rejects stale, unsupported, invalid, unsourced or malformed prompt and clue proposals',()=>{
+  const q=trialDraftItems().find(i=>i.id==='rq-w4')!;
+  const good=entry(q,'Fragevorschlag: Eine präzisere Frage?');
+  expect(worksheetWordingProposal({...good,status:'changed'},q)).toBeNull();
+  expect(worksheetWordingProposal({...good,id:'rq-h1'},q)).toBeNull();
+  expect(worksheetWordingProposal(good,{...q,status:'approved'})).toBeNull();
+  expect(worksheetWordingProposal(entry(q,'Fragevorschlag: Eine neue Frage?','http://example.org'),q)).toBeNull();
+  expect(worksheetWordingProposal(entry(q,'Fragevorschlag: '+(q.payload as {prompt:string}).prompt),q)).toBeNull();
+  expect(worksheetWordingProposal(entry(q,'Fragevorschlag: '+'a'.repeat(501)),q)).toBeNull();
+  expect(worksheetWordingProposal(entry(q,'Hinweis 5: Test'),q)).toBeNull();
+  expect(worksheetWordingProposal(entry(q,'Fragevorschlag: Neu\nzeile'),q)).toBeNull();
+  expect(worksheetWordingProposal(entry(q,'Fragevorschlag: Neue Frage?',undefined,
+   'Vorschlag: '+(q.payload as {answer:string}).answer),q)).toBeNull();
+  for(const id of ['ud-01','vb-a-david','vb-wall-1']){
+   const item=trialDraftItems().find(i=>i.id===id)!;
+   expect(worksheetWordingProposal(entry(item,'Fragevorschlag: Eine andere Frage?'),item)).toBeNull();
+  }
+  const clues=trialDraftItems().find(i=>i.id==='vb-a-david')!;
+  expect(worksheetWordingProposal(entry(clues,'Hinweis 0: Nicht möglich'),clues)).toBeNull();
+  expect(worksheetWordingProposal(entry(clues,'Hinweis 1: Ein anderer Hinweis','', ''),clues)).toBeNull();
+ });
+ it('rejects old CSV wording notes once source or original question has been revised',()=>{
+  const item=trialDraftItems().find(i=>i.id==='qt-natur-6')!;
+  const task=contentReviewTasks([item])[0]!;
+  const csv=exportReviewWorksheet([task]).replace(/,"","","","",""\r\n$/u,
+   ',"","https://example.org/primary","","Fragevorschlag: Eine neue Frage?",""\r\n');
+  const changed={...item,payload:{...item.payload as object,prompt:'Eine bereits geänderte Frage'}};
+  const stale=previewReviewWorksheet(csv,contentReviewTasks([changed])).rows[0]!;
+  expect(stale.status).toBe('changed');
+  expect(worksheetWordingProposal(stale,changed)).toBeNull();
  });
 });

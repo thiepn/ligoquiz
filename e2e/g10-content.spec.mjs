@@ -320,3 +320,34 @@ test('offline CSV answer correction prepares unsaved draft without grading or ap
  await expect(page.getByRole('textbox',{name:'Lösung',exact:true})).toHaveValue('Wien');
  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
 });
+
+test('CSV source-grounded wording revision stages exact current question prompt without auto-save',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ const waiting=page.waitForEvent('download');
+ await queue.getByRole('button',{name:'Alle Aufgaben als CSV'}).click();
+ const download=await waiting,csv=await readFile(await download.path(),'utf8');
+ const amended=csv.split('\r\n').map(line=>line.startsWith('"rq-w4",')?
+  line.replace(/,"","","","",""$/,' ,"","https://example.org/wien","","Fragevorschlag: Welche Stadt ist die Hauptstadt Österreichs?",""'.trimStart()):line)
+  .join('\r\n');
+ const notes=page.getByRole('region',{name:'CSV-Prüfnotizen'});
+ await notes.getByLabel('CSV-Prüfnotizen öffnen').setInputFiles({
+  name:'wording-review.csv',mimeType:'text/csv',buffer:Buffer.from(amended),
+ });
+ await expect(notes).toContainText('1 zugeordnet · 0 veraltet · 0 fehlen');
+ await expect(notes).toContainText('Vorgeschlagen: Welche Stadt ist die Hauptstadt Österreichs?');
+ await notes.getByRole('button',{name:'Formulierung und Quelle im Entwurf vorbereiten'}).click();
+ const editor=page.getByRole('region',{name:'Aufgabe bearbeiten'});
+ await expect(editor.getByRole('textbox',{name:'Fragestellung'}))
+  .toHaveValue('Welche Stadt ist die Hauptstadt Österreichs?');
+ await expect(editor.getByRole('textbox',{name:'Quelle',exact:true})).toHaveValue(/example.org\/wien/);
+ await expect(editor.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
+ await page.reload();
+ await page.getByRole('region',{name:'Aufgabenbestand'}).getByRole('button',{name:/rq-w4/}).click();
+ await expect(page.getByRole('region',{name:'Aufgabe bearbeiten'}).getByRole('textbox',{name:'Fragestellung'}))
+  .not.toHaveValue('Welche Stadt ist die Hauptstadt Österreichs?');
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+});

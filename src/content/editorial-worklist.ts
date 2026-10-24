@@ -184,3 +184,46 @@ export function worksheetAnswerProposal(note:ImportedReviewNote,item:ContentItem
  if(validatePayload(item.game,payload).length)return null;
  return {field,before,after,reference};
 }
+
+export type WorksheetWordingProposal={
+ kind:'prompt'|'clue';before:string;after:string;
+ clueIndex?:number;reference:string;payload:Record<string,unknown>;
+};
+/** Stage a citation-backed, explicit prompt or individual clue revision from
+ * untrusted offline notes. Answer corrections (if supplied) must also validate;
+ * there are no implicit grading, rights, or approval decisions. */
+export function worksheetWordingProposal(note:ImportedReviewNote,item:ContentItem):WorksheetWordingProposal|null{
+ const reference=worksheetSourceProposal(note,item);
+ if(!reference||note.status!=='current'||note.id!==item.id||item.status!=='draft')return null;
+ const marker=note.notes.find(x=>x.heading==='Spielleitung geprüft')?.text.trim();
+ if(!marker)return null;
+ const p=item.payload as Record<string,unknown>;
+ let kind:'prompt'|'clue',before:string,after:string,clueIndex:number|undefined;
+ const clue=/^Hinweis ([1-4]): (.+)$/u.exec(marker);
+ if(clue){
+  const eligible=(item.game==='verbindungen'&&p.kind==='clues')||
+   (item.game==='rundenquiz'&&p.round==='hinweise');
+  if(!eligible||!Array.isArray(p.clues)||p.clues.length!==4)return null;
+  const index=Number(clue[1])-1;
+  if(typeof p.clues[index]!=='string')return null;
+  kind='clue';before=p.clues[index] as string;after=(clue[2]??'').trim();clueIndex=index;
+ }else if(marker.startsWith('Fragevorschlag: ')){
+  if(item.game==='umfrageduell'||item.game==='verbindungen'&&p.kind!=='sequence'||
+   typeof p.prompt!=='string')return null;
+  kind='prompt';before=p.prompt;after=marker.slice('Fragevorschlag: '.length).trim();
+ }else return null;
+ if(!after||after===before.trim()||after.length>500||
+  [...after].some(ch=>ch.charCodeAt(0)<32))return null;
+ const answerMarked=note.notes.some(x=>x.heading==='Antwort geprüft'&&x.text.trim().startsWith('Vorschlag:'));
+ const answer=answerMarked?worksheetAnswerProposal(note,item):null;
+ if(answerMarked&&!answer)return null;
+ const payload:Record<string,unknown>={...p,reference};
+ if(kind==='prompt')payload.prompt=after;
+ else {
+  const clues=(p.clues as string[]).slice();
+  clues[clueIndex!]=after;payload.clues=clues;
+ }
+ if(answer)payload[answer.field]=answer.after;
+ if(validatePayload(item.game,payload).length)return null;
+ return {kind,before,after,...(clueIndex!==undefined?{clueIndex}:{}),reference,payload};
+}
