@@ -64,3 +64,82 @@ export function exportReviewWorksheet(tasks:readonly SourceReviewTask[]):string{
  }
  return '\uFEFF'+lines.join('\r\n')+'\r\n';
 }
+
+export type ImportedReviewNote={
+ id:string;status:'current'|'changed'|'missing';reason:string;
+ notes:readonly {heading:string;text:string}[];
+};
+export type ReviewWorksheetPreview={
+ matched:number;changed:number;missing:number;rows:ImportedReviewNote[];
+};
+/**
+ * Restricted local CSV parser: quotes, embedded line breaks, BOM, and strict
+ * 19-column schema. It never interprets editable cells as permissions.
+ */
+function parseWorksheetCsv(source:string):string[][]{
+ if(source.length>1024*1024)throw Error('CSV-Prüfliste ist größer als 1 MiB');
+ const input=source.replace(/^\uFEFF/u,''),records:string[][]=[];
+ let row:string[]=[],cell='',quoted=false,closed=false;
+ const column=()=>{if(cell.length>16000)throw Error('CSV-Feld zu lang');
+  row.push(cell);cell='';closed=false;};
+ const record=()=>{column();
+  if(row.length!==HEADER.length)throw Error('CSV hat eine ungültige Spaltenzahl');
+  records.push(row);row=[];
+  if(records.length>500)throw Error('Zu viele CSV-Datensätze');};
+ for(let i=0;i<input.length;i++){
+  const ch=input[i]!;
+  if(quoted){
+   if(ch==='"'&&input[i+1]==='"'){cell+='"';i++;}
+   else if(ch==='"'){quoted=false;closed=true;}
+   else cell+=ch;
+  }else if(ch===','){column();}
+  else if(ch==='\n'||ch==='\r'){
+   if(ch==='\r'&&input[i+1]==='\n')i++;
+   record();
+  }else if(ch==='"'&&cell===''&&!closed){quoted=true;}
+  else{
+   if(closed||ch==='"')throw Error('CSV enthält ungültige Anführungszeichen');
+   cell+=ch;
+  }
+ }
+ if(quoted)throw Error('CSV enthält ein offenes Anführungszeichen');
+ if(cell!==''||row.length>0)record();
+ return records;
+}
+/**
+ * Reopens the exported worksheet strictly as *advisory, volatile* reviewer
+ * notes. The current source snapshot must match all content/provenance fields
+ * before a note can navigate to its question. Nothing is persisted.
+ */
+export function previewReviewWorksheet(source:string,tasks:readonly SourceReviewTask[]):ReviewWorksheetPreview{
+ const rows=parseWorksheetCsv(source);
+ if(rows.length===0||rows[0]!.some((value,i)=>value!==HEADER[i]))
+  throw Error('Keine LiGoQuiz-Redaktionsprüfliste oder Spalten geändert');
+ const sourceRows=parseWorksheetCsv(exportReviewWorksheet(tasks)).slice(1);
+ const index=new Map(sourceRows.map(row=>[row[0]!,row]));
+ const seen=new Set<string>();
+ const annotated:ImportedReviewNote[]=[];
+ let matched=0,changed=0,missing=0;
+ for(const row of rows.slice(1)){
+  const id=row[0]!;
+  if(!id||seen.has(id))throw Error('CSV enthält doppelte oder leere Aufgaben-IDs');
+  seen.add(id);
+  const notes=HEADER.slice(14).map((heading,j)=>({
+   heading,text:row[14+j]!.trim().slice(0,1500),
+  })).filter(note=>note.text!=='');
+  if(!notes.length)continue;
+  const current=index.get(id);
+  const identityFields=[0,1,2,4,5,6,7,11,12,13];
+  const status:ImportedReviewNote['status']=!current?'missing':
+   identityFields.every(col=>row[col]===current[col])?'current':'changed';
+  if(status==='current')matched++;
+  else if(status==='changed')changed++;
+  else missing++;
+  annotated.push({id,status,
+   reason:status==='current'?'Inhalt und Quellenstand stimmen überein':
+    status==='missing'?'Aufgabe ist nicht mehr in der lokalen Bibliothek':
+     'Frage, Antwort, Beleg, Rechte oder Herkunft haben sich geändert',
+   notes});
+ }
+ return {matched,changed,missing,rows:annotated};
+}

@@ -8,7 +8,7 @@ import {EditorialAuditPanel} from './EditorialAuditPanel';
 import {StructuredQuestionEditor} from './StructuredQuestionEditor';
 import {trialDraftBundle} from '../../content/trial-draft-bundle';
 import {contentReviewTasks,historicalTrialCorrection,draftSourceCitation,type ReviewRoute} from '../../content/editorial-source-review';
-import {exportReviewWorksheet} from '../../content/editorial-worklist';
+import {exportReviewWorksheet,previewReviewWorksheet} from '../../content/editorial-worklist';
 
 
 const LABELS:Record<GameType,string>={
@@ -61,6 +61,8 @@ export function ContentStudio(){
  const [reviewRoute,setReviewRoute]=useState<ReviewRoute>('primary');
  const [reviewSearch,setReviewSearch]=useState('');
  const [repeatsOnly,setRepeatsOnly]=useState(false);
+ const [reviewCsv,setReviewCsv]=useState('');
+ const [reviewCsvError,setReviewCsvError]=useState('');
  async function refresh(){
   const [all,quarantined,imports]=await Promise.all([repo.list(),repo.quarantined(),repo.receipts()]);
   setItems(all.sort((a,b)=>b.updatedAt-a.updatedAt));
@@ -94,6 +96,11 @@ export function ContentStudio(){
    [x.item.id,payload.prompt??'',payload.target??'',payload.answer??'']
     .join(' ').toLocaleLowerCase('de-DE').includes(normalizedReviewSearch));
  });
+ const reviewerNotes=useMemo(()=>{
+  if(!reviewCsv)return null;
+  try{return previewReviewWorksheet(reviewCsv,sourceTasks);}
+  catch{return null;}
+ },[reviewCsv,sourceTasks]);
  const selectedSourceTask=current?sourceTasks.find(x=>x.item.id===current.id):null;
  const historicalCorrection=current?historicalTrialCorrection(current):null;
  const pack=useMemo(()=>{
@@ -179,6 +186,16 @@ export function ContentStudio(){
    setMessage(proposal.items.length+' vorhandene Probeaufgaben als Entwürfe prüfbar; '+
     proposal.quarantined.length+' Kollisionen zurückgestellt. Noch nichts importiert.');
   });
+ }
+ async function loadReviewNotes(file:File|undefined){
+  if(!file)return;
+  setReviewCsv('');setReviewCsvError('');
+  try{
+   if(file.size>1024*1024)throw Error('CSV-Prüfliste ist größer als 1 MiB');
+   const content=await file.text();
+   previewReviewWorksheet(content,sourceTasks);
+   setReviewCsv(content);
+  }catch(e){setReviewCsvError(formatError(e));}
  }
  async function loadImport(file:File|undefined){
   if(!file)return;
@@ -266,6 +283,33 @@ export function ContentStudio(){
       exportReviewWorksheet(sourceTasks),'text/csv;charset=utf-8')}>
      Alle Aufgaben als CSV</button>
    </div>
+   <section className="cx-worksheet-reentry" aria-label="CSV-Prüfnotizen">
+    <label>Prüfnotizen aus CSV öffnen
+     <input type="file" accept=".csv,text/csv" aria-label="CSV-Prüfnotizen öffnen"
+      onChange={e=>{void loadReviewNotes(e.currentTarget.files?.[0]);e.currentTarget.value='';}}/>
+    </label>
+    {reviewCsvError&&<p role="alert">{reviewCsvError}</p>}
+    {reviewerNotes&&<>
+     <div className="cx-worksheet-summary">
+      <strong>{reviewerNotes.matched} zugeordnet · {reviewerNotes.changed} veraltet · {reviewerNotes.missing} fehlen</strong>
+      <button type="button" className="exp-secondary"
+       onClick={()=>{setReviewCsv('');setReviewCsvError('');}}>Prüfnotizen schließen</button>
+     </div>
+     <p>Nur lokale Notizen, keine Freigabe. Veraltete Einträge können nicht übernommen werden.</p>
+     <div className="cx-worksheet-notes">
+      {reviewerNotes.rows.map(entry=><section key={entry.id} className="cx-worksheet-note">
+       <div><strong>{entry.id} · {entry.status==='current'?'Aktuell':'Veraltet'}</strong>
+        <span>{entry.reason}</span></div>
+       {entry.notes.map(note=><p key={note.heading}><b>{note.heading}:</b> {note.text}</p>)}
+       <button type="button" className="exp-secondary" disabled={entry.status!=='current'||busy}
+        onClick={()=>{const task=sourceTasks.find(task=>task.item.id===entry.id);
+         if(task)choose(task.item);
+        }}>Aufgabe zu Notizen öffnen</button>
+      </section>)}
+      {reviewerNotes.rows.length===0&&<p>Keine ausgefüllten Prüffelder in der CSV.</p>}
+     </div>
+    </>}
+   </section>
    <div className="cx-source-items">
     {visibleSourceTasks.map(task=><button type="button" className="cx-source-item"
       key={task.item.id} aria-pressed={current?.id===task.item.id} onClick={()=>choose(task.item)}>

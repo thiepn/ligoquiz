@@ -106,3 +106,16 @@
 
 .cx-worksheet-actions{display:flex;flex-wrap:wrap;gap:9px;padding:10px 14px;border-bottom:1px solid #dce2de}
 .cx-worksheet-actions button{min-height:36px;font-size:14px}
+
+.cx-worksheet-reentry{border-top:1px solid #dce2de;padding:14px;display:grid;gap:12px}
+.cx-worksheet-reentry>label{display:grid;gap:8px;font-size:14px;font-weight:600}
+.cx-worksheet-reentry input[type=file]{min-width:0;width:100%}
+.cx-worksheet-reentry>p{font-size:14px;margin:0;line-height:1.5}
+.cx-worksheet-summary{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.cx-worksheet-summary strong{font-size:14px}
+.cx-worksheet-notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px;max-height:440px;overflow:auto}
+.cx-worksheet-note{border:1px solid #cdd7d3;padding:14px;display:grid;gap:10px;min-width:0}
+.cx-worksheet-note>div{display:grid;gap:5px}
+.cx-worksheet-note strong,.cx-worksheet-note span,.cx-worksheet-note p{font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.cx-worksheet-note p{margin:0;white-space:pre-wrap}
+.cx-worksheet-note button{justify-self:start;min-height:36px}

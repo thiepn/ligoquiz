@@ -148,12 +148,12 @@ test('source queue search narrows original Quiztafel questions without changing 
  await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
  const queue=page.getByRole('region',{name:'Quellenprüfung'});
  await queue.getByRole('searchbox',{name:'Quellenprüfung durchsuchen'}).fill('qt-geschichte');
- await expect(queue.locator('.cx-source-item')).toHaveCount(2);
+ await expect(queue.locator('.cx-source-item')).toHaveCount(4);
  await queue.getByRole('button',{name:/qt-geschichte-4/}).click();
  const ed=page.getByRole('region',{name:'Aufgabe bearbeiten'});
  await expect(ed).toContainText('Amphitheater');
  await expect(page.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
- await expect(queue).toContainText('2 Treffer');
+ await expect(queue).toContainText('4 Treffer');
 });
 
 test('editorial queue warns of reused clue targets and opens the corresponding question',async({page})=>{
@@ -227,5 +227,31 @@ test('primary-source suggestion prepares a citation locally, without approval or
  await page.getByRole('region',{name:'Aufgabenbestand'}).getByRole('button',{name:/qt-natur-6/}).click();
  await expect(page.getByRole('region',{name:'Aufgabe bearbeiten'})
   .getByRole('textbox',{name:'Quelle',exact:true})).toHaveValue(/list\.iupac\.org/);
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+});
+
+test('CSV reviewer notes reopen read-only, find matching source question and block stale records',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ const wait=page.waitForEvent('download');
+ await queue.getByRole('button',{name:'Alle Aufgaben als CSV'}).click();
+ const downloaded=await wait,csv=await readFile(await downloaded.path(),'utf8');
+ const amended=csv.split('\r\n').map(line=>line.startsWith('"rq-w4",')?
+  line.replace(/,"","","","",""$/,' ,"","Art. 5 prüfen","","","Noch offen"'.trimStart()):line).join('\r\n');
+ const input=queue.getByRole('textbox',{name:'CSV-Prüfnotizen öffnen'});
+ await input.setInputFiles({name:'redaktion.csv',mimeType:'text/csv',buffer:Buffer.from(amended)});
+ const notes=page.getByRole('region',{name:'CSV-Prüfnotizen'});
+ await expect(notes).toContainText('1 zugeordnet · 0 veraltet · 0 fehlen');
+ await expect(notes).toContainText('Art. 5 prüfen');
+ await notes.getByRole('button',{name:'Aufgabe zu Notizen öffnen'}).click();
+ await expect(page.getByRole('region',{name:'Aufgabe bearbeiten'})).toContainText('rq-w4');
+ await expect(page.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
+ await page.getByRole('textbox',{name:'Lösung',exact:true}).fill('Salzburg');
+ await page.getByRole('button',{name:'Änderungen als Entwurf speichern'}).click();
+ await expect(notes).toContainText('0 zugeordnet · 1 veraltet · 0 fehlen');
+ await expect(notes.getByRole('button',{name:'Aufgabe zu Notizen öffnen'})).toBeDisabled();
  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
 });

@@ -12,7 +12,7 @@ import {sampleQuiztafel} from '../src/games/quiztafel/trial-bank';
 import type {GameType} from '../src/domain/game/contracts';
 import {trialDraftBundle,trialDraftItems} from '../src/content/trial-draft-bundle';
 import {contentReviewTasks,originalSourceLead,historicalTrialCorrection,draftSourceCitation} from '../src/content/editorial-source-review';
-import {exportReviewWorksheet,worksheetCell} from '../src/content/editorial-worklist';
+import {exportReviewWorksheet,worksheetCell,previewReviewWorksheet} from '../src/content/editorial-worklist';
 
 const teams=Array.from({length:5},(_,i)=>({id:'team-'+i,name:'Team '+(i+1),order:i}));
 const item=(game:GameType,payload:unknown):ContentItem=>createDraft(game,payload,123);
@@ -402,5 +402,50 @@ describe('Staging source-backed citations in the original editorial draft engine
   expect(draftSourceCitation({...item,provenance:{...item.provenance,sourceId:'wrong'}})).toBeNull();
   expect(draftSourceCitation({...item,payload:{...item.payload as object,reference:citation}})).toBeNull();
   expect(draftSourceCitation(trialDraftItems().find(x=>x.id==='qt-geschichte-4')!)).toBeNull();
+ });
+});
+
+describe('Offline editor CSV reentry is read-only and bound to exact question content',()=>{
+ const notesFor=(rows:string,needle:string,values:string[])=>
+  rows.split('\r\n').map(line=>{
+   if(!line.startsWith(needle))return line;
+   return line.replace(/,"","","","",""$/,','+values.map(worksheetCell).join(','));
+  }).join('\r\n');
+ it('imports edited worksheet notes against matching source-bound questions, no rights or approvals',()=>{
+  const originals=trialDraftItems(),tasks=contentReviewTasks(originals),before=JSON.stringify(originals);
+  const text=notesFor(exportReviewWorksheet(tasks),'"rq-w4",',
+   ['Wien geprüft','RIS Artikel nachschlagen','','','Nicht freigeben']);
+  const output=previewReviewWorksheet(text,tasks);
+  expect(output).toMatchObject({matched:1,changed:0,missing:0});
+  expect(output.rows[0]).toMatchObject({id:'rq-w4',status:'current'});
+  expect(output.rows[0]?.notes.map(n=>n.text)).toEqual([
+   'Wien geprüft','RIS Artikel nachschlagen','Nicht freigeben',
+  ]);
+  expect(JSON.stringify(originals)).toBe(before);
+  expect(originals.every(i=>i.status==='draft'&&!i.review&&!i.provenance.rights)).toBe(true);
+ });
+ it('rejects changed answers, missing source IDs and CSV identity tampering',()=>{
+  const original=trialDraftItems().find(x=>x.id==='rq-w4')!,tasks=contentReviewTasks([original]);
+  const text=notesFor(exportReviewWorksheet(tasks),'"rq-w4",',['','Neue Quelle','','','Prüfen']);
+  const changed={...original,payload:{...original.payload as object,answer:'Andere Antwort'}};
+  const stale=previewReviewWorksheet(text,contentReviewTasks([changed]));
+  expect(stale).toMatchObject({matched:0,changed:1,missing:0});
+  const missing=previewReviewWorksheet(text,[]);
+  expect(missing).toMatchObject({matched:0,changed:0,missing:1});
+  expect(()=>previewReviewWorksheet(text.replace('"rq-w4","rundenquiz"','"rq-w6","rundenquiz"'),tasks))
+   .not.toThrow();
+  expect(previewReviewWorksheet(text.replace('"rq-w4","rundenquiz"','"rq-w6","rundenquiz"'),tasks)
+   .missing).toBe(1);
+ });
+ it('parses embedded CSV quotes and newlines, rejects invalid schemas, duplicate IDs and oversize input',()=>{
+  const tasks=contentReviewTasks(trialDraftItems());
+  const csv=notesFor(exportReviewWorksheet(tasks),'"rq-w4",',
+   ['Quellentext "Art. 5"\nnoch prüfen','','','','']);
+  expect(previewReviewWorksheet(csv,tasks).rows[0]?.notes[0]?.text)
+   .toBe('Quellentext "Art. 5"\nnoch prüfen');
+  expect(()=>previewReviewWorksheet('id,question\r\nfoo,bar',tasks)).toThrow();
+  const first=csv.split('\r\n').find(x=>x.startsWith('"rq-w4",'))!;
+  expect(()=>previewReviewWorksheet(csv+'\r\n'+first+'\r\n',tasks)).toThrow();
+  expect(()=>previewReviewWorksheet('x'.repeat(1024*1024+1),tasks)).toThrow();
  });
 });

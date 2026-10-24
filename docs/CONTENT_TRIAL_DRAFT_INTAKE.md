@@ -105,3 +105,26 @@ Already-linked, edited, provenance-substituted and non-question items cannot
 repeat this operation. The source text still needs independently reviewed
 passage accuracy, answer variants, rights and manual approval; staging
 does not certify, store rights, publish, fetch external pages or approve.
+
+## Reopen offline editorial worksheets (local read-only handoff)
+
+CSV review worksheets exported from the same original 79 draft records can now
+be reopened inside the existing G10 Quellenprüfung. This is a volatile local
+preview, not a content import: only the final five reviewer-filled columns
+are surfaced. The importer accepts strict quoted CSV with UTF-8 BOM, multiline
+cells and commas; rejects invalid schemas, duplicate IDs, overlong fields and
+files above 1 MiB.
+
+For each annotated row, the app compares the original exported question text,
+answer, reference, status, source lead, rights claim, file path and source
+version with the **current** G10 source task. Unchanged rows can open the
+existing editor. Changed/missing rows remain visible but their navigation is
+disabled. Reassessment is reactive after a draft save, so old notes become stale
+when the associated answer or source is edited. The CSV is held in memory
+for this browser view only, cleared by the Close action, and never uploaded
+or written to IndexedDB.
+
+Imported claims of review, correctness, rights or approval are displayed solely
+as untrusted notes: they cannot set checklist flags, reviewer identity,
+approval, source rights, CAS revision or production release. Existing manual
+G10 review and G26 NO_GO remain authoritative.
