@@ -669,8 +669,12 @@ describe('Source-matched original structural editorial repairs',()=>{
   expect(()=>entry(ll,'Zusatzhinweis: '+'x'.repeat(1500))).toThrow(/zu lang/);
   expect(()=>entry(ll,'Zusatzhinweis: '+'a'.repeat(3001))).toThrow(/zu lang/);
   expect(worksheetDetailProposal(entry(ll,'Antwort: Ungültig'),ll)).toBeNull();
-  expect(worksheetDetailProposal(entry(ll,'Erklärungsvorschlag: Neue Erklärung',
-   'Vorschlag: Nein'),ll)).toBeNull();
+  const unverified=worksheetDetailProposal(entry(ll,'Erklärungsvorschlag: Neue Erklärung',
+   'Vorschlag: Nein'),ll);
+  expect(unverified?.payload.answer).toBe('Nein');
+  expect(unverified?.changes.map(x=>x.field)).toEqual(['Erklärung','Antwort']);
+  expect(ll.status).toBe('draft');
+  expect(ll.review).toBeUndefined();
   const survey=trialDraftItems().find(x=>x.id==='ud-01')!;
   expect(worksheetDetailProposal(entry(survey,'Zusatzhinweis: Nicht erlaubt'),survey)).toBeNull();
   const w=trialDraftItems().find(x=>x.id==='vb-wall-1')!;
