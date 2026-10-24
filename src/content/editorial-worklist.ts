@@ -172,7 +172,7 @@ export function worksheetAnswerProposal(note:ImportedReviewNote,item:ContentItem
  const marked=note.notes.find(x=>x.heading==='Antwort geprüft')?.text.trim();
  if(!marked?.startsWith('Vorschlag: '))return null;
  const after=marked.slice('Vorschlag: '.length).trim();
- if(!after||after.length>500||/[\r\n\x00-\x1F]/u.test(after))return null;
+ if(!after||after.length>500||[...after].some(ch=>ch.charCodeAt(0)<32))return null;
  const source=item.payload as {kind?:string;answer?:unknown;target?:unknown};
  const field=item.game==='verbindungen'?
   source.kind==='clues'?'target':source.kind==='sequence'?'answer':null:
