@@ -81,3 +81,8 @@ rights-cleared. The app does not upload the CSV, import reviewer-filled cells,
 change content state or emit any factual/rights approval. Quotes, line breaks
 and spreadsheet formula-style cells are escaped for safer spreadsheet inspection.
 Original G10 CAS, manual review, backup and G26 NO_GO remain unchanged.
+
+The worksheet includes all playable prompt details (clues, sequence items,
+choices, extra hints, wall tiles), solution/explanation context, and for
+any genuinely observed survey the entered method/population/date/limitations.
+This is copied as unverified source data, never independently certified.

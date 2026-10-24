@@ -192,6 +192,7 @@ test('explicit local CSV worksheet exports filtered questions with source warnin
  expect(csv.split('\r\n')).toHaveLength(8);
  expect(csv).toContain('"rq-h1","rundenquiz","draft","lookup"');
  expect(csv).toContain('"vb-a-david"');
+ expect(csv).toContain('Ich besiegte Goliat.');
  expect(csv).not.toContain('"rq-w4","rundenquiz"');
  expect(csv).not.toContain('"qt-geschichte-4","quiztafel"');
  const fullWait=page.waitForEvent('download');

@@ -13,15 +13,29 @@ const HEADER=[
 const phrase=(x:unknown)=>typeof x==='string'?x:'';
 function field(item:ContentItem){
  const p=item.payload as Record<string,unknown>;
- const question=phrase(p.prompt)||phrase(p.target)||
-  (Array.isArray(p.clues)?p.clues.map(phrase).join(' | '):'')||
-  (Array.isArray(p.tiles)?p.tiles.map(t=>phrase((t as {label?:unknown}).label)).join(' | '):'');
- const answer=phrase(p.answer)||phrase(p.target)||
-  (Array.isArray(p.categories)?p.categories.map(c=>phrase((c as {label?:unknown}).label)).join(' | '):'')||
-  (Array.isArray(p.groups)?p.groups.map(g=>phrase((g as {link?:unknown}).link)).join(' | '):'');
- const source=(p.source as {kind?:string}|undefined);
+ const pieces=[phrase(p.prompt),
+  Array.isArray(p.clues)?'Hinweise: '+p.clues.map(phrase).join(' | '):'',
+  Array.isArray(p.items)?'Reihe: '+p.items.map(phrase).join(' | '):'',
+  Array.isArray(p.tiles)?'Wandfelder: '+p.tiles.map(t=>phrase((t as {label?:unknown}).label)).join(' | '):'',
+  phrase(p.hint)?'Zusätzlicher Hinweis: '+phrase(p.hint):'',
+  Array.isArray(p.choices)&&p.choices.length?'Antwortoptionen: '+p.choices.map(phrase).join(' | '):'',
+ ].filter(Boolean);
+ const question=pieces.join(' — ')||phrase(p.target);
+ const categoryText=Array.isArray(p.categories)?
+  p.categories.map(c=>phrase((c as {label?:unknown}).label)).join(' | '):'';
+ const source=(p.source as {kind?:string;source?:string;population?:string;
+  method?:string;collectedOn?:string;limitations?:string}|undefined);
+ const answer=[
+  phrase(p.answer)||phrase(p.target)||
+   (source?.kind==='illustrative'?'Illustrative Kategorien, keine Umfrage: '+categoryText:categoryText)||
+   (Array.isArray(p.groups)?p.groups.map(g=>phrase((g as {link?:unknown}).link)).join(' | '):''),
+  p.truth!==undefined?'Wahrheitswert: '+String(p.truth):'',
+  phrase(p.explanation)?'Erklärung: '+phrase(p.explanation):'',
+ ].filter(Boolean).join(' — ');
  const sourceLabel=source?.kind==='illustrative'?'Nur illustrativ, nicht erhoben':
-  source?.kind==='observed'?'Beobachtete Umfrage – unabhängig prüfen':'';
+  source?.kind==='observed'?
+   ['Beobachtete Umfrage – unabhängig prüfen',phrase(source.source),phrase(source.population),
+    phrase(source.method),phrase(source.collectedOn),phrase(source.limitations)].filter(Boolean).join(' | '):'';
  return {question,answer,reference:phrase(p.reference)||sourceLabel};
 }
 /** Quoted CSV with spreadsheet formula neutralization, even after leading whitespace. */

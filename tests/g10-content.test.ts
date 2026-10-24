@@ -350,6 +350,9 @@ describe('Explicit local editorial worksheet exports actual source-bound draft w
   expect(csv).toContain('"ud-01","umfrageduell","draft","illustrative"');
   expect(csv).toContain('Nur illustrativ, nicht erhoben');
   expect(csv).toContain('"rq-h1","rundenquiz","draft","lookup"');
+  expect(csv).toContain('Ich besiegte Goliat.');
+  expect(csv).toContain('Hinweise: Ich lebte in Bethlehem.');
+  expect(csv).toContain('Brücken-und-Lampe-Problem');
   expect(csv).toContain('"vb-a-david"');
   expect(csv).toContain('"Redaktionelle Entscheidung"');
   expect(JSON.stringify(items)).toBe(before);
@@ -361,6 +364,7 @@ describe('Explicit local editorial worksheet exports actual source-bound draft w
   const csv=exportReviewWorksheet(selected);
   expect(csv.split('\r\n')).toHaveLength(3);
   expect(csv).toContain('"vb-a-david"');
+  expect(csv).toContain('Ich besiegte Goliat.');
   expect(csv).not.toContain('"rq-w4"');
   expect(worksheetCell('=WEBSERVICE("https://evil.example")')).toBe(
    '"\'=WEBSERVICE(""https://evil.example"")"');
