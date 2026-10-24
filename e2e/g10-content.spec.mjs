@@ -34,7 +34,7 @@ test('legacy import is previewed/quarantined before explicit commit and then und
   }},
   {id:'legacy-unknown',game:'mystery',payload:{hello:'world'}},
  ]});
- await page.locator('input[type=file]').setInputFiles({
+ await page.getByLabel('Datei prüfen').setInputFiles({
   name:'ligo-content-pack.json',mimeType:'application/json',buffer:Buffer.from(fixture),
  });
  await expect(page.getByRole('region',{name:'Importvorschau'})).toContainText('1 gültige Entwürfe');
