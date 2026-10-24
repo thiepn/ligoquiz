@@ -71,3 +71,36 @@ describe('G23 source-rights and content-only editor checks',()=>{
   expect(auditPreview(preview).draftCandidates).toBe(1);
  });
 });
+
+describe('Cross-game clue reuse is actionable review data, not an automatic veto',()=>{
+ const teams=Array.from({length:5},(_,i)=>({id:'team-'+i,name:'Team '+i,order:i}));
+ it('flags repeated David, Ester and Petrus reveal targets across different games',async()=>{
+  const {RQ_TRIAL_BANK}=await import('../src/games/rundenquiz/trial-bank');
+  const {trialVerbindungen}=await import('../src/games/verbindungen/trial-bank');
+  const items=[
+   ...RQ_TRIAL_BANK.map(q=>createDraft('rundenquiz',q)),
+   ...trialVerbindungen('lang',teams).map(q=>createDraft('verbindungen',q)),
+  ];
+  const audit=auditLibrary(items),flags=audit.issues.filter(i=>i.code==='CROSS_GAME_CLUE_REUSE');
+  expect(flags).toHaveLength(6);
+  expect(flags.map(i=>[i.id,i.other])).toEqual([
+   ['rq-h1','vb-a-david'],['rq-h2','vb-a-ester'],['rq-h3','vb-a-petrus'],
+   ['vb-a-david','rq-h1'],['vb-a-ester','rq-h2'],['vb-a-petrus','rq-h3'],
+  ]);
+  expect(flags.every(x=>x.severity==='review')).toBe(true);
+  expect(audit.blockers).toBe(0);
+  expect(audit.factualAccuracyVerified).toBe(false);
+  expect(audit.copyrightLicensesApproved).toBe(false);
+ });
+ it('drops warnings if target wording changes; does not classify within-game repeats as cross-game reuse',async()=>{
+  const {RQ_TRIAL_BANK}=await import('../src/games/rundenquiz/trial-bank');
+  const {trialVerbindungen}=await import('../src/games/verbindungen/trial-bank');
+  const rq=createDraft('rundenquiz',RQ_TRIAL_BANK.find(q=>q.id==='rq-h1')!);
+  const vb=createDraft('verbindungen',trialVerbindungen('lang',teams).find(x=>x.id==='vb-a-david')!);
+  const edited=createDraft('verbindungen',{...vb.payload as object,target:'Andere Person'});
+  expect(auditLibrary([rq,vb]).issues.filter(x=>x.code==='CROSS_GAME_CLUE_REUSE')).toHaveLength(2);
+  expect(auditLibrary([rq,edited]).issues.some(x=>x.code==='CROSS_GAME_CLUE_REUSE')).toBe(false);
+  expect(auditLibrary([rq,{...rq,id:'other-rq-h1',payload:{...rq.payload as object,id:'other-rq-h1'}}])
+   .issues.some(x=>x.code==='CROSS_GAME_CLUE_REUSE')).toBe(false);
+ });
+});

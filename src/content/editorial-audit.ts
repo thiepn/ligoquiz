@@ -21,7 +21,7 @@ export type IssueSeverity='blocker'|'review';
 export type AuditCode='INVALID_PAYLOAD'|'PLACEHOLDER_PROMPT'|'PLACEHOLDER_ANSWER'|
  'SOURCE_PLACEHOLDER'|'REFERENCE_UNSPECIFIC'|'RIGHTS_NOT_DOCUMENTED'|
  'HISTORIC_APPROVAL_UNVERIFIED'|'ILLUSTRATIVE_SURVEY'|'ANSWER_ECHO'|
- 'EXACT_DUPLICATE'|'POSSIBLE_DUPLICATE'|'SOURCE_ORIGIN_UNKNOWN';
+ 'EXACT_DUPLICATE'|'POSSIBLE_DUPLICATE'|'CROSS_GAME_CLUE_REUSE'|'SOURCE_ORIGIN_UNKNOWN';
 export type AuditIssue={id:string;game:GameType;code:AuditCode;severity:IssueSeverity;message:string;other?:string};
 export type EditorialAudit={
  format:'ligoquiz-g23-editorial-audit-v1';scanned:number;approvedLocally:number;
@@ -57,14 +57,24 @@ function report(item:ContentItem,code:AuditCode,severity:IssueSeverity,message:s
 }
 export function auditLibrary(items:readonly ContentItem[]):EditorialAudit{
  const issues:AuditIssue[]=[],prior=new Map<string,ContentItem>(),prompts:ContentItem[]=[];
+ const clueTargets=new Map<string,{rundenquiz:ContentItem[];verbindungen:ContentItem[]}>();
  const byGame=Object.fromEntries(GAME_TYPES.map(game=>[game,0])) as Record<GameType,number>;
  for(const item of items){
   byGame[item.game]++;
   if(item.status==='quarantined')continue;
   const problems=validatePayload(item.game,item.payload);
   if(problems.length)issues.push(report(item,'INVALID_PAYLOAD','blocker','Spielregel-Datensatz ungültig: '+problems[0]));
-  const p=item.payload as {answer?:string;source?:{kind?:string;reviewed?:boolean}};
+  const p=item.payload as {answer?:string;target?:string;round?:string;kind?:string;
+   source?:{kind?:string;reviewed?:boolean}};
   const text=prompt(item),answer=sentence(p.answer),reference=source(item);
+  const clueAnswer=item.game==='rundenquiz'&&p.round==='hinweise'?sentence(p.answer):
+   item.game==='verbindungen'&&p.kind==='clues'?sentence(p.target):'';
+  const normalizedClue=normalizedKey(clueAnswer);
+  if(normalizedClue.length>=3&&!placeholder.test(clueAnswer)){
+   const group=clueTargets.get(normalizedClue)??{rundenquiz:[],verbindungen:[]};
+   group[item.game==='rundenquiz'?'rundenquiz':'verbindungen'].push(item);
+   clueTargets.set(normalizedClue,group);
+  }
   if(text&&placeholder.test(text))issues.push(report(item,'PLACEHOLDER_PROMPT','blocker','Platzhalter-Frage noch nicht fertiggestellt'));
   if(answer&&placeholder.test(answer))issues.push(report(item,'PLACEHOLDER_ANSWER','blocker','Platzhalter-Antwort nicht geprüft'));
   if(item.game!=='umfrageduell'){
@@ -95,6 +105,16 @@ export function auditLibrary(items:readonly ContentItem[]):EditorialAudit{
    else prior.set(signature,item);
   }
   if(text&&text.length>=30)prompts.push(item);
+ }
+ // Matching reveal targets across the two clue games can spoil a later task.
+ // This is a human scheduling warning, not proof of invalid content or rights.
+ for(const group of clueTargets.values()){
+  for(const rq of group.rundenquiz)for(const vb of group.verbindungen){
+   issues.push(report(rq,'CROSS_GAME_CLUE_REUSE','review',
+    'Gleiches Hinweisziel in Verbindungen ('+vb.id+'); Reihenfolge und Wiederholung prüfen',vb.id));
+   issues.push(report(vb,'CROSS_GAME_CLUE_REUSE','review',
+    'Gleiches Hinweisziel in Rundenquiz ('+rq.id+'); Reihenfolge und Wiederholung prüfen',rq.id));
+  }
  }
  // Pair comparisons use a bounded candidate bucket rather than O(n²) globally.
  const buckets=new Map<string,ContentItem[]>();
