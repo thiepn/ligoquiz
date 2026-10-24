@@ -119,3 +119,5 @@
 .cx-worksheet-note strong,.cx-worksheet-note span,.cx-worksheet-note p{font-size:14px;line-height:1.5;overflow-wrap:anywhere}
 .cx-worksheet-note p{margin:0;white-space:pre-wrap}
 .cx-worksheet-note button{justify-self:start;min-height:36px}
+
+.cx-worksheet-note button{white-space:normal;text-align:left}

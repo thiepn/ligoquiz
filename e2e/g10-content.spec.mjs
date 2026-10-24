@@ -255,3 +255,38 @@ test('CSV reviewer notes reopen read-only, find matching source question and blo
  await expect(notes.getByRole('button',{name:'Aufgabe zu Notizen öffnen'})).toBeDisabled();
  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
 });
+
+test('manual CSV source proposal stages a citation without losing unsaved work or approving content',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ const waiting=page.waitForEvent('download');
+ await queue.getByRole('button',{name:'Gefilterte Prüfliste als CSV'}).click();
+ const output=await waiting,csv=await readFile(await output.path(),'utf8');
+ const amended=csv.split('\r\n').map(line=>line.startsWith('"rq-w4",')?
+  line.replace(/,"","","","",""$/,' ,"","https://example.org/research/rq-w4","","",""'.trimStart()):line)
+  .join('\r\n');
+ const notes=page.getByRole('region',{name:'CSV-Prüfnotizen'});
+ await notes.getByLabel('CSV-Prüfnotizen öffnen').setInputFiles({
+  name:'review-links.csv',mimeType:'text/csv',buffer:Buffer.from(amended),
+ });
+ await expect(notes).toContainText('1 zugeordnet · 0 veraltet · 0 fehlen');
+ await queue.getByRole('button',{name:/rq-w4/}).click();
+ const answer=page.getByRole('textbox',{name:'Lösung',exact:true});
+ await answer.fill('Ungespeicherter Entwurf');
+ await notes.getByRole('button',{name:'Quellenlink im Entwurf vorbereiten'}).click();
+ await expect(answer).toHaveValue('Ungespeicherter Entwurf');
+ await answer.fill('Wien');
+ await notes.getByRole('button',{name:'Quellenlink im Entwurf vorbereiten'}).click();
+ await expect(page.getByRole('textbox',{name:'Quelle',exact:true}))
+  .toHaveValue(/example\.org\/research\/rq-w4/);
+ await expect(page.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
+ await page.reload();
+ await page.getByRole('region',{name:'Aufgabenbestand'}).getByRole('button',{name:/rq-w4/}).click();
+ await expect(page.getByRole('textbox',{name:'Quelle',exact:true}))
+  .not.toHaveValue(/example\.org\/research\/rq-w4/);
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig'))
+  .toHaveCount(5);
+});

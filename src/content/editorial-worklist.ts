@@ -143,3 +143,23 @@ export function previewReviewWorksheet(source:string,tasks:readonly SourceReview
  }
  return {matched,changed,missing,rows:annotated};
 }
+
+/**
+ * A worksheet note with one HTTPS URL may be staged in an existing draft.
+ * This proposal is unverified, unsaved and cannot confer source rights.
+ */
+export function worksheetSourceProposal(note:ImportedReviewNote,item:ContentItem):string|null{
+ if(note.status!=='current'||note.id!==item.id||item.status!=='draft'||
+    item.game==='umfrageduell')return null;
+ const raw=note.notes.find(x=>x.heading==='Beleg geprüft')?.text.trim();
+ if(!raw||raw.length>500||!/^https:\/\//u.test(raw)||/\s/u.test(raw))return null;
+ let url:URL;
+ try{url=new URL(raw);}catch{return null;}
+ if(url.protocol!=='https:'||!url.hostname.includes('.')||url.username||url.password||
+    url.hostname==='localhost'||url.hostname.endsWith('.local'))return null;
+ const p=item.payload as {reference?:unknown};
+ if(typeof p.reference!=='string'||!p.reference.trim()||
+    p.reference.includes(url.href))return null;
+ const proposed=p.reference.trim()+'; '+url.href;
+ return proposed.length<=1000?proposed:null;
+}

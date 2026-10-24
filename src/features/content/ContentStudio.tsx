@@ -8,7 +8,7 @@ import {EditorialAuditPanel} from './EditorialAuditPanel';
 import {StructuredQuestionEditor} from './StructuredQuestionEditor';
 import {trialDraftBundle} from '../../content/trial-draft-bundle';
 import {contentReviewTasks,historicalTrialCorrection,draftSourceCitation,type ReviewRoute} from '../../content/editorial-source-review';
-import {exportReviewWorksheet,previewReviewWorksheet} from '../../content/editorial-worklist';
+import {exportReviewWorksheet,previewReviewWorksheet,worksheetSourceProposal} from '../../content/editorial-worklist';
 
 
 const LABELS:Record<GameType,string>={
@@ -187,6 +187,21 @@ export function ContentStudio(){
     proposal.quarantined.length+' Kollisionen zurückgestellt. Noch nichts importiert.');
   });
  }
+ function stageReviewCitation(entry:NonNullable<typeof reviewerNotes>['rows'][number]){
+  const task=sourceTasks.find(x=>x.item.id===entry.id);
+  if(!task||entry.status!=='current')return;
+  const proposal=worksheetSourceProposal(entry,task.item);
+  if(!proposal)return;
+  if(current&&(json!==JSON.stringify(current.payload,null,2)||
+    rightsDraft!==(current.provenance.rights??'')||reviewNote.trim()||
+    reviewer.trim()||checklist.some(Boolean))){
+   setError('Ungespeicherte Änderungen zuerst speichern oder verwerfen; Quellenangabe nicht übernommen.');
+   return;
+  }
+  choose(task.item);
+  setJson(JSON.stringify({...task.item.payload as object,reference:proposal},null,2));
+  setMessage('URL aus Prüfnotiz im Entwurf vorbereitet. Quelle unabhängig prüfen; noch nicht gespeichert.');
+ }
  async function loadReviewNotes(file:File|undefined){
   if(!file)return;
   setReviewCsv('');setReviewCsvError('');
@@ -297,7 +312,11 @@ export function ContentStudio(){
      </div>
      <p>Nur lokale Notizen, keine Freigabe. Veraltete Einträge können nicht übernommen werden.</p>
      <div className="cx-worksheet-notes">
-      {reviewerNotes.rows.map(entry=><section key={entry.id} className="cx-worksheet-note">
+      {reviewerNotes.rows.map(entry=>{
+       const task=sourceTasks.find(task=>task.item.id===entry.id);
+       const proposal=task?worksheetSourceProposal(entry,task.item):null;
+       const hasSourceNote=entry.notes.some(note=>note.heading==='Beleg geprüft');
+       return <section key={entry.id} className="cx-worksheet-note">
        <div><strong>{entry.id} · {entry.status==='current'?'Aktuell':'Veraltet'}</strong>
         <span>{entry.reason}</span></div>
        {entry.notes.map(note=><p key={note.heading}><b>{note.heading}:</b> {note.text}</p>)}
@@ -305,7 +324,11 @@ export function ContentStudio(){
         onClick={()=>{const task=sourceTasks.find(task=>task.item.id===entry.id);
          if(task)choose(task.item);
         }}>Aufgabe zu Notizen öffnen</button>
-      </section>)}
+       {proposal&&<button type="button" className="exp-secondary" disabled={busy}
+        onClick={()=>stageReviewCitation(entry)}>Quellenlink im Entwurf vorbereiten</button>}
+       {hasSourceNote&&!proposal&&entry.status==='current'&&
+        <p>Für einen Quellenlink eine vollständige HTTPS-URL in „Beleg geprüft“ eintragen.</p>}
+      </section>;})}
       {reviewerNotes.rows.length===0&&<p>Keine ausgefüllten Prüffelder in der CSV.</p>}
      </div>
     </>}

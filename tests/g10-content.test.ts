@@ -12,7 +12,7 @@ import {sampleQuiztafel} from '../src/games/quiztafel/trial-bank';
 import type {GameType} from '../src/domain/game/contracts';
 import {trialDraftBundle,trialDraftItems} from '../src/content/trial-draft-bundle';
 import {contentReviewTasks,originalSourceLead,historicalTrialCorrection,draftSourceCitation} from '../src/content/editorial-source-review';
-import {exportReviewWorksheet,worksheetCell,previewReviewWorksheet} from '../src/content/editorial-worklist';
+import {exportReviewWorksheet,worksheetCell,previewReviewWorksheet,worksheetSourceProposal} from '../src/content/editorial-worklist';
 
 const teams=Array.from({length:5},(_,i)=>({id:'team-'+i,name:'Team '+(i+1),order:i}));
 const item=(game:GameType,payload:unknown):ContentItem=>createDraft(game,payload,123);
@@ -447,5 +447,43 @@ describe('Offline editor CSV reentry is read-only and bound to exact question co
   const first=csv.split('\r\n').find(x=>x.startsWith('"rq-w4",'))!;
   expect(()=>previewReviewWorksheet(csv+'\r\n'+first+'\r\n',tasks)).toThrow();
   expect(()=>previewReviewWorksheet('x'.repeat(1024*1024+1),tasks)).toThrow();
+ });
+});
+
+describe('CSV research notes safely stage reviewer-provided HTTPS citations',()=>{
+ const read=(task:ReturnType<typeof contentReviewTasks>[number],url:string)=>{
+  const csv=exportReviewWorksheet([task]).replace(/,"","","","",""\r\n$/u,
+   ',"",'+worksheetCell(url)+',"","",""\r\n');
+  return {csv,entry:previewReviewWorksheet(csv,[task]).rows[0]!};
+ };
+ it('returns a valid unsaved citation without mutating draft, rights, review or IDs',()=>{
+  const task=contentReviewTasks(trialDraftItems()).find(t=>t.item.id==='rq-h1')!;
+  const old=JSON.stringify(task.item),{entry}=read(task,'https://example.org/research/rq-h1');
+  expect(entry.status).toBe('current');
+  const reference=worksheetSourceProposal(entry,task.item);
+  expect(reference).toContain('https://example.org/research/rq-h1');
+  expect(reference).toContain((task.item.payload as {reference:string}).reference);
+  expect(validatePayload(task.item.game,{...task.item.payload as object,reference})).toEqual([]);
+  expect(JSON.stringify(task.item)).toBe(old);
+  expect(task.item.status).toBe('draft');
+  expect(task.item.review).toBeUndefined();
+  expect(task.item.provenance.rights).toBeUndefined();
+ });
+ it('refuses stale, missing, wrong-ID, non-draft, repeated, invalid and illustrative links',()=>{
+  const task=contentReviewTasks(trialDraftItems()).find(t=>t.item.id==='rq-h1')!;
+  const url='https://example.org/research/rq-h1',{csv,entry}=read(task,url);
+  const changed={...task.item,payload:{...task.item.payload as object,answer:'Different answer'}};
+  const stale=previewReviewWorksheet(csv,contentReviewTasks([changed])).rows[0]!;
+  expect(worksheetSourceProposal(stale,changed)).toBeNull();
+  expect(worksheetSourceProposal({...entry,id:'other'},task.item)).toBeNull();
+  expect(worksheetSourceProposal(entry,{...task.item,status:'approved'})).toBeNull();
+  expect(worksheetSourceProposal(entry,{...task.item,payload:{...task.item.payload as object,
+   reference:(task.item.payload as {reference:string}).reference+'; '+url}})).toBeNull();
+  for(const invalid of ['javascript:alert(1)','http://example.org/x','https://localhost/x',
+   'https://admin:password@example.org/x','https://example.org/a b']){
+   expect(worksheetSourceProposal(read(task,invalid).entry,task.item)).toBeNull();
+  }
+  const survey=contentReviewTasks(trialDraftItems()).find(t=>t.item.id==='ud-01')!;
+  expect(worksheetSourceProposal(read(survey,url).entry,survey.item)).toBeNull();
  });
 });

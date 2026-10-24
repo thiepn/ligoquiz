@@ -128,3 +128,19 @@ Imported claims of review, correctness, rights or approval are displayed solely
 as untrusted notes: they cannot set checklist flags, reviewer identity,
 approval, source rights, CAS revision or production release. Existing manual
 G10 review and G26 NO_GO remain authoritative.
+
+## Stage an offline reviewer source URL in the original draft
+
+A reviewer may put precisely one HTTPS URL into the existing **Beleg geprüft**
+column of the exported CSV. Reopening a matching non-survey draft shows
+**Quellenlink im Entwurf vorbereiten**, appending that URL to its existing
+reference in the **unsaved** G10 editor only. No third-party fetch, source
+verification, approval, or rights authorization occurs.
+
+The action refuses stale/missing records, already-present URLs, approved or
+in-review items, illustrative surveys, invalid/non-HTTPS links, credential-bearing
+URLs, and strings beyond the original 1000-character source contract. It also
+blocks navigation and staging when the current editor has outstanding question,
+rights, reviewer or checklist edits, to avoid losing unsent work.
+The original explicit Save as Draft with revision CAS remains the only write.
+G26 publication stays NO_GO.
