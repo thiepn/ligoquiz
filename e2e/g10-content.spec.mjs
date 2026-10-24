@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {Buffer} from 'node:buffer';
+import {readFile} from 'node:fs/promises';
 test('content atelier edits a draft and requires four checks plus named approval',async({page})=>{
  await page.goto('/#/inhalte');
  await expect(page.getByRole('heading',{name:'Inhaltsatelier'})).toBeVisible();
@@ -171,5 +172,35 @@ test('editorial queue warns of reused clue targets and opens the corresponding q
  await expect(panel).toContainText('vb-a-david');
  await expect(panel).toContainText('Gleiches Hinweisziel in Rundenquiz');
  await expect(page.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+});
+
+test('explicit local CSV worksheet exports filtered questions with source warnings but no approvals',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ await queue.getByRole('combobox',{name:'Prüfgruppe'}).selectOption('lookup');
+ await queue.getByRole('checkbox',{name:'Nur wiederholte Hinweisziele'}).check();
+ await expect(queue.locator('.cx-source-item')).toHaveCount(6);
+ const wait=page.waitForEvent('download');
+ await queue.getByRole('button',{name:'Gefilterte Prüfliste als CSV'}).click();
+ const download=await wait;
+ expect(download.suggestedFilename()).toBe('ligoquiz-redaktionspruefliste-gefiltert.csv');
+ const csv=await readFile(await download.path(),'utf8');
+ expect(csv.split('\r\n')).toHaveLength(8);
+ expect(csv).toContain('"rq-h1","rundenquiz","draft","lookup"');
+ expect(csv).toContain('"vb-a-david"');
+ expect(csv).not.toContain('"rq-w4","rundenquiz"');
+ expect(csv).not.toContain('"qt-geschichte-4","quiztafel"');
+ const fullWait=page.waitForEvent('download');
+ await queue.getByRole('button',{name:'Alle Aufgaben als CSV'}).click();
+ const full=await fullWait;
+ expect(full.suggestedFilename()).toBe('ligoquiz-redaktionspruefliste-vollstaendig.csv');
+ const whole=await readFile(await full.path(),'utf8');
+ expect(whole.split('\r\n')).toHaveLength(81);
+ expect(whole).toContain('https://whc.unesco.org/en/list/829/');
+ expect(whole).toContain('"ud-01","umfrageduell","draft","illustrative"');
  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
 });

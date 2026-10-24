@@ -65,3 +65,19 @@ and decide whether to separate, replace or schedule it differently.
 No content is auto-rewritten, rejected, approved or published, and no second
 scheduler or scoring engine is created. A different answer target removes the
 flag; unrelated game types and same-game hints do not create this cross-game flag.
+
+## Local research worksheet (CSV)
+
+The source review queue exports either the filtered research worklist or all local
+drafts on explicit button activation. The CSV contains questions/clues, answers
+(or the explicitly illustrative survey categories), original source text,
+source-lead URL where applicable, G23 audit flags, duplicate/reveal-related IDs,
+the source file/version and any **self-asserted** rights note. Five columns for
+answer, citation, rights, host fairness and editorial decision are **blank**.
+
+The worksheet is a local file with raw question/answer text. It is not the
+redacted G23 publication-safe issue index; do not distribute it as if it were
+rights-cleared. The app does not upload the CSV, import reviewer-filled cells,
+change content state or emit any factual/rights approval. Quotes, line breaks
+and spreadsheet formula-style cells are escaped for safer spreadsheet inspection.
+Original G10 CAS, manual review, backup and G26 NO_GO remain unchanged.
