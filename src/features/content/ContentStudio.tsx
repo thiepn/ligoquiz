@@ -350,7 +350,7 @@ export function ContentStudio(){
         <p><b>Vorgeschlagen:</b> {answerProposal.after}</p>
         <button type="button" className="exp-secondary" disabled={busy}
          onClick={()=>stageReviewAnswer(entry)}>Antwort und Quelle im Entwurf vorbereiten</button>
-       </div>
+       </div>}
        {hasSourceNote&&!proposal&&entry.status==='current'&&
         <p>Für einen Quellenlink eine vollständige HTTPS-URL in „Beleg geprüft“ eintragen.</p>}
       </section>;})}
