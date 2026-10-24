@@ -241,9 +241,9 @@ test('CSV reviewer notes reopen read-only, find matching source question and blo
  const downloaded=await wait,csv=await readFile(await downloaded.path(),'utf8');
  const amended=csv.split('\r\n').map(line=>line.startsWith('"rq-w4",')?
   line.replace(/,"","","","",""$/,' ,"","Art. 5 prüfen","","","Noch offen"'.trimStart()):line).join('\r\n');
- const input=queue.getByRole('textbox',{name:'CSV-Prüfnotizen öffnen'});
- await input.setInputFiles({name:'redaktion.csv',mimeType:'text/csv',buffer:Buffer.from(amended)});
  const notes=page.getByRole('region',{name:'CSV-Prüfnotizen'});
+ await notes.getByLabel('CSV-Prüfnotizen öffnen')
+  .setInputFiles({name:'redaktion.csv',mimeType:'text/csv',buffer:Buffer.from(amended)});
  await expect(notes).toContainText('1 zugeordnet · 0 veraltet · 0 fehlen');
  await expect(notes).toContainText('Art. 5 prüfen');
  await notes.getByRole('button',{name:'Aufgabe zu Notizen öffnen'}).click();
