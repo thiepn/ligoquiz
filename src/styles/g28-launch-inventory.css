@@ -1,0 +1,26 @@
+.g28-inventory{margin-block:1.3rem;padding:1.2rem;border:1px solid var(--border,#69727c);color:inherit}
+.g28-inventory-head,.g28-priority-head{display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
+.g28-inventory-head h2,.g28-priority-head h3{margin:0}
+.g28-inventory-head>strong{font-weight:700}
+.g28-inventory-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.7rem;margin-block:1rem}
+.g28-inventory-stats>div{display:flex;flex-direction:column;border:1px solid var(--border,#68717b);padding:.7rem;gap:.3rem}
+.g28-inventory-stats b{font-size:1.45rem}
+.g28-inventory-stats span,.g28-critical{font-size:.94rem;line-height:1.45}
+.g28-inventory details{margin-block:.7rem}
+.g28-inventory details>summary{cursor:pointer;font-weight:600;padding:.4rem 0}
+.g28-family-grid,.g28-gap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.5rem;margin-block:.6rem}
+.g28-family-grid>div,.g28-gap-grid>div{display:flex;flex-direction:column;gap:.2rem;border:1px solid var(--border,#68717b);padding:.65rem}
+.g28-program-controls{display:flex;gap:.7rem;flex-wrap:wrap;margin-block:1rem}
+.g28-program-controls label{display:flex;align-items:center;gap:.45rem;font-weight:600}
+.g28-program-controls select{min-height:44px;max-width:100%;font-size:1rem}
+.g28-program-result{border-top:1px solid var(--border,#68717b);padding-block:1rem}
+.g28-program-result>strong{display:block;font-size:1.1rem}
+.g28-program-result>span{display:block;margin-block:.25rem}
+.g28-inventory table{width:100%;border-collapse:collapse;font-size:.9rem}
+.g28-inventory th,.g28-inventory td{border-bottom:1px solid var(--border,#68717b);padding:.4rem;text-align:left}
+.g28-priority-head label{display:flex;align-items:center;gap:.4rem}
+.g28-priorities{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.6rem;margin-top:.7rem}
+.g28-priority{min-height:52px;display:flex;flex-direction:column;text-align:left;align-items:flex-start;gap:.2rem;padding:.65rem;border:1px solid var(--border,#68717b);background:transparent;color:inherit;cursor:pointer;font:inherit}
+.g28-priority:hover,.g28-priority:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.g28-priority span{font-size:.9rem}
+@media(max-width:600px){.g28-inventory{padding:.7rem}.g28-program-controls{flex-direction:column;align-items:stretch}.g28-program-controls label{justify-content:space-between}}

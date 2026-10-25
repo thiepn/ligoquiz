@@ -5,6 +5,7 @@ import {createDraft,coverage,validatePayload,selectReviewedPack,findDuplicates,t
 import {legacyBackup,previewFile,exportLibrary,type Preview} from '../../content/migration';
 import '../../styles/content-studio.css';
 import {EditorialAuditPanel} from './EditorialAuditPanel';
+import {LaunchInventoryPanel} from './LaunchInventoryPanel';
 import {StructuredQuestionEditor} from './StructuredQuestionEditor';
 import {trialDraftBundle} from '../../content/trial-draft-bundle';
 import {contentReviewTasks,historicalTrialCorrection,draftSourceCitation,type ReviewRoute} from '../../content/editorial-source-review';
@@ -319,6 +320,7 @@ export function ContentStudio(){
      <button className="exp-secondary" onClick={()=>{setPreview(null);setImportConsent(false);}}>Abbrechen</button></div>
    </section>}
   <EditorialAuditPanel items={items} preview={preview} onChoose={choose}/>
+  <LaunchInventoryPanel items={items} onChoose={choose}/>
   <section className="cx-source-queue" aria-label="Quellenprüfung">
    <div className="cx-catalog-top">
     <h2>Quellenprüfung</h2>

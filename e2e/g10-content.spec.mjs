@@ -417,3 +417,31 @@ test('G27 repeated CSV reviewer visit rejects an outdated draft note after saved
  await expect(notes).toContainText('0 zugeordnet · 1 veraltet · 0 fehlen');
  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
 });
+
+test('G28 launch inventory exposes real source counts and actionable five-engine gaps without approval',async({page})=>{
+ await page.goto('/#/inhalte');
+ const panel=page.getByRole('region',{name:'G28 Startinhalte und Quellenzuordnung'});
+ await expect(panel).toContainText('704');
+ await expect(panel).toContainText('Keine quellgebundenen Zuordnungskandidaten');
+ await expect(panel.getByRole('combobox',{name:'G28 Profil'})).toHaveValue('lang');
+ await expect(panel.getByRole('combobox',{name:'G28 Teams'})).toHaveValue('5');
+ await expect(panel).toContainText('Strukturell unvollständig');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ await expect(panel).toContainText('79');
+ await expect(panel).toContainText('Valide, noch nicht freigegebene V2-Entwürfe');
+ await expect(panel).toContainText('Strukturell vollständig');
+ await panel.getByRole('combobox',{name:'G28 Spiel'}).selectOption('verbindungen');
+ await expect(panel).toContainText('Vier Hinweise');
+ await expect(panel).toContainText('16er-Wand');
+ await panel.getByRole('combobox',{name:'G28 Spiel'}).selectOption('umfrageduell');
+ await expect(panel).toContainText('Top 3');
+ await expect(panel).toContainText('10 lokale');
+ await panel.getByRole('combobox',{name:'G28 Spiel'}).selectOption('rundenquiz');
+ await panel.getByRole('button',{name:/rq-w4/}).click();
+ await expect(page.getByRole('region',{name:'Aufgabe bearbeiten'})).toContainText('Österreich');
+ await expect(page.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+ await expect(panel).toContainText('NO_GO');
+});

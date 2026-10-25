@@ -1,0 +1,106 @@
+import {useMemo,useState} from 'react';
+import {GAME_TYPES,type GameType,type GameProfile} from '../../domain/game/contracts';
+import type {ContentItem} from '../../content/contracts';
+import {launchContentInventory} from '../../content/launch-inventory';
+import '../../styles/g28-launch-inventory.css';
+
+const labels:Record<GameType,string>={
+ rundenquiz:'Rundenquiz',quiztafel:'Quiztafel',verbindungen:'Verbindungen',
+ logikleiter:'Logikleiter',umfrageduell:'Umfrageduell',
+};
+/** Local original-source content planning only; all G10 and G26 authorities untouched. */
+export function LaunchInventoryPanel({items,onChoose}:{
+ items:readonly ContentItem[];onChoose:(item:ContentItem)=>void;
+}){
+ const inventory=useMemo(()=>launchContentInventory(items),[items]);
+ const [game,setGame]=useState<GameType>('rundenquiz');
+ const [profile,setProfile]=useState<GameProfile>('lang');
+ const [teams,setTeams]=useState<3|4|5>(5);
+ const [showAll,setShowAll]=useState(false);
+ const program=inventory.programs.find(p=>
+  p.game===game&&p.profile===profile&&p.teams===teams)!;
+ const queue=inventory.priorities.filter(p=>p.item.game===game);
+ return <section className="g28-inventory" aria-label="G28 Startinhalte und Quellenzuordnung">
+  <div className="g28-inventory-head">
+   <h2>Startinhalte und Quellenzuordnung</h2>
+   <strong>NO_GO · Nicht freigegeben</strong>
+  </div>
+  <div className="g28-inventory-stats">
+   <div><b>{inventory.originalDeclaredActive}</b><span>V1 deklarierte aktive Inhalte</span></div>
+   <div><b>{inventory.localCount}</b><span>Tatsächliche V2-Datensätze</span></div>
+   <div><b>{inventory.validUnapproved}</b><span>Valide, noch nicht freigegebene V2-Entwürfe</span></div>
+   <div><b>{inventory.possibleLegacyLinks.length}</b><span>Nur strukturelle V1-Verknüpfungen</span></div>
+  </div>
+  <p className="g28-critical">V1-Zählungen sind historische Originalcode-Metadaten, keine übertragenen Fragen.
+   Keine der {inventory.originalDeclaredActive} Altfragen ist durch diese Übersicht individuell migriert
+   oder unabhängig fachlich/rechtlich freigegeben. {inventory.unreviewedIllustrative} lokale
+   Umfrageaufgaben bleiben ausdrücklich illustrativ.</p>
+  <details>
+   <summary>Acht V1-Quellfamilien prüfen</summary>
+   <div className="g28-family-grid">
+    {inventory.historicFamilies.map(f=><div key={f.code}>
+     <b>{f.code}</b><span>{f.declared} historisch gemeldet</span><span>0 verifizierte V2-Zuordnungen</span>
+    </div>)}
+   </div>
+   <p>Eine Ähnlichkeit der historischen Quellfamilie zu einem V2-Spiel beweist keine
+    Frage-ID, korrekte Antwort, freie Lizenz oder Schemaübernahme.</p>
+  </details>
+  <details>
+   <summary>Strukturelle Importkandidaten ({inventory.possibleLegacyLinks.length})</summary>
+   {inventory.possibleLegacyLinks.slice(0,25).map(candidate=><p key={candidate.sourceId}>
+    {candidate.sourceId} → {candidate.itemId} ({labels[candidate.game]}) · Herkunft nur aus
+    importierten Metadaten, Originaldatensatz nicht gegengeprüft
+   </p>)}
+   {inventory.legacyCollisions.map(id=><p key={id}>Mehrdeutige Quell-ID: {id}</p>)}
+   {inventory.possibleLegacyLinks.length===0&&<p>Keine quellgebundenen Zuordnungskandidaten.
+    Die 79 V2-Probeaufgaben sind kein V1-Migrationsnachweis.</p>}
+  </details>
+  <div className="g28-program-controls">
+   <label>Spiel <select aria-label="G28 Spiel" value={game}
+    onChange={e=>setGame(e.target.value as GameType)}>
+    {GAME_TYPES.map(key=><option key={key} value={key}>{labels[key]}</option>)}
+   </select></label>
+   <label>Profil <select aria-label="G28 Profil" value={profile}
+    onChange={e=>setProfile(e.target.value as GameProfile)}>
+    <option value="kurz">Kurz</option><option value="standard">Standard</option>
+    <option value="lang">Lang</option>
+   </select></label>
+   <label>Teams <select aria-label="G28 Teams" value={teams}
+    onChange={e=>setTeams(Number(e.target.value) as 3|4|5)}>
+    {[3,4,5].map(n=><option key={n} value={n}>{n}</option>)}
+   </select></label>
+  </div>
+  <div className="g28-program-result" aria-label="G28 Strukturelle Abdeckung">
+   <strong>{program.structurallyComplete?'Strukturell vollständig':'Strukturell unvollständig'}</strong>
+   <span>{program.candidateCount} valide Quellkandidaten · {program.locallyApproved} lokale Freigabeangaben</span>
+   <div className="g28-gap-grid">
+    {program.gaps.map(g=><div key={g.kind}>
+     <b>{g.kind}</b><span>{g.present} / {g.required}</span>
+     {g.missing>0&&<strong>{g.missing} fehlen</strong>}
+    </div>)}
+   </div>
+   <p>Nur Strukturprüfung aus lokalen Quellen. Kein Beleg für editorische Freigabe,
+    tatsächliche Spielauswahl, Sachrichtigkeit, Rechte oder Publikationsreife.</p>
+  </div>
+  <details>
+   <summary>Alle 45 Kombinationen ({inventory.programs.filter(p=>p.structurallyComplete).length} strukturell vollständig)</summary>
+   <table><thead><tr><th>Spiel</th><th>Profil</th><th>Teams</th><th>Struktur</th></tr></thead>
+    <tbody>{inventory.programs.map(p=><tr key={p.game+'-'+p.profile+'-'+p.teams}>
+     <td>{labels[p.game]}</td><td>{p.profile}</td><td>{p.teams}</td>
+     <td>{p.structurallyComplete?'Vollständig':'Fehlend: '+p.gaps.filter(g=>g.missing).map(g=>g.kind+' '+g.missing).join(', ')}</td>
+    </tr>)}</tbody></table>
+  </details>
+  <div className="g28-priority-head">
+   <h3>Redaktionelle Reihenfolge · {labels[game]}</h3>
+   <label><input type="checkbox" checked={showAll} onChange={e=>setShowAll(e.target.checked)}/>
+    Alle offenen Aufgaben</label>
+  </div>
+  <div className="g28-priorities">
+   {queue.slice(0,showAll?queue.length:8).map(task=><button type="button"
+    className="g28-priority" key={task.item.id} onClick={()=>onChoose(task.item)}>
+    <strong>{task.item.id}</strong><span>{task.reasons.join(' · ')}</span>
+   </button>)}
+   {queue.length===0&&<p>Keine offenen Aufgaben dieses Spiels.</p>}
+  </div>
+ </section>;
+}
