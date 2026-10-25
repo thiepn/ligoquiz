@@ -322,7 +322,10 @@ export function refreshReviewWorksheet(source:string,tasks:readonly SourceReview
  const currentIds=new Set(review.rows.filter(x=>x.status==='current').map(x=>x.id));
  const rows=parseWorksheetCsv(exportReviewWorksheet(tasks));
  const csv='\uFEFF'+rows.map((row,i)=>{
-  const notes=i>0&&currentIds.has(row[0]!)?original.get(row[0]!)?.slice(14):null;
+  // The original 19-column schema header must be preserved verbatim.
+  // Only data rows receive blank reviewer cells when their notes are stale.
+  if(i===0)return row.map(worksheetCell).join(',');
+  const notes=currentIds.has(row[0]!)?original.get(row[0]!)?.slice(14):null;
   return [...row.slice(0,14),...(notes??['','','','',''])].map(worksheetCell).join(',');
  }).join('\r\n')+'\r\n';
  return {csv,carried:currentIds.size,excludedChanged:review.changed,excludedMissing:review.missing};
