@@ -385,3 +385,35 @@ test('offline CSV structural wall corrections stage tile and group without chang
   .getByRole('textbox',{name:'Feld 1',exact:true})).not.toHaveValue('Redaktionell präzisierter Begriff');
  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
 });
+
+test('G27 repeated CSV reviewer visit rejects an outdated draft note after saved edit',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ const dl=page.waitForEvent('download');
+ await queue.getByRole('button',{name:'Alle Aufgaben als CSV'}).click();
+ const file=await dl,source=await readFile(await file.path(),'utf8');
+ const annotated=source.split('\r\n').map(line=>line.startsWith('"rq-w4",')?
+  line.replace(/,"","","","",""$/,',"","https://example.org/g27","","",""'):line).join('\r\n');
+ const notes=page.getByRole('region',{name:'CSV-Prüfnotizen'});
+ await notes.getByLabel('CSV-Prüfnotizen öffnen').setInputFiles({
+  name:'g27.csv',mimeType:'text/csv',buffer:Buffer.from(annotated)});
+ await expect(notes).toContainText('1 zugeordnet · 0 veraltet · 0 fehlen');
+ const saved=page.waitForEvent('download');
+ await notes.getByRole('button',{name:'Nur aktuelle Prüfliste neu exportieren'}).click();
+ const second=await saved,round2=await readFile(await second.path(),'utf8');
+ expect(round2).toContain('https://example.org/g27');
+ await queue.getByRole('button',{name:/rq-w4/}).click();
+ await page.getByRole('region',{name:'Aufgabe bearbeiten'}).getByRole('textbox',{name:'Lösung',exact:true})
+  .fill('Andere ungeprüfte Antwort');
+ await page.getByRole('button',{name:'Änderungen als Entwurf speichern'}).click();
+ await expect(notes).toContainText('0 zugeordnet · 1 veraltet · 0 fehlen');
+ await expect(notes.getByRole('button',{name:'Nur aktuelle Prüfliste neu exportieren'})).toBeDisabled();
+ await notes.getByRole('button',{name:'Prüfnotizen schließen'}).click();
+ await notes.getByLabel('CSV-Prüfnotizen öffnen').setInputFiles({
+  name:'reopen.csv',mimeType:'text/csv',buffer:Buffer.from(round2)});
+ await expect(notes).toContainText('0 zugeordnet · 1 veraltet · 0 fehlen');
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+});

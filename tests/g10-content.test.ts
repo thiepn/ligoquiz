@@ -12,7 +12,7 @@ import {sampleQuiztafel} from '../src/games/quiztafel/trial-bank';
 import type {GameType} from '../src/domain/game/contracts';
 import {trialDraftBundle,trialDraftItems} from '../src/content/trial-draft-bundle';
 import {contentReviewTasks,originalSourceLead,historicalTrialCorrection,draftSourceCitation} from '../src/content/editorial-source-review';
-import {exportReviewWorksheet,worksheetCell,previewReviewWorksheet,worksheetSourceProposal,worksheetAnswerProposal,worksheetWordingProposal,worksheetDetailProposal} from '../src/content/editorial-worklist';
+import {exportReviewWorksheet,worksheetCell,previewReviewWorksheet,worksheetSourceProposal,worksheetAnswerProposal,worksheetWordingProposal,worksheetDetailProposal,refreshReviewWorksheet} from '../src/content/editorial-worklist';
 
 const teams=Array.from({length:5},(_,i)=>({id:'team-'+i,name:'Team '+(i+1),order:i}));
 const item=(game:GameType,payload:unknown):ContentItem=>createDraft(game,payload,123);
@@ -682,5 +682,51 @@ describe('Source-matched original structural editorial repairs',()=>{
   expect(worksheetDetailProposal(entry(w,'Verbindung 0: Null'),w)).toBeNull();
   expect(worksheetDetailProposal(entry(w,'Wandfeld 1: Neue Bezeichnung\n'+
    'Unbekannt: Abbruch'),w)).toBeNull();
+ });
+});
+
+describe('G27 source-specific multi-visit editorial reconciliation',()=>{
+ const note=(csv:string,id:string)=>csv.split('\r\n').map(line=>line.startsWith('"'+id+'",')?
+  line.replace(/,"","","","",""$/,',"Vorschlag: Neue Antwort","https://example.org/source","","",""'):line).join('\r\n');
+ it('invalidates the original when a new duplicate changes its G23 warnings',()=>{
+  const q=trialDraftItems().find(x=>x.id==='rq-w4')!;
+  const original=contentReviewTasks([q]),csv=note(exportReviewWorksheet(original),q.id);
+  expect(previewReviewWorksheet(csv,original).matched).toBe(1);
+  const copy=createDraft('rundenquiz',{...q.payload as object,id:'g27-duplicate'},123);
+  const tasks=contentReviewTasks([q,copy]);
+  expect(tasks.find(x=>x.item.id===q.id)?.issues.some(x=>x.code==='EXACT_DUPLICATE')).toBe(true);
+  const stale=previewReviewWorksheet(csv,tasks);
+  expect(stale).toMatchObject({matched:0,changed:1,missing:0});
+  expect(stale.rows[0]?.changedFields).toEqual(expect.arrayContaining(['G23-Hinweise','Verwandte Aufgaben']));
+  expect(worksheetAnswerProposal(stale.rows[0]!,q)).toBeNull();
+  const next=refreshReviewWorksheet(csv,tasks);
+  expect(next).toMatchObject({carried:0,excludedChanged:1,excludedMissing:0});
+  expect(previewReviewWorksheet(next.csv,tasks).rows).toHaveLength(0);
+  expect(q.status).toBe('draft');expect(q.review).toBeUndefined();
+ });
+ it('preserves only current reviewer notes across revised and missing sources',()=>{
+  const initial=trialDraftItems().filter(x=>['rq-w4','rq-w6','rq-h1'].includes(x.id));
+  let csv=exportReviewWorksheet(contentReviewTasks(initial));
+  for(const row of initial)csv=note(csv,row.id);
+  const changed=initial.filter(x=>x.id!=='rq-h1').map(x=>x.id==='rq-w6'?
+   {...x,payload:{...x.payload as object,answer:'Subsequent author revision'}}:x);
+  const now=contentReviewTasks(changed);
+  expect(previewReviewWorksheet(csv,now)).toMatchObject({matched:1,changed:1,missing:1});
+  const result=refreshReviewWorksheet(csv,now);
+  expect(result).toMatchObject({carried:1,excludedChanged:1,excludedMissing:1});
+  expect(previewReviewWorksheet(result.csv,now)).toMatchObject({matched:1,changed:0,missing:0});
+  expect(previewReviewWorksheet(result.csv,now).rows.map(x=>x.id)).toEqual(['rq-w4']);
+  expect(result.csv).not.toContain('"rq-h1"');
+  expect(changed.every(x=>x.status==='draft'&&!x.review)).toBe(true);
+ });
+ it('rejects forged review route, duplicate CSV ID and malformed file without approval',()=>{
+  const q=trialDraftItems().find(x=>x.id==='rq-w4')!,tasks=contentReviewTasks([q]);
+  const csv=note(exportReviewWorksheet(tasks),q.id);
+  const modified=previewReviewWorksheet(csv.replace('"primary"','"lookup"'),tasks).rows[0]!;
+  expect(modified.status).toBe('changed');
+  expect(modified.changedFields).toContain('Prüfgruppe');
+  expect(worksheetSourceProposal(modified,q)).toBeNull();
+  expect(()=>refreshReviewWorksheet(csv+csv.split('\r\n')[1]+'\r\n',tasks)).toThrow();
+  expect(()=>refreshReviewWorksheet('bad,csv',tasks)).toThrow();
  });
 });

@@ -100,9 +100,10 @@ export function auditLibrary(items:readonly ContentItem[]):EditorialAudit{
   const signature=contentSignature(item);
   if(signature){
    const found=prior.get(signature);
-   if(found&&found.id!==item.id)
+   if(found&&found.id!==item.id){
     issues.push(report(item,'EXACT_DUPLICATE','blocker','Gleicher Fragenkern wie '+found.id,found.id));
-   else prior.set(signature,item);
+    issues.push(report(found,'EXACT_DUPLICATE','blocker','Gleicher Fragenkern wie '+item.id,item.id));
+   }else prior.set(signature,item);
   }
   if(text&&text.length>=30)prompts.push(item);
  }
@@ -123,9 +124,12 @@ export function auditLibrary(items:readonly ContentItem[]):EditorialAudit{
   const bucket=buckets.get(key)??[];
   for(const previous of bucket){
    if(contentSignature(previous)===contentSignature(item))continue;
-   if(similar(prompt(item),prompt(previous)))
+   if(similar(prompt(item),prompt(previous))){
     issues.push(report(item,'POSSIBLE_DUPLICATE','review',
      'Ähnliche Fragestellung zu '+previous.id+' – Redaktion entscheidet',previous.id));
+    issues.push(report(previous,'POSSIBLE_DUPLICATE','review',
+     'Ähnliche Fragestellung zu '+item.id+' – Redaktion entscheidet',item.id));
+   }
   }
   if(bucket.length<100)bucket.push(item);
   buckets.set(key,bucket);

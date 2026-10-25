@@ -8,7 +8,7 @@ import {EditorialAuditPanel} from './EditorialAuditPanel';
 import {StructuredQuestionEditor} from './StructuredQuestionEditor';
 import {trialDraftBundle} from '../../content/trial-draft-bundle';
 import {contentReviewTasks,historicalTrialCorrection,draftSourceCitation,type ReviewRoute} from '../../content/editorial-source-review';
-import {exportReviewWorksheet,previewReviewWorksheet,worksheetSourceProposal,worksheetAnswerProposal,worksheetWordingProposal,worksheetDetailProposal} from '../../content/editorial-worklist';
+import {exportReviewWorksheet,previewReviewWorksheet,worksheetSourceProposal,worksheetAnswerProposal,worksheetWordingProposal,worksheetDetailProposal,refreshReviewWorksheet} from '../../content/editorial-worklist';
 
 
 const LABELS:Record<GameType,string>={
@@ -355,6 +355,10 @@ export function ContentStudio(){
     {reviewerNotes&&<>
      <div className="cx-worksheet-summary">
       <strong>{reviewerNotes.matched} zugeordnet · {reviewerNotes.changed} veraltet · {reviewerNotes.missing} fehlen</strong>
+      <button type="button" className="exp-secondary" disabled={busy||reviewerNotes.matched===0}
+       onClick={()=>saveFile('ligoquiz-redaktionspruefliste-aktuell.csv',
+        refreshReviewWorksheet(reviewCsv,sourceTasks).csv,'text/csv;charset=utf-8')}>
+       Nur aktuelle Prüfliste neu exportieren</button>
       <button type="button" className="exp-secondary"
        onClick={()=>{setReviewCsv('');setReviewCsvError('');}}>Prüfnotizen schließen</button>
      </div>

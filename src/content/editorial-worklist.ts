@@ -67,6 +67,7 @@ export function exportReviewWorksheet(tasks:readonly SourceReviewTask[]):string{
 
 export type ImportedReviewNote={
  id:string;status:'current'|'changed'|'missing';reason:string;
+ changedFields:readonly string[];
  notes:readonly {heading:string;text:string}[];
 };
 export type ReviewWorksheetPreview={
@@ -131,16 +132,18 @@ export function previewReviewWorksheet(source:string,tasks:readonly SourceReview
   }).filter(note=>note.text!=='');
   if(!notes.length)continue;
   const current=index.get(id);
-  const identityFields=[0,1,2,4,5,6,7,11,12,13];
+  // Original full source context includes source route, research guidance,
+  // G23 warnings and related IDs, not just the question and answer.
+  const changedFields=current?HEADER.slice(0,14).filter((_,col)=>row[col]!==current[col]):[];
   const status:ImportedReviewNote['status']=!current?'missing':
-   identityFields.every(col=>row[col]===current[col])?'current':'changed';
+   changedFields.length===0?'current':'changed';
   if(status==='current')matched++;
   else if(status==='changed')changed++;
   else missing++;
-  annotated.push({id,status,
-   reason:status==='current'?'Inhalt und Quellenstand stimmen überein':
+  annotated.push({id,status,changedFields,
+   reason:status==='current'?'Inhalt und Prüfkontext stimmen überein':
     status==='missing'?'Aufgabe ist nicht mehr in der lokalen Bibliothek':
-     'Frage, Antwort, Beleg, Rechte oder Herkunft haben sich geändert',
+     'Geänderter Prüfstand: '+changedFields.join(', '),
    notes});
  }
  return {matched,changed,missing,rows:annotated};
@@ -306,4 +309,21 @@ export function worksheetDetailProposal(note:ImportedReviewNote,item:ContentItem
  }
  if(validatePayload(item.game,payload).length)return null;
  return {changes,reference,payload};
+}
+
+/** Re-export only still-current original reviewer notes. Old changed/missing
+ * notes remain in the original uploaded CSV, never silently re-anchored. */
+export function refreshReviewWorksheet(source:string,tasks:readonly SourceReviewTask[]):{
+ csv:string;carried:number;excludedChanged:number;excludedMissing:number;
+}{
+ const review=previewReviewWorksheet(source,tasks);
+ const previous=parseWorksheetCsv(source);
+ const original=new Map(previous.slice(1).map(row=>[row[0]!,row]));
+ const currentIds=new Set(review.rows.filter(x=>x.status==='current').map(x=>x.id));
+ const rows=parseWorksheetCsv(exportReviewWorksheet(tasks));
+ const csv='\uFEFF'+rows.map((row,i)=>{
+  const notes=i>0&&currentIds.has(row[0]!)?original.get(row[0]!)?.slice(14):null;
+  return [...row.slice(0,14),...(notes??['','','','',''])].map(worksheetCell).join(',');
+ }).join('\r\n')+'\r\n';
+ return {csv,carried:currentIds.size,excludedChanged:review.changed,excludedMissing:review.missing};
 }
