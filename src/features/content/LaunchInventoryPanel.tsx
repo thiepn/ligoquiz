@@ -421,7 +421,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
        const item=items.find(i=>i.id===selectedIssue.sourceId);
        if(item)onChoose(item);
       }}>Originalquelle in G10 korrigieren</button>}
-     <div className="g35-source-options" aria-label="G35 Alternative Originalquellen">
+     <section className="g35-source-options" aria-label="G35 Alternative Originalquellen">
       {candidateChoices.length===0?<p>Keine kompatible Alternative im Originalbestand.</p>:
        candidateChoices.map(option=><div key={option.sourceId}>
         <strong>{option.sourceId}</strong>
@@ -434,7 +434,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
          {option.sourceId} als Entwurf wählen
         </button>
        </div>)}
-     </div>
+     </section>
     </div>
    </div>}
    {resolutionMessage&&<p role="status">{resolutionMessage}</p>}
