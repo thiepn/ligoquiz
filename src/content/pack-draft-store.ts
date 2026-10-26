@@ -211,7 +211,6 @@ export async function previewSelectiveRecovery(saved:SavedPreparation,
  items:readonly ContentItem[]):Promise<RecoveryProposal>{
  const old=assertSavedPreparation(saved);
  const byId=new Map(items.map(i=>[i.id,i]));
- const stamps=new Map(old.sources.map(s=>[s.id,s]));
  const validated=new Map<string,boolean>();
  for(const stamp of old.sources){
   const item=byId.get(stamp.id);
