@@ -75,10 +75,10 @@ describe('G35 native original-source slot completion and moderator continuity',(
  it('retains exact rehearsal phase index without issuing host or stage commands',()=>{
   const changed=originalSlotCandidates(bank,'rundenquiz','kurz',3,start,'wissen:1')[0]!;
   const newChoices=selectOriginalSlot(bank,'rundenquiz','kurz',3,start,changed);
-  expect(rehearsalIndexForSlot(bank,'rundenquiz','kurz',3,newChoices??undefined,'wissen:1')).toBe(0);
-  expect(rehearsalIndexForSlot(bank,'rundenquiz','kurz',3,newChoices??undefined,'wissen:2')).toBe(5);
-  expect(rehearsalIndexForSlot(bank,'rundenquiz','kurz',3,newChoices??undefined,'missing-slot')).toBeNull();
-  expect(rehearsalIndexForSlot(bank,'quiztafel','kurz',3,newChoices??undefined,'category:1')).toBeNull();
+  expect(rehearsalIndexForSlot(bank,'rundenquiz','kurz',3,newChoices??{},'wissen:1')).toBe(0);
+  expect(rehearsalIndexForSlot(bank,'rundenquiz','kurz',3,newChoices??{},'wissen:2')).toBe(5);
+  expect(rehearsalIndexForSlot(bank,'rundenquiz','kurz',3,newChoices??{},'missing-slot')).toBeNull();
+  expect(rehearsalIndexForSlot(bank,'quiztafel','kurz',3,newChoices??{},'category:1')).toBeNull();
  });
  it('checks original category dependency and does not resurrect invalid Quiztafel row',()=>{
   const previous=composeContentPack(bank,'quiztafel','lang',5);
