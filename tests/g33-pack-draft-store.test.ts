@@ -1,7 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {IDBFactory} from 'fake-indexeddb';
 import {trialDraftItems} from '../src/content/trial-draft-bundle';
-import {PreparationRepository,PreparationError,assertSavedPreparation,prepareSavedDraft,reconcileSavedDraft
+import {PreparationRepository,PreparationError,assertSavedPreparation,prepareSavedDraft,reconcileSavedDraft,previewSelectiveRecovery,commitSelectiveRecovery
 } from '../src/content/pack-draft-store';
 import {GAME_TYPES} from '../src/domain/game/contracts';
 import type {ContentItem} from '../src/content/contracts';
@@ -99,5 +99,110 @@ describe('G33 original local source-only game-night draft and CAS',()=>{
   expect((await repo.read())?.revision).toBe(1);
   expect(JSON.stringify(originals)).toBe(original);
   await repo.close();
+ });
+});
+
+describe('G34 surgical recovery of original source-only five-game packs',()=>{
+ const original=trialDraftItems();
+ const input={game:'quiztafel' as const,profile:'lang' as const,
+  teams:5 as const,step:3,selections:{}};
+ const modify=(id:string,change:(item:ContentItem)=>ContentItem)=>
+  original.map(i=>i.id===id?change(i):i);
+ it('retains every independent original assignment, clears only changed source and persists as new CAS revision',async()=>{
+  const storage=new IDBFactory(),repo=new PreparationRepository(storage,'g34-surgical');
+  const saved=await prepareSavedDraft(original,input,1);await repo.save(saved,null);
+  const target=saved.assignments.find(x=>x.game==='rundenquiz'&&x.slot==='wissen:1')!;
+  expect(target.id).toBeTruthy();
+  const changed=modify(target.id!,item=>({...item,revision:item.revision+1,
+   payload:{...item.payload as object,prompt:'Neue redaktionelle Frage, nicht geprüft'}}));
+  expect((await reconcileSavedDraft(saved,changed)).status).toBe('stale');
+  const preview=await previewSelectiveRecovery(saved,changed);
+  expect(preview.canCommit).toBe(true);
+  expect(preview.selections.rundenquiz['wissen:1']).toBe('');
+  expect(preview.cleared).toEqual([
+   {game:'rundenquiz',slot:'wissen:1',sourceId:target.id,reason:'changed'},
+  ]);
+  const another=saved.assignments.find(s=>s.game==='quiztafel'&&s.slot==='tile:2:3')!;
+  expect(preview.selections.quiztafel['tile:2:3']).toBe(another.id);
+  expect(preview.retained).toBe(saved.assignments.filter(x=>x.id!==null).length-1);
+  const recovered=await commitSelectiveRecovery(repo,saved,changed,preview);
+  expect(recovered.revision).toBe(2);
+  expect(recovered.selections.rundenquiz['wissen:1']).toBe('');
+  expect((await reconcileSavedDraft(recovered,changed)).status).toBe('ready');
+  expect(recovered.release).toBe('NO_GO');
+  const restored=(await repo.read())!;
+  expect(restored).toEqual(recovered);await repo.close();
+ });
+ it('fails closed for rights/status changes, missing source and unchanged draft',async()=>{
+  const saved=await prepareSavedDraft(original,input,1);
+  const fresh=await previewSelectiveRecovery(saved,original);
+  expect(fresh.canCommit).toBe(false);expect(fresh.cleared).toEqual([]);
+  const id=saved.assignments.find(s=>s.game==='verbindungen'&&s.id)!.id!;
+  const missing=await previewSelectiveRecovery(saved,original.filter(x=>x.id!==id));
+  expect(missing.cleared.some(x=>x.sourceId===id&&x.reason==='missing')).toBe(true);
+  const rights=modify(id,item=>({...item,provenance:{...item.provenance,rights:'Neuer Rechtevorbehalt'}}));
+  expect((await previewSelectiveRecovery(saved,rights)).cleared.some(x=>x.sourceId===id)).toBe(true);
+  const review=modify(id,item=>({...item,status:'review'}));
+  expect((await previewSelectiveRecovery(saved,review)).cleared.some(x=>x.sourceId===id)).toBe(true);
+  const repo=new PreparationRepository(new IDBFactory(),'g34-unchanged');
+  await repo.save(saved,null);
+  await expect(commitSelectiveRecovery(repo,saved,original,fresh))
+   .rejects.toMatchObject({code:'STALE'});
+  await repo.close();
+ });
+ it('clearing a Quiztafel category also clears dependent rows without modifying other teams',async()=>{
+  const saved=await prepareSavedDraft(original,input,1);
+  const cat=saved.assignments.find(x=>x.game==='quiztafel'&&x.slot==='category:1')!;
+  const changed=original.filter(x=>x.id!==cat.id);
+  const proposal=await previewSelectiveRecovery(saved,changed);
+  expect(proposal.selections.quiztafel['category:1']).toBe('');
+  for(let row=1;row<=6;row++){
+   expect(proposal.selections.quiztafel['tile:1:'+row]).toBe('');
+  }
+  expect(proposal.selections.quiztafel['tile:2:1'])
+   .toBe(saved.assignments.find(s=>s.game==='quiztafel'&&s.slot==='tile:2:1')!.id);
+  expect(proposal.cleared.some(g=>g.slot==='category:1')).toBe(true);
+  expect(proposal.status).toBe('NO_GO');
+ });
+ it('rejects forged approval/selection proposal and changes made after preview',async()=>{
+  const repo=new PreparationRepository(new IDBFactory(),'g34-forged');
+  const saved=await prepareSavedDraft(original,input,1);await repo.save(saved,null);
+  const id=saved.assignments.find(x=>x.game==='rundenquiz'&&x.id)!.id!;
+  const changed=modify(id,item=>({...item,revision:item.revision+1}));
+  const p=await previewSelectiveRecovery(saved,changed);
+  const forged={...p,selections:{...p.selections,rundenquiz:{
+   ...p.selections.rundenquiz,'wissen:1':id}}};
+  await expect(commitSelectiveRecovery(repo,saved,changed,forged)).rejects.toMatchObject({code:'STALE'});
+  const changedAgain=modify(id,item=>({...item,revision:item.revision+2}));
+  // Same cleared slot, but an unrelated previously-valid slot changes as well.
+  const other=p.selections.logikleiter['rung:1']!;
+  const two=changedAgain.map(item=>item.id===other?{...item,revision:item.revision+1}:item);
+  await expect(commitSelectiveRecovery(repo,saved,two,p)).rejects.toMatchObject({code:'STALE'});
+  expect((await repo.read())?.revision).toBe(1);
+  await repo.close();
+ });
+ it('two-tab recovery cannot overwrite a concurrent newer revision',async()=>{
+  const storage=new IDBFactory(),a=new PreparationRepository(storage,'g34-race'),
+   b=new PreparationRepository(storage,'g34-race');
+  const saved=await prepareSavedDraft(original,input,1);await a.save(saved,null);
+  const id=saved.assignments.find(x=>x.game==='rundenquiz'&&x.id)!.id!;
+  const changed=modify(id,item=>({...item,revision:item.revision+1}));
+  const preview=await previewSelectiveRecovery(saved,changed);
+  await a.save(await prepareSavedDraft(original,{...input,step:5},2),1);
+  await expect(commitSelectiveRecovery(b,saved,changed,preview))
+   .rejects.toMatchObject({code:'CONFLICT'});
+  expect((await b.read())?.step).toBe(5);
+  await a.close();await b.close();
+ });
+ it('new unrelated original source must not silently change retained source ID',async()=>{
+  const saved=await prepareSavedDraft(original,input,1);
+  const related=original[0]!;
+  const added:ContentItem={...related,id:'000-earlier-source',
+   payload:{...related.payload as object,id:'000-earlier-source'}};
+  const recovery=await previewSelectiveRecovery(saved,[...original,added]);
+  expect(recovery.retained).toBe(saved.assignments.filter(x=>x.id!==null).length);
+  expect(recovery.selections.rundenquiz['wissen:1'])
+   .toBe(saved.assignments.find(x=>x.game==='rundenquiz'&&x.slot==='wissen:1')!.id);
+  expect(recovery.cleared).toEqual([]);
  });
 });
