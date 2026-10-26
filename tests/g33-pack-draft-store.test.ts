@@ -69,7 +69,7 @@ describe('G33 original local source-only game-night draft and CAS',()=>{
   const changed=originals.map(item=>item.id===id?{...item,status:'review' as const}:item);
   expect((await reconcileSavedDraft(saved,changed)).status).toBe('stale');
   expect((await reconcileSavedDraft(saved,originals.filter(x=>x.id!==id))).status).toBe('stale');
-  const unrelated:ContentItem={...originals[0]!,id:'g33-unrelated',payload:{...originals[0]!.payload as object,id:'g33-unrelated'}};
+  const unrelated:ContentItem={...originals[0]!,id:'zz-g33-unrelated',payload:{...originals[0]!.payload as object,id:'zz-g33-unrelated'}};
   expect((await reconcileSavedDraft(saved,[...originals,unrelated])).status).toBe('ready');
  });
  it('blocks malformed, forged and oversized stored plan snapshots',async()=>{
