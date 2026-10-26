@@ -6,6 +6,8 @@ import {composeContentPack,exportPreparationPlan,prepareFiveGameEvening} from '.
 import {buildEditorialRehearsal,projectedRehearsalFrame} from '../../content/game-night-rehearsal';
 import {gameNightRunSheet,sourceRepairChoices,applySourceRepair,prioritizedReviewSlots
 } from '../../content/game-night-repairs';
+import {buildEveningCueSheet,currentEveningCue,moveEveningCue,
+ nextUnresolvedCue,type EveningCue} from '../../content/evening-rehearsal-queue';
 import {fiveGameReadiness,originalSlotCandidates,selectOriginalSlot,
  rehearsalIndexForSlot} from '../../content/original-slot-resolution';
 import {PreparationRepository,prepareSavedDraft,reconcileSavedDraft,
@@ -214,6 +216,13 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
    setResolutionMessage(sourceId+' als lokaler Entwurf gewählt. Zum Behalten Abendplan speichern.');
   }catch(e){setResolutionMessage(e instanceof Error?e.message:'Quellenwahl fehlgeschlagen');}
   finally{setResolving(false);}
+ }
+ const cueSheet=useMemo(()=>buildEveningCueSheet(items,profile,teams,eveningOverrides),
+  [items,profile,teams,eveningOverrides]);
+ const cue=currentEveningCue(cueSheet,game,stepIndex);
+ function openEveningCue(next:EveningCue|null){
+  if(!next)return;
+  setGame(next.game);setStepIndex(next.localIndex);
  }
  const runSheet=useMemo(()=>gameNightRunSheet(items,profile,teams,eveningOverrides),
   [items,profile,teams,eveningOverrides]);
@@ -438,6 +447,55 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
     </div>
    </div>}
    {resolutionMessage&&<p role="status">{resolutionMessage}</p>}
+  </section>
+  <section className="g36-evening-rehearsal" aria-label="G36 Fünf-Spiele-Moderationslauf">
+   <div className="g28-inventory-head">
+    <h3>Moderationslauf · fünf Spiele</h3>
+    <strong>NO_GO</strong>
+   </div>
+   <p>{cueSheet.cues.length} Moderationsphasen · {cueSheet.missingSourceSlots}
+    {' '}fehlende Quellenplätze · {cueSheet.unresolvedSlots} redaktionell zu prüfen</p>
+   <div className="g36-queue-controls">
+    <button type="button" className="exp-secondary" disabled={!cueSheet.cues.length}
+     onClick={()=>openEveningCue(moveEveningCue(cueSheet,game,stepIndex,-1))}>
+     Vorherige Phase
+    </button>
+    <button type="button" className="exp-secondary" disabled={!cueSheet.cues.length}
+     onClick={()=>openEveningCue(moveEveningCue(cueSheet,game,stepIndex,1))}>
+     Nächste Phase
+    </button>
+    <button type="button" className="exp-secondary"
+     disabled={!cueSheet.cues.some(x=>x.needsReview)}
+     onClick={()=>openEveningCue(nextUnresolvedCue(cueSheet,game,stepIndex))}>
+     Nächste Quelle prüfen
+    </button>
+   </div>
+   <div className="g36-cue">
+    <div aria-live="polite">
+     {cue?<><strong>{cue.index+1} / {cueSheet.cues.length} · {labels[cue.game]}</strong>
+      <p>{cue.label} · {cue.phase}</p>
+      {cue.teamNumber&&<p>Team {cue.teamNumber}</p>}
+      <p>Quelle: {cue.sourceId??'Nicht besetzt'}
+       {cue.sourceRevision!==null?' · Revision '+cue.sourceRevision:''}</p>
+      {cue.needsReview&&<strong>Quelle redaktionell offen</strong>}
+      {cue.sourceId&&<button type="button" className="exp-secondary"
+       onClick={()=>{const found=items.find(x=>x.id===cue.sourceId);if(found)onChoose(found);}}>
+       Originalquelle in G10 öffnen
+      </button>}
+     </>:<p>Keine Moderationsphase vorhanden.</p>}
+    </div>
+    <div aria-label="G36 Öffentliche Phasenvorschau">
+     <strong>Beamer-Vorschau</strong>
+     <p>{cue?.stage??'Keine Aufgabe'}</p>
+    </div>
+   </div>
+   <div className="g36-roster">
+    {cueSheet.teamTurns.map(t=><div key={t.game}>
+     <strong>{labels[t.game]}</strong>
+     <span>{t.count.map((n,i)=>'Team '+(i+1)+': '+n).join(' · ')}</span>
+     <span>{t.balanced?'Gleich verteilt':'Unterschiedliche Teamaufgaben'}</span>
+    </div>)}
+   </div>
   </section>
   <section className="g30-pack-plan" aria-label="G30 Original-Packplanung">
    <div className="g28-inventory-head">

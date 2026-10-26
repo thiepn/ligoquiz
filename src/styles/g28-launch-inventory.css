@@ -86,3 +86,14 @@
 .g35-source-options>div{display:flex;flex-direction:column;align-items:stretch;gap:.4rem;border:1px solid var(--border,#68717b);padding:.65rem}
 .g35-source-options span{overflow-wrap:anywhere}
 @media(max-width:660px){.g35-issue-resolver{grid-template-columns:1fr}}
+
+.g36-evening-rehearsal{border-top:1px solid var(--border,#68717b);padding:1rem 0}
+.g36-evening-rehearsal h3{margin:0;font-size:1.1rem}
+.g36-queue-controls{display:flex;flex-wrap:wrap;gap:.5rem;margin:.8rem 0}
+.g36-queue-controls button{min-height:44px}
+.g36-cue{display:grid;grid-template-columns:2fr 1fr;gap:.7rem}
+.g36-cue>div{border:1px solid var(--border,#68717b);padding:.7rem;min-width:0}
+.g36-cue p{margin:.35rem 0}
+.g36-roster{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.5rem;margin:.8rem 0}
+.g36-roster>div{display:flex;flex-direction:column;gap:.3rem;padding:.55rem;border:1px solid var(--border,#68717b)}
+@media(max-width:660px){.g36-cue{grid-template-columns:1fr}}

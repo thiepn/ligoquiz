@@ -67,7 +67,7 @@ export function nextUnresolvedCue(sheet:EveningCueSheet,game:GameType,
   const cue=sheet.cues[(idx+offset)%sheet.cues.length]!;
   // Go to the first step of a distinct unresolved slot, not repeatedly cycle
   // through four to five phases of the same question.
-  if(cue.needsReview&&cue.phase==='ready')return cue;
+  if(cue.needsReview&&(cue.phase==='ready'||cue.phase==='prepared'))return cue;
  }
  return null;
 }
