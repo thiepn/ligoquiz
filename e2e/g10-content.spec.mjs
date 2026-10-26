@@ -705,3 +705,37 @@ test('G34 recover unchanged five-game assignments but clear only revised questio
  await expect(plan.getByRole('combobox',{name:'G30 wissen 2'})).toHaveValue(q2);
  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
 });
+
+test('G35 editor completes original empty Rundenquiz slot with source validation and saved local rehearsal',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ await page.getByRole('combobox',{name:'G28 Profil'}).selectOption('kurz');
+ await page.getByRole('combobox',{name:'G28 Teams'}).selectOption('3');
+ const plan=page.getByRole('region',{name:'G30 Original-Packplanung'});
+ await plan.getByText(/Aufgabenplätze und Originalquellen wählen/).click();
+ await plan.getByRole('combobox',{name:'G30 wissen 1'}).selectOption('');
+ const five=page.getByRole('region',{name:'G35 Fünf-Spiele-Quellenwahl'});
+ const selector=five.getByRole('combobox',{name:'G35 Quellenplatz'});
+ await selector.selectOption('rundenquiz/wissen:1');
+ const choices=five.getByRole('region',{name:'G35 Alternative Originalquellen'});
+ const option=choices.getByRole('button',{name:/als Entwurf wählen/}).first();
+ await expect(option).toBeEnabled();
+ const label=await option.textContent();
+ const id=label?.trim().split(' ')[0];
+ expect(id).toMatch(/^rq-/);
+ await option.click();
+ await expect(plan.getByRole('combobox',{name:'G30 wissen 1'})).toHaveValue(id);
+ const rehearsal=page.getByRole('region',{name:'G31 Moderationsprobe'});
+ await expect(rehearsal).toContainText('Schritt 1 /');
+ const saved=page.getByRole('region',{name:'G33 Lokaler Abendplan'});
+ await saved.getByRole('button',{name:'Abendplan lokal speichern'}).click();
+ await expect(saved).toContainText('Revision 1');
+ await page.reload();
+ await expect(saved).toContainText('Revision 1');
+ await plan.getByText(/Aufgabenplätze und Originalquellen wählen/).click();
+ await expect(plan.getByRole('combobox',{name:'G30 wissen 1'})).toHaveValue(id);
+ await expect(five).toContainText('NO_GO');
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+});
