@@ -618,7 +618,7 @@ test('G33 durable original five-game source choices and moderator step recover a
   options.map(x=>x.value).filter(Boolean));
  const other=alternatives.find(x=>x!==initial);
  expect(other).toBeTruthy();
- await source.selectOption(other!);
+ await source.selectOption(other);
  const rehearsal=page.getByRole('region',{name:'G31 Moderationsprobe'});
  await rehearsal.getByRole('button',{name:'Nächster Schritt'}).click();
  await rehearsal.getByRole('button',{name:'Nächster Schritt'}).click();
@@ -632,7 +632,7 @@ test('G33 durable original five-game source choices and moderator step recover a
  await expect(page.getByRole('combobox',{name:'G28 Teams'})).toHaveValue('3');
  await expect(rehearsal).toContainText('Schritt 3 /');
  await plan.getByText(/Aufgabenplätze und Originalquellen wählen/).click();
- await expect(source).toHaveValue(other!);
+ await expect(source).toHaveValue(other);
  await expect(saved).toContainText('Revision 1');
  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
  await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
