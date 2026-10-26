@@ -159,9 +159,10 @@ export function exportPreparationPlan(plan:PreparationPlan):string{
 }
 /** Selected ids from separate games get an actual cross-game spoiler check. */
 export function prepareFiveGameEvening(items:readonly ContentItem[],profile:GameProfile,
- teams:3|4|5):{plans:PreparationPlan[];spoilers:PreparationProblem[];release:'NO_GO'}{
+ teams:3|4|5,overrides:Partial<Record<GameType,Override>>={}):{
+ plans:PreparationPlan[];spoilers:PreparationProblem[];release:'NO_GO'}{
  const names=['rundenquiz','quiztafel','verbindungen','logikleiter','umfrageduell'] as const;
- const plans=names.map(game=>composeContentPack(items,game,profile,teams));
+ const plans=names.map(game=>composeContentPack(items,game,profile,teams,overrides[game]??{}));
  const allIds=new Set(plans.flatMap(x=>x.selectedIds));
  const spoilers=auditLibrary(items).issues.filter(issue=>
   issue.code==='CROSS_GAME_CLUE_REUSE'&&issue.other&&allIds.has(issue.id)&&allIds.has(issue.other))
