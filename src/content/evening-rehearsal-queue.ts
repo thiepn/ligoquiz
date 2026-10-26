@@ -1,6 +1,6 @@
 import type {ContentItem} from './contracts';
 import {GAME_TYPES,type GameType,type GameProfile} from '../domain/game/contracts';
-import {composeContentPack,type PreparationProblem} from './pack-preparation';
+import type {PreparationProblem} from './pack-preparation';
 import {prepareFiveGameEvening} from './pack-preparation';
 import {buildEditorialRehearsal,projectedRehearsalFrame} from './game-night-rehearsal';
 import {fiveGameReadiness} from './original-slot-resolution';
