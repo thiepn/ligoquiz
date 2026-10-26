@@ -168,3 +168,32 @@ test('G35 offline editor fills one original source slot and retains approved-aut
   await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
  }finally{await context.setOffline(false);}
 });
+
+test('G36 installed offline original moderator cue changes games and restores stage-safe phase',async({page,context})=>{
+ await page.goto('/#/technik');
+ await page.evaluate(()=>globalThis.navigator.serviceWorker.ready);
+ await page.reload();
+ await expect.poll(()=>page.evaluate(()=>Boolean(globalThis.navigator.serviceWorker.controller))).toBe(true);
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ await page.getByRole('combobox',{name:'G28 Profil'}).selectOption('kurz');
+ await page.getByRole('combobox',{name:'G28 Teams'}).selectOption('3');
+ const queue=page.getByRole('region',{name:'G36 Fünf-Spiele-Moderationslauf'});
+ await context.setOffline(true);
+ try{
+  await queue.getByRole('button',{name:'Vorherige Phase'}).click();
+  await expect(page.getByRole('combobox',{name:'G28 Spiel'})).toHaveValue('umfrageduell');
+  await expect(queue).toContainText('Beamer-Vorschau');
+  const saved=page.getByRole('region',{name:'G33 Lokaler Abendplan'});
+  await saved.getByRole('button',{name:'Abendplan lokal speichern'}).click();
+  await expect(saved).toContainText('Revision 1');
+  await page.reload();
+  await expect(saved).toContainText('Revision 1');
+  await expect(page.getByRole('combobox',{name:'G28 Spiel'})).toHaveValue('umfrageduell');
+  await expect(queue).toContainText('NO_GO');
+  await expect(queue.getByLabel('G36 Öffentliche Phasenvorschau')).not.toContainText('Josua');
+  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+ }finally{await context.setOffline(false);}
+});

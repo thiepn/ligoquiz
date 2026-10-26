@@ -739,3 +739,34 @@ test('G35 editor completes original empty Rundenquiz slot with source validation
  await expect(five).toContainText('NO_GO');
  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
 });
+
+test('G36 original five-game cue desk traverses boundaries, reviews source and restores local saved phase',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ await page.getByRole('combobox',{name:'G28 Profil'}).selectOption('kurz');
+ await page.getByRole('combobox',{name:'G28 Teams'}).selectOption('3');
+ const queue=page.getByRole('region',{name:'G36 Fünf-Spiele-Moderationslauf'});
+ await expect(queue).toContainText('NO_GO');
+ await expect(queue).toContainText('Team 3:');
+ await expect(queue).toContainText('1 / ');
+ const stage=queue.getByLabel('G36 Öffentliche Phasenvorschau');
+ await expect(stage).toContainText('Warteschirm');
+ await expect(stage).not.toContainText('Josua');
+ await queue.getByRole('button',{name:'Nächste Phase'}).click();
+ await expect(queue).toContainText('2 / ');
+ await expect(stage).toContainText('Aufgabe läuft');
+ await queue.getByRole('button',{name:'Nächste Quelle prüfen'}).click();
+ await expect(queue).toContainText('Quelle redaktionell offen');
+ await queue.getByRole('button',{name:'Originalquelle in G10 öffnen'}).click();
+ await expect(page.getByRole('region',{name:'Aufgabe bearbeiten'})).toBeVisible();
+ const saved=page.getByRole('region',{name:'G33 Lokaler Abendplan'});
+ await saved.getByRole('button',{name:'Abendplan lokal speichern'}).click();
+ await expect(saved).toContainText('Revision 1');
+ const before=await queue.locator('.g36-cue>div').first().textContent();
+ await page.reload();
+ await expect(saved).toContainText('Revision 1');
+ await expect(queue.locator('.g36-cue>div').first()).toContainText(before?.split(' · ')[0]??'');
+ await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
+});
