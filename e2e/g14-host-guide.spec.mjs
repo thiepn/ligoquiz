@@ -20,7 +20,9 @@ for(const game of games){
   await expect(panel).toBeVisible();
   await expect(panel).toContainText('Wertung offen');
   await expect(panel.locator('.g14-connect strong')).toHaveText('0');
-  await expect(panel.locator('.g14-connect span')).toHaveText('Beamerfenster bestätigt');
+  await expect(panel.locator('.g14-connect')).toHaveAttribute('role','status');
+  await expect(panel.locator('.g14-connect')).toHaveAttribute('aria-live','polite');
+  await expect(panel.locator('.g14-connect span')).toHaveText('Kein Beamerfenster bestätigt');
   const primary=host.getByRole('button',{name:game.start});
   await expect(primary).toBeEnabled();
   await page.keyboard.press('Alt+Shift+N');
@@ -39,3 +41,22 @@ for(const game of games){
   await expect(host.getByRole('button',{name:/Nächste Aktion fokussieren/})).toBeVisible();
  });
 }
+
+test('G32 original host announces genuine connected projector and never assumes viewer from launch link',async({page})=>{
+ await page.goto('/#/setup');
+ await page.getByRole('button',{name:'Weiter'}).click();
+ await page.getByRole('button',{name:'Weiter'}).click();
+ await page.getByRole('checkbox').check();
+ await page.getByRole('button',{name:'Spielleitung öffnen'}).click();
+ const host=page.locator('.rq-host');
+ const indicator=host.getByRole('region',{name:'Moderationsübersicht'}).getByRole('status');
+ await expect(indicator).toContainText('Kein Beamerfenster bestätigt');
+ const link=await host.getByRole('link',{name:/Beamer öffnen/}).getAttribute('href');
+ expect(link).toMatch(/^#\/stage\?event=[\w-]+$/);
+ const stage=await page.context().newPage();
+ await stage.goto('http://127.0.0.1:4178/'+link);
+ await expect(indicator.locator('strong')).toHaveText('1',{timeout:12000});
+ await expect(indicator.locator('span')).toHaveText('Beamerfenster bestätigt');
+ await expect(host.getByRole('button',{name:'Teams bestätigen'})).toBeEnabled();
+ await stage.close();
+});
