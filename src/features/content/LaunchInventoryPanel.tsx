@@ -1,4 +1,4 @@
-import {useMemo,useState} from 'react';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import {GAME_TYPES,type GameType,type GameProfile} from '../../domain/game/contracts';
 import type {ContentItem} from '../../content/contracts';
 import {launchContentInventory} from '../../content/launch-inventory';
@@ -6,6 +6,8 @@ import {composeContentPack,exportPreparationPlan,prepareFiveGameEvening} from '.
 import {buildEditorialRehearsal,projectedRehearsalFrame} from '../../content/game-night-rehearsal';
 import {gameNightRunSheet,sourceRepairChoices,applySourceRepair,prioritizedReviewSlots
 } from '../../content/game-night-repairs';
+import {PreparationRepository,prepareSavedDraft,reconcileSavedDraft,
+ type SavedPreparation} from '../../content/pack-draft-store';
 import '../../styles/g28-launch-inventory.css';
 
 const labels:Record<GameType,string>={
@@ -13,10 +15,19 @@ const labels:Record<GameType,string>={
  logikleiter:'Logikleiter',umfrageduell:'Umfrageduell',
 };
 /** Local original-source content planning only; all G10 and G26 authorities untouched. */
-export function LaunchInventoryPanel({items,onChoose}:{
+export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
  items:readonly ContentItem[];onChoose:(item:ContentItem)=>void;
+ loaded:boolean;latestItems:()=>Promise<ContentItem[]>;
 }){
  const inventory=useMemo(()=>launchContentInventory(items),[items]);
+ const [draftRepo]=useState(()=>new PreparationRepository());
+ const hasHydrated=useRef(false);
+ const [saved,setSaved]=useState<SavedPreparation|null>(null);
+ const [saveState,setSaveState]=useState<'loading'|'empty'|'ready'|'stale'|'error'>('loading');
+ const [saveIssues,setSaveIssues]=useState<string[]>([]);
+ const [saving,setSaving]=useState(false);
+ const [saveMessage,setSaveMessage]=useState('');
+ useEffect(()=>()=>{void draftRepo.close();},[draftRepo]);
  const [game,setGame]=useState<GameType>('rundenquiz');
  const [profile,setProfile]=useState<GameProfile>('lang');
  const [teams,setTeams]=useState<3|4|5>(5);
@@ -33,6 +44,73 @@ export function LaunchInventoryPanel({items,onChoose}:{
   [overrides,profile,teams]);
  const evening=useMemo(()=>prepareFiveGameEvening(items,profile,teams,eveningOverrides),
   [items,profile,teams,eveningOverrides]);
+ useEffect(()=>{
+  if(!loaded)return;
+  let active=true;
+  void draftRepo.read().then(async existing=>{
+   const result=existing?await reconcileSavedDraft(existing,items):null;
+   if(!active)return;
+   setSaved(existing);
+   setSaveState(!existing?'empty':result?.status==='ready'?'ready':'stale');
+   setSaveIssues(result?.issues??[]);
+   if(!hasHydrated.current){
+    hasHydrated.current=true;
+    if(existing&&result?.status==='ready'){
+     setGame(existing.game);setProfile(existing.profile);setTeams(existing.teams);
+     setStepIndex(existing.step);
+     setOverrides(prev=>({...prev,...Object.fromEntries(GAME_TYPES.map(key=>[
+      key+'/'+existing.profile+'/'+existing.teams,
+      {...existing.selections[key]},
+     ]))}));
+    }
+   }
+  }).catch(err=>{
+   if(active){setSaveState('error');
+    setSaveMessage(err instanceof Error?err.message:'Lokaler Plan nicht lesbar');}
+  });
+  return ()=>{active=false;};
+ },[draftRepo,loaded,items]);
+ const pendingChanges=Boolean(saved&&(
+  saved.game!==game||saved.profile!==profile||saved.teams!==teams||
+  saved.step!==stepIndex||GAME_TYPES.some(k=>
+   JSON.stringify(saved.selections[k])!==JSON.stringify(eveningOverrides[k]))));
+ async function saveLocalDraft(){
+  if(saving||!loaded||saveState==='loading')return;
+  if(saveState==='stale'||saveState==='error'){
+   setSaveMessage('Veralteten oder beschädigten Plan zuerst ausdrücklich verwerfen.');return;
+  }
+  setSaving(true);setSaveMessage('');
+  try{
+   const existing=saved;
+   const currentLibrary=await latestItems();
+   if(existing){
+    const verdict=await reconcileSavedDraft(existing,currentLibrary);
+    if(verdict.status!=='ready'){
+     setSaveState('stale');setSaveIssues(verdict.issues);
+     throw Error('Quellen wurden seit der Speicherung geändert. Keine Übernahme.');
+    }
+   }
+   const record=await prepareSavedDraft(items,{game,profile,teams,step:stepIndex,
+    selections:eveningOverrides},(existing?.revision??0)+1);
+   const verdict=await reconcileSavedDraft(record,currentLibrary);
+   if(verdict.status!=='ready')throw Error('Quellen wurden in anderem Fenster verändert; zuerst neu laden.');
+   await draftRepo.save(record,existing?.revision??null);
+   setSaved(record);setSaveState('ready');setSaveIssues([]);
+   setSaveMessage('Lokaler Abendplan gespeichert · Revision '+record.revision);
+  }catch(e){setSaveMessage(e instanceof Error?e.message:'Speichern fehlgeschlagen');}
+  finally{setSaving(false);}
+ }
+ async function discardLocalDraft(){
+  if(saving||saveState==='loading')return;
+  if(!window.confirm('Nur den gespeicherten Abendplan löschen? Die Fragenbibliothek bleibt unverändert.'))return;
+  setSaving(true);setSaveMessage('');
+  try{
+   await draftRepo.clear(saved?.revision??null);
+   setSaved(null);setSaveState('empty');setSaveIssues([]);
+   setSaveMessage('Gespeicherter Abendplan verworfen. Quellen bleiben erhalten.');
+  }catch(e){setSaveMessage(e instanceof Error?e.message:'Plan konnte nicht verworfen werden');}
+  finally{setSaving(false);}
+ }
  const runSheet=useMemo(()=>gameNightRunSheet(items,profile,teams,eveningOverrides),
   [items,profile,teams,eveningOverrides]);
  const prioritized=useMemo(()=>prioritizedReviewSlots(plan,evening.spoilers),
@@ -143,6 +221,32 @@ export function LaunchInventoryPanel({items,onChoose}:{
    <p>Nur Strukturprüfung aus lokalen Quellen. Kein Beleg für editorische Freigabe,
     tatsächliche Spielauswahl, Sachrichtigkeit, Rechte oder Publikationsreife.</p>
   </div>
+  <section className="g33-persistence" aria-label="G33 Lokaler Abendplan">
+   <div className="g28-inventory-head">
+    <h3>Lokaler Abendplan</h3>
+    <strong>{saveState==='ready'?'Revision '+saved?.revision:
+     saveState==='stale'?'Quellen geändert':
+     saveState==='loading'?'Lädt':saveState==='error'?'Speicherfehler':'Nicht gespeichert'}</strong>
+   </div>
+   {pendingChanges&&saveState==='ready'&&<p>Ungespeicherte Auswahl oder Moderationsposition</p>}
+   {saveIssues.length>0&&<div role="alert">
+    {saveIssues.map((issue,i)=><p key={i}>{issue}</p>)}
+    {saveIssues.map(issue=>issue.split(':')[0]!).filter((key,i,all)=>all.indexOf(key)===i)
+     .map(key=>items.find(item=>item.id===key)).filter((x):x is ContentItem=>Boolean(x))
+     .map(item=><button type="button" className="exp-secondary" key={item.id}
+      onClick={()=>onChoose(item)}>Quelle {item.id} in G10 prüfen</button>)}
+   </div>}
+   <div className="g33-actions">
+    <button type="button" className="exp-secondary"
+     disabled={saving||!loaded||saveState==='loading'||saveState==='stale'||saveState==='error'}
+     onClick={()=>void saveLocalDraft()}>Abendplan lokal speichern</button>
+    <button type="button" className="exp-secondary"
+     disabled={saving||saveState==='loading'||(!saved&&saveState!=='error')}
+     onClick={()=>void discardLocalDraft()}>Gespeicherten Plan verwerfen</button>
+   </div>
+   {saveMessage&&<p role="status">{saveMessage}</p>}
+   <p>Nur Quellen-IDs, Revisionen und Prüfsummen lokal. Keine Freigabe und kein Spielstart.</p>
+  </section>
   <section className="g32-evening" aria-label="G32 Fünf-Spiele-Abendplan">
    <div className="g28-inventory-head"><h3>Fünf-Spiele-Abendplan</h3><strong>NO_GO</strong></div>
    <p>{runSheet.totalSteps} Moderationsschritte · {runSheet.missing} fehlende Aufgaben

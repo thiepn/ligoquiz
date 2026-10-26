@@ -60,3 +60,10 @@
 .g32-repair-choices{display:flex;flex-direction:column;align-items:stretch;gap:.45rem;
  border:1px solid var(--border,#68717b);padding:.8rem}
 @media(max-width:660px){.g32-review-grid{grid-template-columns:1fr}}
+
+.g33-persistence{border-top:1px solid var(--border,#68717b);padding:1rem 0}
+.g33-persistence h3{margin:0;font-size:1.1rem}
+.g33-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin:.7rem 0}
+.g33-persistence [role="alert"]{border:1px solid var(--border,#68717b);
+ padding:.6rem;margin:.7rem 0}
+.g33-persistence [role="alert"] p{margin:.35rem 0}

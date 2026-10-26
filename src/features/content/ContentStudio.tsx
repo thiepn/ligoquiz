@@ -47,6 +47,7 @@ function statusText(status:ContentItem['status']){return {
 export function ContentStudio(){
  const [repo]=useState(()=>new ContentRepository());
  const [items,setItems]=useState<ContentItem[]>([]);
+ const [libraryLoaded,setLibraryLoaded]=useState(false);
  const [quarantine,setQuarantine]=useState<StoredQuarantine[]>([]);
  const [receipts,setReceipts]=useState<Receipt[]>([]);
  const [current,setCurrent]=useState<ContentItem|null>(null);
@@ -68,12 +69,12 @@ export function ContentStudio(){
  const [reviewCsvError,setReviewCsvError]=useState('');
  async function refresh(){
   const [all,quarantined,imports]=await Promise.all([repo.list(),repo.quarantined(),repo.receipts()]);
-  setItems(all.sort((a,b)=>b.updatedAt-a.updatedAt));
+  setItems(all.sort((a,b)=>b.updatedAt-a.updatedAt));setLibraryLoaded(true);
   setQuarantine(quarantined);setReceipts(imports);
  }
  useEffect(()=>{let alive=true;
   void Promise.all([repo.list(),repo.quarantined(),repo.receipts()]).then(([all,q,r])=>{
-   if(alive){setItems(all.sort((a,b)=>b.updatedAt-a.updatedAt));setQuarantine(q);setReceipts(r);}
+   if(alive){setItems(all.sort((a,b)=>b.updatedAt-a.updatedAt));setQuarantine(q);setReceipts(r);setLibraryLoaded(true);}
   }).catch(e=>{if(alive)setError(formatError(e));});
   return ()=>{alive=false;void repo.close();};
  },[repo]);
@@ -345,7 +346,8 @@ export function ContentStudio(){
      <button className="exp-secondary" onClick={()=>{setPreview(null);setImportConsent(false);}}>Abbrechen</button></div>
    </section>}
   <EditorialAuditPanel items={items} preview={preview} onChoose={choose}/>
-  <LaunchInventoryPanel items={items} onChoose={selectFromPreparation}/>
+  <LaunchInventoryPanel items={items} onChoose={selectFromPreparation}
+   loaded={libraryLoaded} latestItems={()=>repo.list()}/>
   <section className="cx-source-queue" aria-label="Quellenprüfung">
    <div className="cx-catalog-top">
     <h2>Quellenprüfung</h2>
