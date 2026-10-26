@@ -5,6 +5,7 @@ import {createDraft,coverage,validatePayload,selectReviewedPack,findDuplicates,t
 import {legacyBackup,previewFile,exportLibrary,type Preview} from '../../content/migration';
 import '../../styles/content-studio.css';
 import {EditorialAuditPanel} from './EditorialAuditPanel';
+import {qualitySignals} from '../../content/editorial-quality';
 import {LaunchInventoryPanel} from './LaunchInventoryPanel';
 import {StructuredQuestionEditor} from './StructuredQuestionEditor';
 import {trialDraftBundle} from '../../content/trial-draft-bundle';
@@ -62,6 +63,7 @@ export function ContentStudio(){
  const [reviewRoute,setReviewRoute]=useState<ReviewRoute>('primary');
  const [reviewSearch,setReviewSearch]=useState('');
  const [repeatsOnly,setRepeatsOnly]=useState(false);
+ const [qualityOnly,setQualityOnly]=useState(false);
  const [reviewCsv,setReviewCsv]=useState('');
  const [reviewCsvError,setReviewCsvError]=useState('');
  async function refresh(){
@@ -93,6 +95,7 @@ export function ContentStudio(){
   const payload=x.item.payload as {prompt?:string;target?:string;answer?:string};
   return x.route===reviewRoute&&
    (!repeatsOnly||x.issues.some(issue=>issue.code==='CROSS_GAME_CLUE_REUSE'))&&
+   (!qualityOnly||qualitySignals(x.item,x.issues).length>0)&&
    (!normalizedReviewSearch||
    [x.item.id,payload.prompt??'',payload.target??'',payload.answer??'']
     .join(' ').toLocaleLowerCase('de-DE').includes(normalizedReviewSearch));
@@ -336,6 +339,8 @@ export function ContentStudio(){
       onChange={e=>setReviewSearch(e.target.value)} placeholder="Frage oder Kennung"/>
     <label><input type="checkbox" checked={repeatsOnly}
       onChange={e=>setRepeatsOnly(e.target.checked)}/>Nur wiederholte Hinweisziele</label>
+    <label><input type="checkbox" checked={qualityOnly}
+     onChange={e=>setQualityOnly(e.target.checked)}/>Nur Qualitätsrisiken</label>
     <span>{visibleSourceTasks.length} Treffer</span>
    </div>
    <div className="cx-worksheet-actions">
@@ -472,6 +477,11 @@ export function ContentStudio(){
        <li>Mehrdeutigkeiten, Antwortvarianten und Bewertung prüfen</li>
        <li>Urheberschaft und Nutzungsrecht unabhängig dokumentieren</li>
       </ul>
+      {qualitySignals(selectedSourceTask.item,selectedSourceTask.issues).length>0&&<div>
+       <strong>Fragenqualität · redaktionell prüfen</strong>
+       <ul>{qualitySignals(selectedSourceTask.item,selectedSourceTask.issues).map((signal,i)=>
+        <li key={signal.code+'-'+i}>{signal.message}{signal.relatedId?' ('+signal.relatedId+')':''}</li>)}</ul>
+      </div>}
       {selectedSourceTask.issues.length>0&&<div>
        <strong>Bestehende Redaktionshinweise ({selectedSourceTask.issues.length})</strong>
        <ul>{selectedSourceTask.issues.map((issue,i)=><li key={issue.code+'-'+i}>
