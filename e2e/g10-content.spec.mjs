@@ -570,3 +570,37 @@ test('G31 source continuity refuses to discard unsaved G10 edits without explici
  await expect(editor.getByRole('textbox',{name:/Nutzungsrechte und externe Freigabegrundlage/})).toHaveValue('');
  await expect(page.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
 });
+
+test('G32 original five-game run sheet offers reversible source repairs without approving questions',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const run=page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'});
+ await expect(run).toContainText('NO_GO');
+ const navigation=run.getByRole('navigation',{name:'G32 Spiele wechseln'});
+ await expect(navigation.getByRole('button')).toHaveCount(5);
+ await navigation.getByRole('button',{name:/Quiztafel/}).click();
+ await expect(page.getByRole('combobox',{name:'G28 Spiel'})).toHaveValue('quiztafel');
+ await navigation.getByRole('button',{name:/Rundenquiz/}).click();
+ await page.getByRole('combobox',{name:'G28 Profil'}).selectOption('kurz');
+ const plan=page.getByRole('region',{name:'G30 Original-Packplanung'});
+ const repair=page.getByRole('region',{name:'G32 Quellenreparatur'});
+ await expect(repair).toContainText('Offene Aufgaben');
+ await repair.getByRole('button',{name:/hinweise 1.*CROSS_GAME_SPOILER/}).click();
+ const current=await plan.getByRole('combobox',{name:'G30 Hinweise 1'}).inputValue()
+  .catch(()=>null);
+ expect(current).toBeNull();
+ const chooser=repair.getByRole('button',{name:/auswählen ·/}).first();
+ await expect(chooser).toBeEnabled();
+ const choiceName=await chooser.textContent();
+ const chosenId=choiceName?.trim().split(' ')[0]??'';
+ await chooser.click();
+ await expect(repair.getByRole('button',{name:'Letzte Quellwahl rückgängig'})).toBeEnabled();
+ await plan.getByText(/Aufgabenplätze und Originalquellen wählen/).click();
+ await expect(plan.getByRole('combobox',{name:'G30 hinweise 1'})).toHaveValue(chosenId);
+ await repair.getByRole('button',{name:'Letzte Quellwahl rückgängig'}).click();
+ await expect(plan.getByRole('combobox',{name:'G30 hinweise 1'})).toHaveValue('rq-h1');
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+ await expect(run).toContainText('NO_GO');
+});
