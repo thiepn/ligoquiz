@@ -206,7 +206,7 @@ export class PreparationRepository{
 export type RecoveryGap={game:GameType;slot:string;sourceId:string|null;
  reason:'changed'|'missing'|'incompatible'|'layout'};
 export type RecoveryProposal={selections:StoredSelections;retained:number;
- cleared:RecoveryGap[];slots:number;canCommit:boolean;status:'NO_GO'};
+ cleared:RecoveryGap[];slots:number;canCommit:boolean;sourceOrderChanged:boolean;status:'NO_GO'};
 export async function previewSelectiveRecovery(saved:SavedPreparation,
  items:readonly ContentItem[]):Promise<RecoveryProposal>{
  const old=assertSavedPreparation(saved);
@@ -261,8 +261,9 @@ export async function previewSelectiveRecovery(saved:SavedPreparation,
  const remaining=old.assignments.filter(x=>x.id!==null&&!maps[x.game][x.slot]);
  if(remaining.length!==gaps.length)
   fail('INVALID','Einige geänderte Quellen wurden nicht als Konflikt ausgewiesen.');
+ const stale=(await reconcileSavedDraft(old,items)).status==='stale';
  return {selections:maps,retained,cleared:gaps,slots:old.assignments.length,
-  canCommit:gaps.length>0,status:'NO_GO'};
+  canCommit:stale,sourceOrderChanged:stale&&gaps.length===0,status:'NO_GO'};
 }
 /** Independently recompute revision custody at commit time; never accept stale proposals. */
 export async function commitSelectiveRecovery(

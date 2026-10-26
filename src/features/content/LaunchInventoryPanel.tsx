@@ -118,8 +118,9 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
    }
    const proposal=await previewSelectiveRecovery(current,fromLibrary);
    setRecovery(proposal);setSaveIssues(verdict.issues);
-   setSaveMessage(proposal.cleared.length+
-    ' Plätze erfordern Entscheidung; übrige Originalquellen bleiben erhalten.');
+   setSaveMessage(proposal.cleared.length?
+    proposal.cleared.length+' Plätze erfordern Entscheidung; übrige Originalquellen bleiben erhalten.':
+    'Alle alten Quellen stimmen überein; ursprüngliche Quellenreihenfolge kann ausdrücklich fixiert werden.');
   }catch(e){setSaveMessage(e instanceof Error?e.message:'Wiederherstellung fehlgeschlagen');}
   finally{setSaving(false);}
  }
@@ -286,7 +287,8 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
      {recovery&&<button type="button" className="exp-secondary"
       disabled={saving||!recovery.canCommit}
       onClick={()=>void confirmSelectiveRecovery()}>
-      {recovery.retained} Quellen behalten · {recovery.cleared.length} Plätze leeren
+      {recovery.cleared.length===0?'Ursprüngliche Quellwahl fixieren':
+       recovery.retained+' Quellen behalten · '+recovery.cleared.length+' Plätze leeren'}
      </button>}
     </div>
     {recovery&&<section className="g34-recovery-list" aria-label="G34 Betroffene Quellplätze">

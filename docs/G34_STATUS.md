@@ -16,3 +16,6 @@ browser/offline 40316805223 PASS 225/225 Chromium, 8/8 installed offline.
 ## Acceptance
 Unit tests: partial question edit, unchanged sibling, Quiztafel category rows, changed status/rights, missing sources, forged/stale proposal, CAS lost race, unrelated additions, and unchanged-library refusal. Genuine Chromium: source save → stale → preview → accepted partial recovery → reload. Installed offline PWA: same sequence without network.
 No new rights approval, publication, merge, migration, staging or production writes.
+
+## Original source ordering preservation
+New questions can sort ahead of previously selected questions without changing those original source bytes. Explicit recovery pins the original source IDs and can commit a new local CAS revision even when no slots need clearing. It never silently adopts newly sorted defaults, approves content or launches a game.

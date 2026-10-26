@@ -201,8 +201,17 @@ describe('G34 surgical recovery of original source-only five-game packs',()=>{
    payload:{...related.payload as object,id:'000-earlier-source'}};
   const recovery=await previewSelectiveRecovery(saved,[...original,added]);
   expect(recovery.retained).toBe(saved.assignments.filter(x=>x.id!==null).length);
+  expect(recovery.canCommit).toBe(true);
+  expect(recovery.sourceOrderChanged).toBe(true);
   expect(recovery.selections.rundenquiz['wissen:1'])
    .toBe(saved.assignments.find(x=>x.game==='rundenquiz'&&x.slot==='wissen:1')!.id);
   expect(recovery.cleared).toEqual([]);
+  const db=new PreparationRepository(new IDBFactory(),'g34-earlier-source');
+  await db.save(saved,null);
+  const retained=await commitSelectiveRecovery(db,saved,[...original,added],recovery);
+  expect(retained.revision).toBe(2);
+  expect((await reconcileSavedDraft(retained,[...original,added])).status).toBe('ready');
+  expect(retained.selections.rundenquiz['wissen:1']).toBe(recovery.selections.rundenquiz['wissen:1']);
+  await db.close();
  });
 });
