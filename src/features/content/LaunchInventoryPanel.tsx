@@ -32,7 +32,11 @@ export function LaunchInventoryPanel({items,onChoose}:{
  const rehearsal=useMemo(()=>buildEditorialRehearsal(plan,items),[plan,items]);
  const activeStep=rehearsal.steps[Math.min(stepIndex,rehearsal.steps.length-1)]??null;
  const frame=projectedRehearsalFrame(activeStep);
- const conflicts=rehearsal.steps.filter(s=>s.issues.length>0);
+ const firstBySlot=new Set<string>();
+ const conflicts=rehearsal.steps.filter(step=>{
+  if(!step.issues.length||firstBySlot.has(step.slot))return false;
+  firstBySlot.add(step.slot);return true;
+ });
  function goToNextIssue(){
   if(!conflicts.length)return;
   const next=conflicts.find(s=>s.index>stepIndex)??conflicts[0];
