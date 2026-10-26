@@ -11,3 +11,6 @@ Original G29 exact-head browser #40295908875: **218/218 genuine Chromium PASS**,
 
 ## Qualification
 Unit tests for all 45 real engine compositions, 3/4/5 team geometry, missing rows/difficulties/tasks, duplicate/forged source overrides, cross-game spoiler and source-ID-only export. Genuine Chromium tests check actual import, source assignment, G10 correction handoff, five-game choices, no implicit approval. Exact G30 HEAD CI must be independently verified. Physical pilot, original rights, measured surveys, staging and production release remain NOT_TESTED/NO_GO.
+
+## Qualification correction
+Initial G30 exact-head Verify: 373/374 Vitest pass. A reproduced issue was the per-slot selector discarding previously sorted options, so a reviewer could not choose a valid earlier source for a later slot. The composer now retains all compatible source choices and only offsets its default selection. Invalid-source overrides, duplicate IDs and duplicate question-core checks remain enforced.

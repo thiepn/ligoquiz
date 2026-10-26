@@ -77,8 +77,8 @@ describe('G30 original native five-engine pack preparation',()=>{
   const known=originals.find(x=>x.id===k[0]!.selected)!;
   const source=createDraft('rundenquiz',{...known.payload as object,id:'g30-copy'},12);
   const near=composeContentPack([...originals,source],'rundenquiz','kurz',3,
-   {[k[1]!.key]:'g30-copy'});
-  expect(near.problems.some(x=>x.code==='DUPLICATE_CONTENT'||x.code==='DUPLICATE_ID')).toBe(true);
+   {[k[0]!.key]:known.id,[k[1]!.key]:'g30-copy'});
+  expect(near.problems.some(x=>x.code==='DUPLICATE_CONTENT')).toBe(true);
  });
  it('recognizes source-specific cross-game spoilers without deleting or auto-editing them',()=>{
   const evening=prepareFiveGameEvening(originals,'lang',5);

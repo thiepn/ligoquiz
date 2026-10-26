@@ -30,13 +30,13 @@ const unique=(ids:readonly string[])=>new Set(ids).size===ids.length;
 export function composeContentPack(items:readonly ContentItem[],game:GameType,
  profile:GameProfile,teams:3|4|5,overrides:Override={}):PreparationPlan{
  const bank=groups(items,game),slots:PreparationSlot[]=[],problems:PreparationProblem[]=[];
- const add=(key:string,label:string,options:readonly ContentItem[])=>{
+ const add=(key:string,label:string,options:readonly ContentItem[],defaultIndex=0)=>{
   const values=options.map(x=>x.id);
   const choice=overrides[key];
-  if(choice!==undefined&&!values.includes(choice)){
+  if(choice!==undefined&&choice!==''&&!values.includes(choice)){
    problems.push({code:'INVALID_OVERRIDE',message:'Auswahl passt nicht zu '+label,itemIds:[choice]});
   }
-  const selected=choice!==undefined?(values.includes(choice)?choice:null):(values[0]??null);
+  const selected=choice!==undefined?(values.includes(choice)?choice:null):(values[defaultIndex]??null);
   slots.push({key,label,options:values,selected});
   if(!selected)problems.push({code:'MISSING',message:'Nicht besetzt: '+label,itemIds:[]});
  };
@@ -45,7 +45,7 @@ export function composeContentPack(items:readonly ContentItem[],game:GameType,
   for(const [round,needed] of Object.entries(counts))
    for(let i=0;i<needed;i++)
     add(round+':'+(i+1),round+' '+(i+1),
-     bank.filter(x=>p(x).round===round).slice(i));
+     bank.filter(x=>p(x).round===round),i);
  }else if(game==='quiztafel'){
   const depth=DEPTH[profile],categories=new Map<string,{name:string;items:ContentItem[]}>();
   for(const item of bank){
@@ -57,7 +57,7 @@ export function composeContentPack(items:readonly ContentItem[],game:GameType,
    .sort(([a],[b])=>a.localeCompare(b));
   for(let i=0;i<teams;i++){
    const catKey='category:'+String(i+1),options=choices.map(([,v])=>v.items.find(x=>Number(p(x).row)===1)!).filter(Boolean);
-   add(catKey,'Kategorie Team '+(i+1),options.slice(i));
+   add(catKey,'Kategorie Team '+(i+1),options,i);
    const choice=slots.at(-1)?.selected,cat=choice?String(p(bank.find(x=>x.id===choice)!).categoryId):null;
    for(let row=1;row<=depth;row++){
     add('tile:'+String(i+1)+':'+String(row),'Team '+(i+1)+' · '+String(row*100)+' Punkte',
@@ -70,15 +70,15 @@ export function composeContentPack(items:readonly ContentItem[],game:GameType,
    for(let team=1;team<=teams;team++){
     const idx=(round-1)*teams+team-1;
     add('clue:'+round+':'+team,'Hinweise · Runde '+round+' / Team '+team,
-     bank.filter(x=>p(x).kind==='clues').slice(idx));
+     bank.filter(x=>p(x).kind==='clues'),idx);
    }
   for(let round=1;round<=need.sequences;round++)
    for(let team=1;team<=teams;team++){
     const idx=(round-1)*teams+team-1;
     add('sequence:'+round+':'+team,'Folge · Runde '+round+' / Team '+team,
-     bank.filter(x=>p(x).kind==='sequence').slice(idx));
+     bank.filter(x=>p(x).kind==='sequence'),idx);
    }
-  for(let i=0;i<need.wall;i++)add('wall:'+i,'16er-Wand',bank.filter(x=>p(x).kind==='wall').slice(i));
+  for(let i=0;i<need.wall;i++)add('wall:'+i,'16er-Wand',bank.filter(x=>p(x).kind==='wall'),i);
  }else if(game==='logikleiter'){
   for(let n=1;n<=LENGTH[profile];n++)
    add('rung:'+n,'Stufe '+n,bank.filter(x=>p(x).difficulty===n));
@@ -87,7 +87,7 @@ export function composeContentPack(items:readonly ContentItem[],game:GameType,
   for(const [format,required] of Object.entries(counts))
    for(let n=1;n<=required;n++)
     add(format+':'+n,(format==='top3'?'Top 3':'Beliebteste Antwort')+' · '+n,
-     bank.filter(x=>p(x).format===format).slice(n-1));
+     bank.filter(x=>p(x).format===format),n-1);
  }
  // Category slots are structural choices, not extra questions in the chosen pack.
  const chosen=slots.filter(x=>!x.key.startsWith('category:')).map(x=>x.selected).filter((x):x is string=>x!==null);
