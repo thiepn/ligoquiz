@@ -7,7 +7,8 @@ import {buildEditorialRehearsal,projectedRehearsalFrame} from '../../content/gam
 import {gameNightRunSheet,sourceRepairChoices,applySourceRepair,prioritizedReviewSlots
 } from '../../content/game-night-repairs';
 import {PreparationRepository,prepareSavedDraft,reconcileSavedDraft,
- type SavedPreparation} from '../../content/pack-draft-store';
+ previewSelectiveRecovery,commitSelectiveRecovery,
+ type SavedPreparation,type RecoveryProposal} from '../../content/pack-draft-store';
 import '../../styles/g28-launch-inventory.css';
 
 const labels:Record<GameType,string>={
@@ -25,6 +26,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
  const [saved,setSaved]=useState<SavedPreparation|null>(null);
  const [saveState,setSaveState]=useState<'loading'|'empty'|'ready'|'stale'|'error'>('loading');
  const [saveIssues,setSaveIssues]=useState<string[]>([]);
+ const [recovery,setRecovery]=useState<RecoveryProposal|null>(null);
  const [saving,setSaving]=useState(false);
  const [saveMessage,setSaveMessage]=useState('');
  useEffect(()=>()=>{void draftRepo.close();},[draftRepo]);
@@ -51,6 +53,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
    const result=existing?await reconcileSavedDraft(existing,items):null;
    if(!active)return;
    setSaved(existing);
+   setRecovery(null);
    setSaveState(!existing?'empty':result?.status==='ready'?'ready':'stale');
    setSaveIssues(result?.issues??[]);
    if(!hasHydrated.current){
@@ -100,13 +103,60 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
   }catch(e){setSaveMessage(e instanceof Error?e.message:'Speichern fehlgeschlagen');}
   finally{setSaving(false);}
  }
+ async function previewRecovery(){
+  if(!saved||saveState!=='stale'||saving)return;
+  setSaving(true);setSaveMessage('');setRecovery(null);
+  try{
+   const current=await draftRepo.read();
+   if(!current||current.revision!==saved.revision)
+    throw Error('Plan wurde in anderem Fenster verändert. Ansicht neu laden.');
+   const fromLibrary=await latestItems();
+   const verdict=await reconcileSavedDraft(current,fromLibrary);
+   if(verdict.status!=='stale'){
+    setSaveState('ready');setSaveIssues([]);
+    setSaveMessage('Quellen stimmen inzwischen wieder überein.');return;
+   }
+   const proposal=await previewSelectiveRecovery(current,fromLibrary);
+   setRecovery(proposal);setSaveIssues(verdict.issues);
+   setSaveMessage(proposal.cleared.length+
+    ' Plätze erfordern Entscheidung; übrige Originalquellen bleiben erhalten.');
+  }catch(e){setSaveMessage(e instanceof Error?e.message:'Wiederherstellung fehlgeschlagen');}
+  finally{setSaving(false);}
+ }
+ async function confirmSelectiveRecovery(){
+  if(!saved||!recovery||!recovery.canCommit||saving||saveState!=='stale')return;
+  if(!window.confirm('Unveränderte Quellen behalten und betroffene Aufgabenplätze ausdrücklich leeren? Die Originalfragen werden nicht geändert.'))return;
+  setSaving(true);setSaveMessage('');
+  try{
+   const fromLibrary=await latestItems();
+   // Avoid saving a plan built from a stale G10 tab even if a newer browser
+   // tab changed an unrelated source after this view last refreshed.
+   const proposed=await prepareSavedDraft(items,{
+    game:saved.game,profile:saved.profile,teams:saved.teams,
+    step:saved.step,selections:recovery.selections,
+   },saved.revision+1);
+   if((await reconcileSavedDraft(proposed,fromLibrary)).status!=='ready')
+    throw Error('Quellenstand in G10 hat sich verändert. Seite neu laden.');
+   const record=await commitSelectiveRecovery(draftRepo,saved,fromLibrary,recovery);
+   setGame(record.game);setProfile(record.profile);setTeams(record.teams);
+   setStepIndex(record.step);
+   setOverrides(prev=>({...prev,...Object.fromEntries(GAME_TYPES.map(key=>[
+    key+'/'+record.profile+'/'+record.teams,{...record.selections[key]},
+   ]))}));
+   setSaved(record);setSaveState('ready');setSaveIssues([]);setRecovery(null);
+   setSaveMessage('Unveränderte Quellen behalten · '+recovery.cleared.length+
+    ' Aufgabenplätze offen · Revision '+record.revision);
+  }catch(e){setRecovery(null);
+   setSaveMessage(e instanceof Error?e.message:'Wiederherstellung fehlgeschlagen');}
+  finally{setSaving(false);}
+ }
  async function discardLocalDraft(){
   if(saving||saveState==='loading')return;
   if(!window.confirm('Nur den gespeicherten Abendplan löschen? Die Fragenbibliothek bleibt unverändert.'))return;
   setSaving(true);setSaveMessage('');
   try{
    await draftRepo.clear(saved?.revision??null);
-   setSaved(null);setSaveState('empty');setSaveIssues([]);
+   setSaved(null);setSaveState('empty');setSaveIssues([]);setRecovery(null);
    setSaveMessage('Gespeicherter Abendplan verworfen. Quellen bleiben erhalten.');
   }catch(e){setSaveMessage(e instanceof Error?e.message:'Plan konnte nicht verworfen werden');}
   finally{setSaving(false);}
@@ -229,6 +279,29 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
      saveState==='loading'?'Lädt':saveState==='error'?'Speicherfehler':'Nicht gespeichert'}</strong>
    </div>
    {pendingChanges&&saveState==='ready'&&<p>Ungespeicherte Auswahl oder Moderationsposition</p>}
+   {saveState==='stale'&&<div className="g34-recovery" aria-label="G34 Teilwiederherstellung">
+    <div className="g33-actions">
+     <button type="button" className="exp-secondary" disabled={saving||!saved}
+      onClick={()=>void previewRecovery()}>Gültige Quellen prüfen</button>
+     {recovery&&<button type="button" className="exp-secondary"
+      disabled={saving||!recovery.canCommit}
+      onClick={()=>void confirmSelectiveRecovery()}>
+      {recovery.retained} Quellen behalten · {recovery.cleared.length} Plätze leeren
+     </button>}
+    </div>
+    {recovery&&<div className="g34-recovery-list" aria-label="G34 Betroffene Quellplätze">
+     {recovery.cleared.map(gap=><div key={gap.game+'/'+gap.slot}>
+      <strong>{labels[gap.game]} · {gap.slot}</strong>
+      <span>{gap.sourceId??'Ohne Quelle'} · {gap.reason==='changed'?'Quelle geändert':
+       gap.reason==='missing'?'Quelle fehlt':gap.reason==='layout'?'Aufgabenstruktur geändert':
+       'Zuordnung nicht mehr kompatibel'}</span>
+      {gap.sourceId&&items.find(item=>item.id===gap.sourceId)&&
+       <button type="button" className="exp-secondary"
+        onClick={()=>{const item=items.find(x=>x.id===gap.sourceId);if(item)onChoose(item);}}>
+        Quelle in G10 prüfen</button>}
+     </div>)}
+    </div>}
+   </div>}
    {saveIssues.length>0&&<div role="alert">
     {saveIssues.map((issue,i)=><p key={i}>{issue}</p>)}
     {saveIssues.map(issue=>issue.split(':')[0]!).filter((key,i,all)=>all.indexOf(key)===i)
