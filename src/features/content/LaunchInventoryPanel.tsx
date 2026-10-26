@@ -6,6 +6,8 @@ import {composeContentPack,exportPreparationPlan,prepareFiveGameEvening} from '.
 import {buildEditorialRehearsal,projectedRehearsalFrame} from '../../content/game-night-rehearsal';
 import {gameNightRunSheet,sourceRepairChoices,applySourceRepair,prioritizedReviewSlots
 } from '../../content/game-night-repairs';
+import {fiveGameReadiness,originalSlotCandidates,selectOriginalSlot,
+ rehearsalIndexForSlot} from '../../content/original-slot-resolution';
 import {PreparationRepository,prepareSavedDraft,reconcileSavedDraft,
  previewSelectiveRecovery,commitSelectiveRecovery,
  type SavedPreparation,type RecoveryProposal} from '../../content/pack-draft-store';
@@ -36,6 +38,9 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
  const [showAll,setShowAll]=useState(false);
  const [stepIndex,setStepIndex]=useState(0);
  const [repairSlot,setRepairSlot]=useState<string>('');
+ const [focusedIssue,setFocusedIssue]=useState('');
+ const [resolving,setResolving]=useState(false);
+ const [resolutionMessage,setResolutionMessage]=useState('');
  const [undoRepair,setUndoRepair]=useState<{key:string;before:Record<string,string>}|null>(null);
  const [overrides,setOverrides]=useState<Record<string,Record<string,string>>>({});
  const configKey=game+'/'+profile+'/'+teams;
@@ -161,6 +166,54 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
    setSaveMessage('Gespeicherter Abendplan verworfen. Quellen bleiben erhalten.');
   }catch(e){setSaveMessage(e instanceof Error?e.message:'Plan konnte nicht verworfen werden');}
   finally{setSaving(false);}
+ }
+ const readiness=useMemo(()=>fiveGameReadiness(items,profile,teams,eveningOverrides),
+  [items,profile,teams,eveningOverrides]);
+ const selectedIssue=readiness.issues.find(issue=>
+  issue.game+'/'+issue.slot===focusedIssue)??readiness.issues[0]??null;
+ const candidateChoices=useMemo(()=>selectedIssue?
+  originalSlotCandidates(items,selectedIssue.game,profile,teams,
+   eveningOverrides,selectedIssue.slot,8):[],
+  [items,selectedIssue,profile,teams,eveningOverrides]);
+ function jumpToIssue(issue:typeof selectedIssue){
+  if(!issue)return;
+  setFocusedIssue(issue.game+'/'+issue.slot);
+  setGame(issue.game);
+  const index=rehearsalIndexForSlot(items,issue.game,profile,teams,
+   eveningOverrides,issue.slot);
+  if(index!==null)setStepIndex(index);
+  setResolutionMessage('');
+ }
+ async function chooseOriginalCandidate(sourceId:string){
+  const issue=selectedIssue;
+  const candidate=candidateChoices.find(x=>x.sourceId===sourceId);
+  if(!issue||!candidate||resolving||!loaded||saveState==='stale'||
+   saveState==='error'||saveState==='loading')return;
+  setResolving(true);setResolutionMessage('');
+  try{
+   const latest=await latestItems();
+   // The user acts on a locally rendered draft; every selected original source
+   // must still match the actual G10 library revision before this choice.
+   const before=await prepareSavedDraft(items,{
+    game,profile,teams,step:stepIndex,selections:eveningOverrides},1);
+   if((await reconcileSavedDraft(before,latest)).status!=='ready')
+    throw Error('Originalquellen geändert. Zuerst Inhaltsatelier aktualisieren.');
+   const revised=selectOriginalSlot(latest,issue.game,profile,teams,
+    eveningOverrides,candidate);
+   if(!revised)throw Error('Alternativquelle nicht mehr gültig. Erneut prüfen.');
+   const after=await prepareSavedDraft(items,{
+    game,profile,teams,step:stepIndex,selections:revised},1);
+   if((await reconcileSavedDraft(after,latest)).status!=='ready')
+    throw Error('Änderung mit neuer Originalquelle nicht mehr kompatibel.');
+   const key=issue.game+'/'+profile+'/'+teams;
+   setUndoRepair({key,before:{...overrides[key]}});
+   setOverrides(prev=>({...prev,[key]:{...revised[issue.game]}}));
+   setGame(issue.game);
+   const jump=rehearsalIndexForSlot(items,issue.game,profile,teams,revised,issue.slot);
+   if(jump!==null)setStepIndex(jump);
+   setResolutionMessage(sourceId+' als lokaler Entwurf gewählt. Zum Behalten Abendplan speichern.');
+  }catch(e){setResolutionMessage(e instanceof Error?e.message:'Quellenwahl fehlgeschlagen');}
+  finally{setResolving(false);}
  }
  const runSheet=useMemo(()=>gameNightRunSheet(items,profile,teams,eveningOverrides),
   [items,profile,teams,eveningOverrides]);
@@ -336,6 +389,55 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
    </nav>
    <p>{runSheet.spoilers.length} spielübergreifende Hinweis-Konflikte.
     Nur Entwurfsplanung, keine Freigabe und kein Live-Spiel.</p>
+  </section>
+  <section className="g35-editor-completion" aria-label="G35 Fünf-Spiele-Quellenwahl">
+   <div className="g28-inventory-head">
+    <h3>Offene Quellenplätze</h3>
+    <strong>{readiness.issues.length} Prüffälle · NO_GO</strong>
+   </div>
+   <div className="g35-five-stats">
+    {readiness.games.map(entry=><button key={entry.game} type="button"
+     className="exp-secondary" onClick={()=>setGameSelection(entry.game)}>
+     {labels[entry.game]} · {entry.missing} offen · {entry.hard} Strukturfehler
+     {' '}· {entry.teamTurns.join(' / ')} Teamaufgaben
+    </button>)}
+   </div>
+   {selectedIssue&&<div className="g35-issue-resolver">
+    <label>Quellenplatz
+     <select aria-label="G35 Quellenplatz" value={selectedIssue.game+'/'+selectedIssue.slot}
+      onChange={event=>jumpToIssue(readiness.issues.find(i=>
+       i.game+'/'+i.slot===event.target.value)??null)}>
+      {readiness.issues.map(issue=><option key={issue.game+'/'+issue.slot}
+       value={issue.game+'/'+issue.slot}>
+       {labels[issue.game]} · {issue.label} · {issue.kind}
+      </option>)}
+     </select>
+    </label>
+    <div className="g35-issue-choices">
+     <strong>{labels[selectedIssue.game]} · {selectedIssue.label}</strong>
+     <p>{selectedIssue.sourceId??'Nicht besetzt'} · {selectedIssue.codes.join(', ')}</p>
+     {selectedIssue.sourceId&&items.some(item=>item.id===selectedIssue.sourceId)&&
+      <button type="button" className="exp-secondary" onClick={()=>{
+       const item=items.find(i=>i.id===selectedIssue.sourceId);
+       if(item)onChoose(item);
+      }}>Originalquelle in G10 korrigieren</button>}
+     <div className="g35-source-options" aria-label="G35 Alternative Originalquellen">
+      {candidateChoices.length===0?<p>Keine kompatible Alternative im Originalbestand.</p>:
+       candidateChoices.map(option=><div key={option.sourceId}>
+        <strong>{option.sourceId}</strong>
+        <span>Revision {option.sourceRevision} · {option.sourceStatus}
+         {' '}· {option.hardAfter} Strukturfehler · {option.spoilersAfter} Hinweis-Konflikte</span>
+        <span>Teamaufgaben: {option.teamTurns.join(' / ')}</span>
+        <button type="button" className="exp-secondary"
+         disabled={resolving||!loaded||saveState==='stale'||saveState==='error'}
+         onClick={()=>void chooseOriginalCandidate(option.sourceId)}>
+         {option.sourceId} als Entwurf wählen
+        </button>
+       </div>)}
+     </div>
+    </div>
+   </div>}
+   {resolutionMessage&&<p role="status">{resolutionMessage}</p>}
   </section>
   <section className="g30-pack-plan" aria-label="G30 Original-Packplanung">
    <div className="g28-inventory-head">
