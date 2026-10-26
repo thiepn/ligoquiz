@@ -3,6 +3,7 @@ import {GAME_TYPES,type GameType,type GameProfile} from '../../domain/game/contr
 import type {ContentItem} from '../../content/contracts';
 import {launchContentInventory} from '../../content/launch-inventory';
 import {composeContentPack,exportPreparationPlan,prepareFiveGameEvening} from '../../content/pack-preparation';
+import {buildEditorialRehearsal,projectedRehearsalFrame} from '../../content/game-night-rehearsal';
 import '../../styles/g28-launch-inventory.css';
 
 const labels:Record<GameType,string>={
@@ -18,11 +19,28 @@ export function LaunchInventoryPanel({items,onChoose}:{
  const [profile,setProfile]=useState<GameProfile>('lang');
  const [teams,setTeams]=useState<3|4|5>(5);
  const [showAll,setShowAll]=useState(false);
+ const [stepIndex,setStepIndex]=useState(0);
  const [overrides,setOverrides]=useState<Record<string,Record<string,string>>>({});
  const configKey=game+'/'+profile+'/'+teams;
  const plan=useMemo(()=>composeContentPack(items,game,profile,teams,overrides[configKey]??{}),
   [items,game,profile,teams,overrides,configKey]);
- const evening=useMemo(()=>prepareFiveGameEvening(items,profile,teams),[items,profile,teams]);
+ const eveningOverrides=useMemo(()=>Object.fromEntries(GAME_TYPES.map(key=>
+  [key,overrides[key+'/'+profile+'/'+teams]??{}])) as Record<GameType,Record<string,string>>,
+  [overrides,profile,teams]);
+ const evening=useMemo(()=>prepareFiveGameEvening(items,profile,teams,eveningOverrides),
+  [items,profile,teams,eveningOverrides]);
+ const rehearsal=useMemo(()=>buildEditorialRehearsal(plan,items),[plan,items]);
+ const activeStep=rehearsal.steps[Math.min(stepIndex,rehearsal.steps.length-1)]??null;
+ const frame=projectedRehearsalFrame(activeStep);
+ const conflicts=rehearsal.steps.filter(s=>s.issues.length>0);
+ function goToNextIssue(){
+  if(!conflicts.length)return;
+  const next=conflicts.find(s=>s.index>stepIndex)??conflicts[0];
+  if(next)setStepIndex(next.index);
+ }
+ function setGameSelection(next:GameType){setGame(next);setStepIndex(0);}
+ function setProfileSelection(next:GameProfile){setProfile(next);setStepIndex(0);}
+ function setTeamsSelection(next:3|4|5){setTeams(next);setStepIndex(0);}
  function downloadPlan(){
   const blob=new Blob([exportPreparationPlan(plan)],{type:'application/json;charset=utf-8'});
   const url=URL.createObjectURL(blob),link=document.createElement('a');
@@ -69,16 +87,16 @@ export function LaunchInventoryPanel({items,onChoose}:{
   </details>
   <div className="g28-program-controls">
    <label>Spiel <select aria-label="G28 Spiel" value={game}
-    onChange={e=>setGame(e.target.value as GameType)}>
+    onChange={e=>setGameSelection(e.target.value as GameType)}>
     {GAME_TYPES.map(key=><option key={key} value={key}>{labels[key]}</option>)}
    </select></label>
    <label>Profil <select aria-label="G28 Profil" value={profile}
-    onChange={e=>setProfile(e.target.value as GameProfile)}>
+    onChange={e=>setProfileSelection(e.target.value as GameProfile)}>
     <option value="kurz">Kurz</option><option value="standard">Standard</option>
     <option value="lang">Lang</option>
    </select></label>
    <label>Teams <select aria-label="G28 Teams" value={teams}
-    onChange={e=>setTeams(Number(e.target.value) as 3|4|5)}>
+    onChange={e=>setTeamsSelection(Number(e.target.value) as 3|4|5)}>
     {[3,4,5].map(n=><option key={n} value={n}>{n}</option>)}
    </select></label>
   </div>
@@ -140,6 +158,48 @@ export function LaunchInventoryPanel({items,onChoose}:{
      </div>)}
     </div>
    </details>
+   <section className="g31-rehearsal" aria-label="G31 Moderationsprobe">
+    <div className="g28-inventory-head">
+     <h3>Moderationsprobe · {labels[game]}</h3><strong>NO_GO</strong>
+    </div>
+    <p>{rehearsal.taskCount} Aufgaben · {rehearsal.steps.length} Moderationsschritte
+     {' '}· {rehearsal.missingCount} fehlend · {rehearsal.conflictedCount} mit Prüfhinweisen</p>
+    <p>Teamaufgaben: {rehearsal.teamTurns.map((n,i)=>'Team '+(i+1)+': '+n).join(' · ')}
+     {' '}· {rehearsal.balancedTeamExposure?'Gleich verteilt':'Verteilung prüfen'}</p>
+    <div className="g31-nav">
+     <button type="button" className="exp-secondary" disabled={!activeStep||activeStep.index===0}
+      onClick={()=>setStepIndex(v=>Math.max(0,v-1))}>Vorheriger Schritt</button>
+     <button type="button" className="exp-secondary"
+      disabled={!activeStep||activeStep.index===rehearsal.steps.length-1}
+      onClick={()=>setStepIndex(v=>Math.min(rehearsal.steps.length-1,v+1))}>Nächster Schritt</button>
+     <button type="button" className="exp-secondary" disabled={!conflicts.length}
+      onClick={goToNextIssue}>Nächsten Prüffall zeigen</button>
+     <button type="button" className="exp-secondary"
+      onClick={()=>setGameSelection(GAME_TYPES[(GAME_TYPES.indexOf(game)+1)%GAME_TYPES.length]!)}>
+      Nächstes Spiel</button>
+    </div>
+    <div className="g31-two-views">
+     <div className="g31-moderator" aria-label="G31 Spielleitung">
+      <h4>Spielleitung</h4>
+      {activeStep?<div aria-live="polite">
+       <strong>Schritt {activeStep.index+1} / {rehearsal.steps.length} · {activeStep.slotLabel}</strong>
+       <p>{activeStep.hostStep} · {activeStep.hostNext}</p>
+       <p>{activeStep.scoreState}</p>
+       <p>Quelle: {activeStep.sourceId??'Fehlender Inhalt'}</p>
+       {activeStep.issues.length>0&&<p>{activeStep.issues.map(i=>i.code).join(' · ')}</p>}
+       {activeStep.sourceId&&<button type="button" className="exp-secondary"
+        onClick={()=>{const item=items.find(x=>x.id===activeStep.sourceId);
+         if(item)onChoose(item);}}>Quelle {activeStep.sourceId} in G10 prüfen</button>}
+      </div>:<p>Keine Aufgaben für dieses Profil.</p>}
+     </div>
+     <div className="g31-stage" aria-label="G31 Beamer-Probe">
+      <h4>Beamer · Vorschau</h4>
+      <strong aria-live="polite">{frame.stage}</strong>
+     </div>
+    </div>
+    <p>Lesbare Simulation der ursprünglichen Moderationsphasen. Kein Spielstand,
+     keine Bewertung, keine Live-Projektion oder Veröffentlichung.</p>
+   </section>
    <p>Die Planung verwendet nur Original-IDs und bestehende Regeln. Auch vollständig besetzte Packs bleiben
     ohne unabhängige Redaktion, Rechteprüfung und G26-Entscheid nicht veröffentlichbar.</p>
   </section>

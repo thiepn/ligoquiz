@@ -130,6 +130,14 @@ export function ContentStudio(){
   setRightsDraft(item.provenance.rights??'');
   setReviewNote('');setChecklist([false,false,false,false]);setError('');setMessage('');
  }
+ function selectFromPreparation(item:ContentItem){
+  const edited=Boolean(current&&(json!==JSON.stringify(current.payload,null,2)||
+   rightsDraft!==(current.provenance.rights??'')||reviewNote.trim()||
+   reviewer.trim()||checklist.some(Boolean)));
+  if(current?.id!==item.id&&edited&&
+   !window.confirm('Ungespeicherte Korrekturen verwerfen und die nächste Originalquelle öffnen?'))return;
+  if(current?.id!==item.id)choose(item);
+ }
  async function act(fn:()=>Promise<void>){
   if(busy)return;setBusy(true);setError('');setMessage('');
   try{await fn();await refresh();}catch(e){setError(formatError(e));}
@@ -337,7 +345,7 @@ export function ContentStudio(){
      <button className="exp-secondary" onClick={()=>{setPreview(null);setImportConsent(false);}}>Abbrechen</button></div>
    </section>}
   <EditorialAuditPanel items={items} preview={preview} onChoose={choose}/>
-  <LaunchInventoryPanel items={items} onChoose={choose}/>
+  <LaunchInventoryPanel items={items} onChoose={selectFromPreparation}/>
   <section className="cx-source-queue" aria-label="Quellenprüfung">
    <div className="cx-catalog-top">
     <h2>Quellenprüfung</h2>
