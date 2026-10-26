@@ -197,3 +197,88 @@ export class PreparationRepository{
  }
  async close():Promise<void>{const p=this.dbPromise;this.dbPromise=null;if(p)(await p).close();}
 }
+
+/**
+ * Recover an old draft only through an explicit host decision. Exact byte custody
+ * controls each individual assignment; unverified questions become empty slots.
+ * No question payload or manual approval is copied into a plan.
+ */
+export type RecoveryGap={game:GameType;slot:string;sourceId:string|null;
+ reason:'changed'|'missing'|'incompatible'|'layout'};
+export type RecoveryProposal={selections:StoredSelections;retained:number;
+ cleared:RecoveryGap[];slots:number;canCommit:boolean;status:'NO_GO'};
+export async function previewSelectiveRecovery(saved:SavedPreparation,
+ items:readonly ContentItem[]):Promise<RecoveryProposal>{
+ const old=assertSavedPreparation(saved);
+ const byId=new Map(items.map(i=>[i.id,i]));
+ const stamps=new Map(old.sources.map(s=>[s.id,s]));
+ const validated=new Map<string,boolean>();
+ for(const stamp of old.sources){
+  const item=byId.get(stamp.id);
+  validated.set(stamp.id,Boolean(item&&item.game===stamp.game&&
+   item.revision===stamp.revision&&await sha256(exact(item))===stamp.sha256));
+ }
+ const maps=normalizedSelections({});
+ const gaps:RecoveryGap[]=[];
+ const marked=new Set<string>();
+ const gap=(entry:SlotStamp,reason:RecoveryGap['reason'])=>{
+  const key=entry.game+'/'+entry.slot;
+  if(marked.has(key))return;
+  marked.add(key);gaps.push({game:entry.game,slot:entry.slot,
+   sourceId:entry.id,reason});
+ };
+ // Rebuild the original assignment, not new defaults. A changed source is a
+ // hole even if the changed content passes current schema validation.
+ for(const entry of old.assignments){
+  if(entry.id===null){maps[entry.game][entry.slot]='';continue;}
+  if(!validated.get(entry.id)){
+   maps[entry.game][entry.slot]='';
+   gap(entry,byId.has(entry.id)?'changed':'missing');
+  }else maps[entry.game][entry.slot]=entry.id;
+ }
+ // A valid source may become incompatible when an adjacent category/slot was
+ // cleared. Propagate empties to a fixed point, never auto-select alternatives.
+ for(let iteration=0;iteration<old.assignments.length+1;iteration++){
+  let changed=false;
+  for(const game of GAME_TYPES){
+   const plan=composeContentPack(items,game,old.profile,old.teams,maps[game]);
+   const slots=new Map(plan.slots.map(s=>[s.key,s]));
+   for(const entry of old.assignments.filter(a=>a.game===game)){
+    const wanted=maps[game][entry.slot];
+    if(!wanted)continue;
+    const slot=slots.get(entry.slot);
+    if(!slot||slot.selected!==wanted||!slot.options.includes(wanted)){
+     maps[game][entry.slot]='';
+     gap(entry,slot?'incompatible':'layout');
+     changed=true;
+    }
+   }
+  }
+  if(!changed)break;
+  if(iteration===old.assignments.length)
+   fail('INVALID','Quellplätze konnten nicht eindeutig abgeglichen werden.');
+ }
+ const retained=old.assignments.filter(x=>x.id!==null&&maps[x.game][x.slot]===x.id).length;
+ const remaining=old.assignments.filter(x=>x.id!==null&&!maps[x.game][x.slot]);
+ if(remaining.length!==gaps.length)
+  fail('INVALID','Einige geänderte Quellen wurden nicht als Konflikt ausgewiesen.');
+ return {selections:maps,retained,cleared:gaps,slots:old.assignments.length,
+  canCommit:gaps.length>0,status:'NO_GO'};
+}
+/** Independently recompute revision custody at commit time; never accept stale proposals. */
+export async function commitSelectiveRecovery(
+ repo:PreparationRepository,saved:SavedPreparation,
+ items:readonly ContentItem[],input:RecoveryProposal):Promise<SavedPreparation>{
+ const trusted=await previewSelectiveRecovery(saved,items);
+ if(!trusted.canCommit||
+  JSON.stringify(trusted.selections)!==JSON.stringify(input.selections)||
+  JSON.stringify(trusted.cleared)!==JSON.stringify(input.cleared))
+  fail('STALE','Quellen haben sich seit der Auswahl verändert; Wiederherstellung neu prüfen.');
+ const next=await prepareSavedDraft(items,{
+  game:saved.game,profile:saved.profile,teams:saved.teams,
+  step:saved.step,selections:trusted.selections,
+ },saved.revision+1);
+ const check=await reconcileSavedDraft(next,items);
+ if(check.status!=='ready')fail('STALE','Wiederhergestellte Auswahl konnte nicht bestätigt werden.');
+ return repo.save(next,saved.revision);
+}
