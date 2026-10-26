@@ -44,3 +44,19 @@
 .g31-stage{display:flex;flex-direction:column;gap:.8rem}
 .g31-stage>strong{font-size:1.1rem}
 @media(max-width:660px){.g31-two-views{grid-template-columns:1fr}}
+
+.g32-evening,.g32-review{border-top:1px solid var(--border,#68717b);padding:1rem 0}
+.g32-evening h3,.g32-review h3{margin:0;font-size:1.1rem}
+.g32-game-rail{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.5rem}
+.g32-game-rail button{background:transparent;border:1px solid var(--border,#68717b);
+ padding:.8rem;display:flex;flex-direction:column;gap:.35rem;text-align:left;
+ color:inherit;cursor:pointer;font:inherit;border-radius:0}
+.g32-game-rail button[aria-pressed="true"]{outline:2px solid currentColor;outline-offset:0}
+.g32-game-rail button span{font-size:.9rem}
+.g32-review-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(210px,1fr);gap:.8rem}
+.g32-review-list{max-height:24rem;overflow:auto;display:flex;flex-direction:column;gap:.45rem}
+.g32-review-list>div{display:flex;gap:.3rem;flex-wrap:wrap}
+.g32-review-list button[aria-pressed="true"]{outline:2px solid currentColor}
+.g32-repair-choices{display:flex;flex-direction:column;align-items:stretch;gap:.45rem;
+ border:1px solid var(--border,#68717b);padding:.8rem}
+@media(max-width:660px){.g32-review-grid{grid-template-columns:1fr}}

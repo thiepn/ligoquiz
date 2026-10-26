@@ -4,6 +4,8 @@ import type {ContentItem} from '../../content/contracts';
 import {launchContentInventory} from '../../content/launch-inventory';
 import {composeContentPack,exportPreparationPlan,prepareFiveGameEvening} from '../../content/pack-preparation';
 import {buildEditorialRehearsal,projectedRehearsalFrame} from '../../content/game-night-rehearsal';
+import {gameNightRunSheet,sourceRepairChoices,applySourceRepair,prioritizedReviewSlots
+} from '../../content/game-night-repairs';
 import '../../styles/g28-launch-inventory.css';
 
 const labels:Record<GameType,string>={
@@ -20,6 +22,8 @@ export function LaunchInventoryPanel({items,onChoose}:{
  const [teams,setTeams]=useState<3|4|5>(5);
  const [showAll,setShowAll]=useState(false);
  const [stepIndex,setStepIndex]=useState(0);
+ const [repairSlot,setRepairSlot]=useState<string>('');
+ const [undoRepair,setUndoRepair]=useState<{key:string;before:Record<string,string>}|null>(null);
  const [overrides,setOverrides]=useState<Record<string,Record<string,string>>>({});
  const configKey=game+'/'+profile+'/'+teams;
  const plan=useMemo(()=>composeContentPack(items,game,profile,teams,overrides[configKey]??{}),
@@ -29,6 +33,29 @@ export function LaunchInventoryPanel({items,onChoose}:{
   [overrides,profile,teams]);
  const evening=useMemo(()=>prepareFiveGameEvening(items,profile,teams,eveningOverrides),
   [items,profile,teams,eveningOverrides]);
+ const runSheet=useMemo(()=>gameNightRunSheet(items,profile,teams,eveningOverrides),
+  [items,profile,teams,eveningOverrides]);
+ const prioritized=useMemo(()=>prioritizedReviewSlots(plan,evening.spoilers),
+  [plan,evening.spoilers]);
+ const currentRepairSlot=plan.slots.find(s=>s.key===repairSlot)?repairSlot:
+  prioritized[0]?.slot??'';
+ const repairs=useMemo(()=>currentRepairSlot?
+  sourceRepairChoices(items,plan,eveningOverrides,currentRepairSlot,5):[],
+  [items,plan,eveningOverrides,currentRepairSlot]);
+ function useRepair(sourceId:string){
+  const choice=repairs.find(x=>x.sourceId===sourceId);
+  if(!choice)return;
+  const revised=applySourceRepair(items,plan,eveningOverrides,choice);
+  if(!revised)return;
+  setUndoRepair({key:configKey,before:{...overrides[configKey]}});
+  setOverrides(prev=>({...prev,[configKey]:{...revised[game]}}));
+  setStepIndex(0);
+ }
+ function undoLastRepair(){
+  if(!undoRepair||undoRepair.key!==configKey)return;
+  setOverrides(prev=>({...prev,[configKey]:undoRepair.before}));
+  setUndoRepair(null);setStepIndex(0);
+ }
  const rehearsal=useMemo(()=>buildEditorialRehearsal(plan,items),[plan,items]);
  const activeStep=rehearsal.steps[Math.min(stepIndex,rehearsal.steps.length-1)]??null;
  const frame=projectedRehearsalFrame(activeStep);
@@ -116,6 +143,21 @@ export function LaunchInventoryPanel({items,onChoose}:{
    <p>Nur Strukturprüfung aus lokalen Quellen. Kein Beleg für editorische Freigabe,
     tatsächliche Spielauswahl, Sachrichtigkeit, Rechte oder Publikationsreife.</p>
   </div>
+  <section className="g32-evening" aria-label="G32 Fünf-Spiele-Abendplan">
+   <div className="g28-inventory-head"><h3>Fünf-Spiele-Abendplan</h3><strong>NO_GO</strong></div>
+   <p>{runSheet.totalSteps} Moderationsschritte · {runSheet.missing} fehlende Aufgaben
+    {' '}· {runSheet.hardIssues} Strukturkonflikte · {runSheet.reviewIssues} offene Prüfpunkte</p>
+   <nav className="g32-game-rail" aria-label="G32 Spiele wechseln">
+    {runSheet.games.map(entry=><button type="button" key={entry.game}
+     aria-pressed={game===entry.game} onClick={()=>setGameSelection(entry.game)}>
+     <strong>{labels[entry.game]}</strong>
+     <span>{entry.slots} Aufgaben · {entry.hardIssues} Strukturfehler</span>
+     <span>{entry.reviewIssues} Prüfungen · {entry.balanced?'fair verteilt':'Verteilung prüfen'}</span>
+    </button>)}
+   </nav>
+   <p>{runSheet.spoilers.length} spielübergreifende Hinweis-Konflikte.
+    Nur Entwurfsplanung, keine Freigabe und kein Live-Spiel.</p>
+  </section>
   <section className="g30-pack-plan" aria-label="G30 Original-Packplanung">
    <div className="g28-inventory-head">
     <h3>Packplanung · {labels[game]}</h3><strong>NO_GO · Quellenentwürfe</strong>
@@ -162,6 +204,38 @@ export function LaunchInventoryPanel({items,onChoose}:{
      </div>)}
     </div>
    </details>
+   <section className="g32-review" aria-label="G32 Quellenreparatur">
+    <div className="g28-inventory-head">
+     <h3>Offene Aufgaben · {labels[game]}</h3>
+     <strong>{prioritized.length} Prüffälle</strong>
+    </div>
+    {prioritized.length===0?<p>Keine offenen Konflikte in dieser Auswahl.</p>:
+    <div className="g32-review-grid">
+     <div className="g32-review-list">
+      {prioritized.slice(0,25).map(task=><div key={task.slot}>
+       <button type="button" aria-pressed={currentRepairSlot===task.slot}
+        className="exp-secondary" onClick={()=>setRepairSlot(task.slot)}>
+        {task.label} · {task.severity} · {task.issues.join(', ')}
+       </button>
+       {task.itemId&&<button type="button" className="exp-secondary"
+        onClick={()=>{const item=items.find(i=>i.id===task.itemId);if(item)onChoose(item);}}>
+        G10: {task.itemId}</button>}
+      </div>)}
+     </div>
+     <div className="g32-repair-choices">
+      <strong>{plan.slots.find(s=>s.key===currentRepairSlot)?.label??'Kein Quellplatz'}</strong>
+      {repairs.length===0?<p>Keine Alternative ohne zusätzliche strukturelle Risiken.</p>:
+       repairs.map(choice=><button key={choice.sourceId} type="button" className="exp-secondary"
+        onClick={()=>useRepair(choice.sourceId)}>
+        {choice.sourceId} auswählen · {choice.change} Risikopunkte weniger
+       </button>)}
+      <button type="button" className="exp-secondary"
+       disabled={!undoRepair||undoRepair.key!==configKey}
+       onClick={undoLastRepair}>Letzte Quellwahl rückgängig</button>
+     </div>
+    </div>}
+    <p>Alternativen sind lokale Entwurfsvorschläge. Fakten, Quellenrechte und Antworten werden nicht automatisch geprüft.</p>
+   </section>
    <section className="g31-rehearsal" aria-label="G31 Moderationsprobe">
     <div className="g28-inventory-head">
      <h3>Moderationsprobe · {labels[game]}</h3><strong>NO_GO</strong>
