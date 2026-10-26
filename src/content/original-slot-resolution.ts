@@ -100,7 +100,7 @@ export function originalSlotCandidates(items:readonly ContentItem[],
   const evening=prepareFiveGameEvening(items,profile,teams,proposed);
   const selected=evening.plans.find(p=>p.game===game)!;
   const hardAfter=hard(selected.problems);
-  if(hardAfter>initialHard)continue;
+  if(hardAfter>initialHard||evening.spoilers.length>baseline.spoilers.length)continue;
   const after=weight(selected.problems)+evening.spoilers.length*40;
   // A missing slot should actually become usable, not just move the hole.
   if(!slot.selected&&!selected.slots.find(s=>s.key===slotKey)?.selected)continue;

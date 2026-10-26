@@ -35,14 +35,14 @@ describe('G35 native original-source slot completion and moderator continuity',(
   expect(pack.structuralReady).toBe(true);
   expect(pack.sourceDrafts).toBe(pack.selectedIds.length);
   expect(pack.validForPublication).toBe(false);
-  expect(fiveGameReadiness(bank,'kurz',3,selected).release).toBe('NO_GO');
+  expect(fiveGameReadiness(bank,'kurz',3,selected??undefined).release).toBe('NO_GO');
  });
  it('preserves independent game assignments and real 3/4/5-team exposure after reviewer selection',()=>{
   for(const teams of [3,4,5] as const){
    const choices=originalSlotCandidates(bank,'rundenquiz','kurz',teams,start,'wissen:1');
    expect(choices).not.toHaveLength(0);
    const change=selectOriginalSlot(bank,'rundenquiz','kurz',teams,start,choices[0]!);
-   const summary=fiveGameReadiness(bank,'kurz',teams,change);
+   const summary=fiveGameReadiness(bank,'kurz',teams,change??undefined);
    expect(summary.games.every(x=>x.balanced)).toBe(true);
    expect(summary.games.every(x=>x.teamTurns.length===teams)).toBe(true);
    expect(change?.verbindungen).toBeUndefined();
@@ -70,15 +70,15 @@ describe('G35 native original-source slot completion and moderator continuity',(
   expect(selectOriginalSlot(bank,'rundenquiz','kurz',3,start,{
    ...chosen,improvement:9999})).toBeNull();
   expect(selectOriginalSlot(bank,'rundenquiz','kurz',3,start,{
-   ...chosen,approvalGranted:true})).toBeNull();
+   ...chosen,approvalGranted:true as false})).toBeNull();
  });
  it('retains exact rehearsal phase index without issuing host or stage commands',()=>{
   const changed=originalSlotCandidates(bank,'rundenquiz','kurz',3,start,'wissen:1')[0]!;
   const newChoices=selectOriginalSlot(bank,'rundenquiz','kurz',3,start,changed);
-  expect(rehearsalIndexForSlot(bank,'rundenquiz','kurz',3,newChoices,'wissen:1')).toBe(0);
-  expect(rehearsalIndexForSlot(bank,'rundenquiz','kurz',3,newChoices,'wissen:2')).toBe(5);
-  expect(rehearsalIndexForSlot(bank,'rundenquiz','kurz',3,newChoices,'missing-slot')).toBeNull();
-  expect(rehearsalIndexForSlot(bank,'quiztafel','kurz',3,newChoices,'category:1')).toBeNull();
+  expect(rehearsalIndexForSlot(bank,'rundenquiz','kurz',3,newChoices??undefined,'wissen:1')).toBe(0);
+  expect(rehearsalIndexForSlot(bank,'rundenquiz','kurz',3,newChoices??undefined,'wissen:2')).toBe(5);
+  expect(rehearsalIndexForSlot(bank,'rundenquiz','kurz',3,newChoices??undefined,'missing-slot')).toBeNull();
+  expect(rehearsalIndexForSlot(bank,'quiztafel','kurz',3,newChoices??undefined,'category:1')).toBeNull();
  });
  it('checks original category dependency and does not resurrect invalid Quiztafel row',()=>{
   const previous=composeContentPack(bank,'quiztafel','lang',5);
