@@ -1,5 +1,5 @@
 import type {ContentItem} from './contracts';
-import {contentSignature,normalizedKey,validatePayload} from './contracts';
+import {contentSignature,validatePayload} from './contracts';
 import {auditLibrary} from './editorial-audit';
 import {qualitySignals} from './editorial-quality';
 import {PROFILE_COUNTS,selectProfile,type Question} from '../games/rundenquiz/engine';

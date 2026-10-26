@@ -479,3 +479,39 @@ test('G29 native editorial correction combines source-linked hints and accepted 
  await expect(notes).toContainText('0 zugeordnet · 1 veraltet · 0 fehlen');
  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
 });
+
+test('G30 actual five-game pack source assignments and G10 editor handoff stay NO_GO',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const plan=page.getByRole('region',{name:'G30 Original-Packplanung'});
+ await expect(plan).toContainText('NO_GO');
+ await expect(plan).toContainText('Regelstruktur erfüllt');
+ await expect(plan).toContainText('ohne lokale Freigabe');
+ await plan.getByText(/Aufgabenplätze und Originalquellen wählen/).click();
+ const id=await plan.getByRole('combobox',{name:'G30 wissen 1'}).inputValue();
+ expect(id).toMatch(/^rq-/);
+ const exportPromise=page.waitForEvent('download');
+ await plan.getByRole('button',{name:'Quell-IDs als Packplan exportieren'}).click();
+ const out=await exportPromise;
+ const content=JSON.parse(await readFile(await out.path(),'utf8'));
+ expect(content).toMatchObject({format:'ligoquiz-g30-source-ids-only-v1',status:'NO_GO',
+  publicationAuthorized:false,rightsVerified:false,game:'rundenquiz',profile:'lang',teams:5});
+ expect(content.sourceIds).toContain(id);
+ expect(JSON.stringify(content)).not.toContain('"answer"');
+ await plan.getByRole('button',{name:id+' in G10 prüfen'}).first().click();
+ await expect(page.getByRole('region',{name:'Aufgabe bearbeiten'})).toContainText(id);
+ await expect(page.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
+ const selector=page.getByRole('combobox',{name:'G28 Spiel'});
+ await selector.selectOption('quiztafel');
+ await expect(plan).toContainText('Regelstruktur erfüllt');
+ await expect(plan.getByRole('combobox',{name:/G30 Team 5 · 600 Punkte/})).toBeVisible();
+ await selector.selectOption('verbindungen');
+ await expect(plan).toContainText('16er-Wand');
+ await selector.selectOption('logikleiter');
+ await expect(plan.getByRole('combobox',{name:'G30 Stufe 7'})).toBeVisible();
+ await selector.selectOption('umfrageduell');
+ await expect(plan.getByRole('combobox',{name:/G30 Top 3 · 2/})).toBeVisible();
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+});
