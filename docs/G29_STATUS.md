@@ -15,3 +15,5 @@ All 79 sample IDs, independent legacy 704 metadata, game engines, CAS, backups, 
 
 ## Qualification
 Exact-head TypeScript, ESLint, Vitest, built-PWA Chromium and offline verdicts must be established independently at the final commit. No physical venue or rights signoff is claimed.
+
+G29 Chromium #40294171738: 217 genuine browser tests passed, one new G29 worksheet UI case failed because original Rundenquiz hint rounds were incorrectly excluded from manual answer variants. Exact source correction permits source-linked original four-clue manual grades; repeat exact-head Chromium qualification required. G9 original Top-3 test passed in that run; no engine or grading changes.

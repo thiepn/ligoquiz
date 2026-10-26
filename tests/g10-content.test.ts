@@ -752,7 +752,7 @@ describe('G29 source-checked original multi-field editorial corrections',()=>{
   expect(item.review).toBeUndefined();
  });
  it('allows source-linked accepted names only in original manually judged formats',()=>{
-  for(const id of ['rq-w4','qt-natur-6','vb-a-david']){
+  for(const id of ['rq-w4','rq-h1','qt-natur-6','vb-a-david']){
    const item=trialDraftItems().find(i=>i.id===id)!;
    const proposal=worksheetQualityBatchProposal(note(item,'Antwortvarianten: Alternative A | Alternative B',''),item);
    expect(proposal?.changes[0]?.field).toBe('Antwortvarianten');
