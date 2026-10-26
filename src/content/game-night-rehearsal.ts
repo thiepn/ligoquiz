@@ -12,6 +12,7 @@ export type RehearsalStep={
 export type Rehearsal={
  game:GameType;profile:PreparationPlan['profile'];teams:PreparationPlan['teams'];
  steps:RehearsalStep[];taskCount:number;missingCount:number;conflictedCount:number;
+ teamTurns:readonly number[];balancedTeamExposure:boolean;
  canStartLiveGame:false;publicAnswersIncluded:false;release:'NO_GO';
 };
 function phases(game:GameType,slot:string):readonly string[]{
@@ -36,6 +37,7 @@ export function buildEditorialRehearsal(plan:PreparationPlan,items:readonly Cont
  const known=new Map(items.map(item=>[item.id,item]));
  const slots=plan.slots.filter(s=>!s.key.startsWith('category:'));
  const steps:RehearsalStep[]=[];
+ const teamTurns=Array.from({length:plan.teams},()=>0);
  let index=0,missingCount=0,conflictedCount=0;
  for(const slot of slots){
   const item=slot.selected?known.get(slot.selected):undefined;
@@ -45,6 +47,10 @@ export function buildEditorialRehearsal(plan:PreparationPlan,items:readonly Cont
   if(issues.length)conflictedCount++;
   const team=/(?:Team )([3-5]|[12])(?:\b|$)/u.exec(slot.label);
   const teamNumber=team?Number(team[1]):null;
+  if(plan.game==='quiztafel'||plan.game==='verbindungen'){
+   if(teamNumber&&teamTurns[teamNumber-1]!==undefined)teamTurns[teamNumber-1]!++;
+   else if(slot.key.startsWith('wall:'))teamTurns.forEach((_,i)=>{teamTurns[i]!++;});
+  }else teamTurns.forEach((_,i)=>{teamTurns[i]!++;});
   for(const phase of phases(plan.game,slot.key)){
    const desc=describeHostStep({
     game:plan.game,phase,paused:false,recovery:false,
@@ -56,7 +62,8 @@ export function buildEditorialRehearsal(plan:PreparationPlan,items:readonly Cont
   }
  }
  return {game:plan.game,profile:plan.profile,teams:plan.teams,steps,
-  taskCount:slots.length,missingCount,conflictedCount,
+  taskCount:slots.length,missingCount,conflictedCount,teamTurns,
+  balancedTeamExposure:Math.max(...teamTurns)-Math.min(...teamTurns)===0,
   canStartLiveGame:false,publicAnswersIncluded:false,release:'NO_GO'};
 }
 /** Source references on the moderator side only. Stage gets no payload, clue or solution. */
