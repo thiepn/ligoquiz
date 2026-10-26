@@ -64,3 +64,31 @@ for (const [label, selector, count] of games) {
     }
   });
 }
+
+test('G33 original source-only pack plan survives installed PWA offline reload without enabling play',async({page,context})=>{
+ await page.goto('/#/technik');
+ await page.evaluate(()=>globalThis.navigator.serviceWorker.ready);
+ await page.reload();
+ await expect.poll(()=>page.evaluate(()=>Boolean(globalThis.navigator.serviceWorker.controller))).toBe(true);
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ await page.getByRole('combobox',{name:'G28 Profil'}).selectOption('kurz');
+ await page.getByRole('combobox',{name:'G28 Teams'}).selectOption('3');
+ await page.getByRole('combobox',{name:'G28 Spiel'}).selectOption('logikleiter');
+ const saved=page.getByRole('region',{name:'G33 Lokaler Abendplan'});
+ await saved.getByRole('button',{name:'Abendplan lokal speichern'}).click();
+ await expect(saved).toContainText('Revision 1');
+ await context.setOffline(true);
+ try{
+  await page.reload();
+  await expect(page.getByRole('heading',{name:'Inhaltsatelier'})).toBeVisible();
+  await expect(saved).toContainText('Revision 1');
+  await expect(page.getByRole('combobox',{name:'G28 Spiel'})).toHaveValue('logikleiter');
+  await expect(page.getByRole('combobox',{name:'G28 Profil'})).toHaveValue('kurz');
+  await expect(page.getByRole('combobox',{name:'G28 Teams'})).toHaveValue('3');
+  await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
+  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+ }finally{await context.setOffline(false);}
+});
