@@ -67,3 +67,8 @@
 .g33-persistence [role="alert"]{border:1px solid var(--border,#68717b);
  padding:.6rem;margin:.7rem 0}
 .g33-persistence [role="alert"] p{margin:.35rem 0}
+
+.g34-recovery{margin:.65rem 0}
+.g34-recovery-list{max-height:24rem;overflow:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.5rem}
+.g34-recovery-list>div{border:1px solid var(--border,#68717b);padding:.65rem;display:flex;flex-direction:column;gap:.4rem}
+.g34-recovery-list strong,.g34-recovery-list span{overflow-wrap:anywhere}

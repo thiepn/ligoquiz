@@ -92,3 +92,44 @@ test('G33 original source-only pack plan survives installed PWA offline reload w
   await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
  }finally{await context.setOffline(false);}
 });
+
+test('G34 installed offline G10 source revision recovery keeps other slots and never authorizes release',async({page,context})=>{
+ await page.goto('/#/technik');
+ await page.evaluate(()=>globalThis.navigator.serviceWorker.ready);
+ await page.reload();
+ await expect.poll(()=>page.evaluate(()=>Boolean(globalThis.navigator.serviceWorker.controller))).toBe(true);
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const persisted=page.getByRole('region',{name:'G33 Lokaler Abendplan'});
+ await persisted.getByRole('button',{name:'Abendplan lokal speichern'}).click();
+ await expect(persisted).toContainText('Revision 1');
+ const plan=page.getByRole('region',{name:'G30 Original-Packplanung'});
+ await plan.getByText(/Aufgabenplätze und Originalquellen wählen/).click();
+ const source=await plan.getByRole('combobox',{name:'G30 wissen 1'}).inputValue();
+ const sibling=await plan.getByRole('combobox',{name:'G30 wissen 2'}).inputValue();
+ await plan.getByRole('button',{name:source+' in G10 prüfen'}).first().click();
+ const editor=page.getByRole('region',{name:'Aufgabe bearbeiten'});
+ const prompt=editor.getByRole('textbox',{name:'Fragestellung'});
+ await prompt.fill((await prompt.inputValue())+' – offline redaktionell geändert');
+ await editor.getByRole('button',{name:'Änderungen als Entwurf speichern'}).click();
+ await expect(persisted).toContainText('Quellen geändert');
+ await context.setOffline(true);
+ try{
+  await page.reload();
+  await expect(persisted).toContainText('Quellen geändert');
+  const recover=persisted.getByRole('region',{name:'G34 Teilwiederherstellung'});
+  await recover.getByRole('button',{name:'Gültige Quellen prüfen'}).click();
+  await expect(recover.getByLabel('G34 Betroffene Quellplätze')).toContainText(source);
+  page.once('dialog',dialog=>dialog.accept());
+  await recover.getByRole('button',{name:/Quellen behalten · .* Plätze leeren/}).click();
+  await expect(persisted).toContainText('Revision 2');
+  await page.reload();
+  await expect(persisted).toContainText('Revision 2');
+  await plan.getByText(/Aufgabenplätze und Originalquellen wählen/).click();
+  await expect(plan.getByRole('combobox',{name:'G30 wissen 1'})).toHaveValue('');
+  await expect(plan.getByRole('combobox',{name:'G30 wissen 2'})).toHaveValue(sibling);
+  await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
+ }finally{await context.setOffline(false);}
+});
