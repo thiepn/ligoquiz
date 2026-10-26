@@ -2,6 +2,7 @@ import {useMemo,useState} from 'react';
 import {GAME_TYPES,type GameType,type GameProfile} from '../../domain/game/contracts';
 import type {ContentItem} from '../../content/contracts';
 import {launchContentInventory} from '../../content/launch-inventory';
+import {composeContentPack,exportPreparationPlan,prepareFiveGameEvening} from '../../content/pack-preparation';
 import '../../styles/g28-launch-inventory.css';
 
 const labels:Record<GameType,string>={
@@ -17,6 +18,17 @@ export function LaunchInventoryPanel({items,onChoose}:{
  const [profile,setProfile]=useState<GameProfile>('lang');
  const [teams,setTeams]=useState<3|4|5>(5);
  const [showAll,setShowAll]=useState(false);
+ const [overrides,setOverrides]=useState<Record<string,Record<string,string>>>({});
+ const configKey=game+'/'+profile+'/'+teams;
+ const plan=useMemo(()=>composeContentPack(items,game,profile,teams,overrides[configKey]??{}),
+  [items,game,profile,teams,overrides,configKey]);
+ const evening=useMemo(()=>prepareFiveGameEvening(items,profile,teams),[items,profile,teams]);
+ function downloadPlan(){
+  const blob=new Blob([exportPreparationPlan(plan)],{type:'application/json;charset=utf-8'});
+  const url=URL.createObjectURL(blob),link=document.createElement('a');
+  try{link.href=url;link.download='ligoquiz-g30-packplan-quell-ids.json';link.click();}
+  finally{window.setTimeout(()=>URL.revokeObjectURL(url),1000);}
+ }
  const program=inventory.programs.find(p=>
   p.game===game&&p.profile===profile&&p.teams===teams)!;
  const queue=inventory.priorities.filter(p=>p.item.game===game);
@@ -82,6 +94,55 @@ export function LaunchInventoryPanel({items,onChoose}:{
    <p>Nur Strukturprüfung aus lokalen Quellen. Kein Beleg für editorische Freigabe,
     tatsächliche Spielauswahl, Sachrichtigkeit, Rechte oder Publikationsreife.</p>
   </div>
+  <section className="g30-pack-plan" aria-label="G30 Original-Packplanung">
+   <div className="g28-inventory-head">
+    <h3>Packplanung · {labels[game]}</h3><strong>NO_GO · Quellenentwürfe</strong>
+   </div>
+   <p>{plan.slots.length} Plätze · {plan.selectedIds.length} zugeordnete Aufgaben ·
+    {' '}{plan.sourceDrafts} ohne lokale Freigabe · {plan.problems.length} Prüfhinweise</p>
+   <strong>{plan.structuralReady?'Regelstruktur erfüllt':'Spielstruktur unvollständig'}</strong>
+   {plan.problems.length>0&&<div className="g30-pack-problems" aria-label="G30 Packrisiken">
+    {plan.problems.slice(0,20).map((problem,i)=><p key={problem.code+'-'+i}>
+     <b>{problem.code}:</b> {problem.message}
+     {problem.itemIds.map(id=><span key={id}> {id}</span>)}</p>)}
+   </div>}
+   {evening.spoilers.length>0&&<div className="g30-pack-problems"
+    aria-label="G30 Spielübergreifende Hinweis-Konflikte">
+    <strong>Spielübergreifende Hinweis-Konflikte</strong>
+    {evening.spoilers.map((problem,i)=><div key={i}>
+     {problem.itemIds.map(id=><button type="button" className="exp-secondary" key={id}
+      onClick={()=>{const item=items.find(x=>x.id===id);if(item)onChoose(item);}}>
+      {id} im G10-Editor prüfen</button>)}
+    </div>)}
+   </div>}
+   <div className="g30-plan-actions">
+    <button type="button" className="exp-secondary" onClick={downloadPlan}
+     disabled={!plan.selectedIds.length}>Quell-IDs als Packplan exportieren</button>
+    <button type="button" className="exp-secondary"
+     onClick={()=>setOverrides(prev=>({...prev,[configKey]:{}}))}>
+     Auswahl zurücksetzen</button>
+   </div>
+   <details>
+    <summary>Aufgabenplätze und Originalquellen wählen ({plan.slots.length})</summary>
+    <div className="g30-pack-slots">
+     {plan.slots.map(slot=><div key={slot.key} className="g30-pack-slot">
+      <label>{slot.label}
+       <select value={slot.selected??''} aria-label={'G30 '+slot.label}
+        onChange={e=>setOverrides(prev=>({...prev,[configKey]:{
+         ...prev[configKey],[slot.key]:e.target.value}}))}>
+        <option value="">Nicht besetzt</option>
+        {slot.options.map(id=><option value={id} key={id}>{id}</option>)}
+       </select>
+      </label>
+      {slot.selected&&<button type="button" className="exp-secondary"
+       onClick={()=>{const item=items.find(x=>x.id===slot.selected);if(item)onChoose(item);}}>
+       {slot.selected} in G10 prüfen</button>}
+     </div>)}
+    </div>
+   </details>
+   <p>Die Planung verwendet nur Original-IDs und bestehende Regeln. Auch vollständig besetzte Packs bleiben
+    ohne unabhängige Redaktion, Rechteprüfung und G26-Entscheid nicht veröffentlichbar.</p>
+  </section>
   <details>
    <summary>Alle 45 Kombinationen ({inventory.programs.filter(p=>p.structurallyComplete).length} strukturell vollständig)</summary>
    <table><thead><tr><th>Spiel</th><th>Profil</th><th>Teams</th><th>Struktur</th></tr></thead>

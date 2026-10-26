@@ -24,3 +24,13 @@
 .g28-priority:hover,.g28-priority:focus-visible{outline:2px solid currentColor;outline-offset:2px}
 .g28-priority span{font-size:.9rem}
 @media(max-width:600px){.g28-inventory{padding:.7rem}.g28-program-controls{flex-direction:column;align-items:stretch}.g28-program-controls label{justify-content:space-between}}
+.g30-pack-plan{border-top:1px solid var(--border,#68717b);padding:1rem 0}
+.g30-pack-plan h3{margin:0;font-size:1.15rem}
+.g30-pack-plan>strong{display:block;margin:.6rem 0}
+.g30-pack-problems{border:1px solid var(--border,#68717b);padding:.65rem;margin-block:.5rem;max-height:22rem;overflow-y:auto}
+.g30-pack-problems p{margin:.5rem 0}
+.g30-plan-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin:.8rem 0}
+.g30-pack-slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.55rem;margin-block:.8rem}
+.g30-pack-slot{border:1px solid var(--border,#68717b);padding:.7rem;display:flex;flex-direction:column;align-items:stretch;gap:.65rem}
+.g30-pack-slot label{display:flex;flex-direction:column;gap:.25rem;font-weight:600}
+.g30-pack-slot select{font-size:1rem;min-height:44px;width:100%}
