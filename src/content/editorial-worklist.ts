@@ -383,7 +383,7 @@ export function worksheetQualityBatchProposal(note:ImportedReviewNote,item:Conte
   payload[proposal.field]=proposal.after;
  }else if(answerNote.startsWith('Antwortvarianten: ')){
   const field=item.game==='verbindungen'&&p.kind==='clues'?'target':
-   item.game==='rundenquiz'&&['wissen','finale'].includes(String(p.round))?'answer':
+   item.game==='rundenquiz'&&['wissen','hinweise','finale'].includes(String(p.round))?'answer':
    item.game==='quiztafel'?'answer':null;
   const original=field&&typeof p[field]==='string'?p[field] as string:null;
   if(!field||!original||original.includes(' / '))return null;
