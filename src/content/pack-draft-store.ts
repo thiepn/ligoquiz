@@ -28,7 +28,7 @@ function fail(code:PreparationError['code'],message:string):never{
 function plain(v:unknown):v is Record<string,unknown>{
  return v!==null&&typeof v==='object'&&!Array.isArray(v);
 }
-const SAFE=/^[a-zA-Z0-9_:.\/-]{1,128}$/u;
+const SAFE=/^[a-zA-Z0-9_:./-]{1,128}$/u;
 export function assertSavedPreparation(raw:unknown):SavedPreparation{
  if(!plain(raw)||raw.key!=='current'||raw.format!==FORMAT||raw.sourceOnly!==true||
   raw.release!=='NO_GO'||!Number.isSafeInteger(raw.revision)||Number(raw.revision)<1||
