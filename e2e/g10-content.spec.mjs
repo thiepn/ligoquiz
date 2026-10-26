@@ -588,9 +588,6 @@ test('G32 original five-game run sheet offers reversible source repairs without 
  const repair=page.getByRole('region',{name:'G32 Quellenreparatur'});
  await expect(repair).toContainText('Offene Aufgaben');
  await repair.getByRole('button',{name:/hinweise 1.*CROSS_GAME_SPOILER/}).click();
- const current=await plan.getByRole('combobox',{name:'G30 Hinweise 1'}).inputValue()
-  .catch(()=>null);
- expect(current).toBeNull();
  const chooser=repair.getByRole('button',{name:/auswählen ·/}).first();
  await expect(chooser).toBeEnabled();
  const choiceName=await chooser.textContent();

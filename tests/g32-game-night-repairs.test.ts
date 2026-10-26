@@ -57,7 +57,7 @@ describe('G32 local five-game run sheet and source-constrained editorial repair'
   const fixed=applySourceRepair(bank,plan,{},choices[0]!);
   expect(fixed?.rundenquiz?.['hinweise:1']).toBe(choices[0]!.sourceId);
   expect(fixed?.quiztafel).toBeUndefined();
-  expect(gameNightRunSheet(bank,'kurz',3,fixed).publishAllowed).toBe(false);
+  expect(gameNightRunSheet(bank,'kurz',3,fixed!).publishAllowed).toBe(false);
   expect(composeContentPack(bank,'rundenquiz','kurz',3).selectedIds).toContain('rq-h1');
  });
  it('rejects forged choices, incorrect score receipts and stale local candidates',()=>{
