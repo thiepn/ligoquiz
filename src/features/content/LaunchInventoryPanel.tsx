@@ -179,7 +179,7 @@ export function LaunchInventoryPanel({items,onChoose}:{
       Nächstes Spiel</button>
     </div>
     <div className="g31-two-views">
-     <div className="g31-moderator" aria-label="G31 Spielleitung">
+     <section className="g31-moderator" aria-label="G31 Spielleitung">
       <h4>Spielleitung</h4>
       {activeStep?<div aria-live="polite">
        <strong>Schritt {activeStep.index+1} / {rehearsal.steps.length} · {activeStep.slotLabel}</strong>
@@ -191,11 +191,11 @@ export function LaunchInventoryPanel({items,onChoose}:{
         onClick={()=>{const item=items.find(x=>x.id===activeStep.sourceId);
          if(item)onChoose(item);}}>Quelle {activeStep.sourceId} in G10 prüfen</button>}
       </div>:<p>Keine Aufgaben für dieses Profil.</p>}
-     </div>
-     <div className="g31-stage" aria-label="G31 Beamer-Probe">
+     </section>
+     <section className="g31-stage" aria-label="G31 Beamer-Probe">
       <h4>Beamer · Vorschau</h4>
       <strong aria-live="polite">{frame.stage}</strong>
-     </div>
+     </section>
     </div>
     <p>Lesbare Simulation der ursprünglichen Moderationsphasen. Kein Spielstand,
      keine Bewertung, keine Live-Projektion oder Veröffentlichung.</p>
