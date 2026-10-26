@@ -279,7 +279,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
      saveState==='loading'?'Lädt':saveState==='error'?'Speicherfehler':'Nicht gespeichert'}</strong>
    </div>
    {pendingChanges&&saveState==='ready'&&<p>Ungespeicherte Auswahl oder Moderationsposition</p>}
-   {saveState==='stale'&&<div className="g34-recovery" aria-label="G34 Teilwiederherstellung">
+   {saveState==='stale'&&<section className="g34-recovery" aria-label="G34 Teilwiederherstellung">
     <div className="g33-actions">
      <button type="button" className="exp-secondary" disabled={saving||!saved}
       onClick={()=>void previewRecovery()}>Gültige Quellen prüfen</button>
@@ -289,7 +289,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
       {recovery.retained} Quellen behalten · {recovery.cleared.length} Plätze leeren
      </button>}
     </div>
-    {recovery&&<div className="g34-recovery-list" aria-label="G34 Betroffene Quellplätze">
+    {recovery&&<section className="g34-recovery-list" aria-label="G34 Betroffene Quellplätze">
      {recovery.cleared.map(gap=><div key={gap.game+'/'+gap.slot}>
       <strong>{labels[gap.game]} · {gap.slot}</strong>
       <span>{gap.sourceId??'Ohne Quelle'} · {gap.reason==='changed'?'Quelle geändert':
@@ -300,8 +300,8 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
         onClick={()=>{const item=items.find(x=>x.id===gap.sourceId);if(item)onChoose(item);}}>
         Quelle in G10 prüfen</button>}
      </div>)}
-    </div>}
-   </div>}
+    </section>}
+   </section>}
    {saveIssues.length>0&&<div role="alert">
     {saveIssues.map((issue,i)=><p key={i}>{issue}</p>)}
     {saveIssues.map(issue=>issue.split(':')[0]!).filter((key,i,all)=>all.indexOf(key)===i)
