@@ -10,7 +10,7 @@ import {LaunchInventoryPanel} from './LaunchInventoryPanel';
 import {StructuredQuestionEditor} from './StructuredQuestionEditor';
 import {trialDraftBundle} from '../../content/trial-draft-bundle';
 import {contentReviewTasks,historicalTrialCorrection,draftSourceCitation,type ReviewRoute} from '../../content/editorial-source-review';
-import {exportReviewWorksheet,previewReviewWorksheet,worksheetSourceProposal,worksheetAnswerProposal,worksheetWordingProposal,worksheetDetailProposal,refreshReviewWorksheet} from '../../content/editorial-worklist';
+import {exportReviewWorksheet,previewReviewWorksheet,worksheetSourceProposal,worksheetAnswerProposal,worksheetWordingProposal,worksheetDetailProposal,refreshReviewWorksheet,worksheetQualityBatchProposal} from '../../content/editorial-worklist';
 
 
 const LABELS:Record<GameType,string>={
@@ -193,6 +193,20 @@ export function ContentStudio(){
  }
 
 
+ function stageQualityBatch(entry:NonNullable<typeof reviewerNotes>['rows'][number]){
+  const task=sourceTasks.find(x=>x.item.id===entry.id);
+  const proposal=task?worksheetQualityBatchProposal(entry,task.item):null;
+  if(!task||!proposal)return;
+  if(current&&(json!==JSON.stringify(current.payload,null,2)||
+   rightsDraft!==(current.provenance.rights??'')||reviewNote.trim()||
+   reviewer.trim()||checklist.some(Boolean))){
+   setError('Ungespeicherte Änderungen zuerst sichern oder verwerfen; Qualitätskorrektur nicht übernommen.');
+   return;
+  }
+  choose(task.item);
+  setJson(JSON.stringify(proposal.payload,null,2));
+  setMessage('Quellenbasierte Qualitätskorrekturen im ungespeicherten G10-Entwurf vorbereitet. Unabhängig prüfen.');
+ }
  function stageReviewDetail(entry:NonNullable<typeof reviewerNotes>['rows'][number]){
   const task=sourceTasks.find(x=>x.item.id===entry.id);
   if(!task||entry.status!=='current')return;
@@ -377,6 +391,7 @@ export function ContentStudio(){
        const answerProposal=task?worksheetAnswerProposal(entry,task.item):null;
        const wordingProposal=task?worksheetWordingProposal(entry,task.item):null;
        const detailProposal=task?worksheetDetailProposal(entry,task.item):null;
+       const batchProposal=task?worksheetQualityBatchProposal(entry,task.item):null;
        const hasSourceNote=entry.notes.some(note=>note.heading==='Beleg geprüft');
        return <section key={entry.id} className="cx-worksheet-note">
        <div><strong>{entry.id} · {entry.status==='current'?'Aktuell':'Veraltet'}</strong>
@@ -386,6 +401,13 @@ export function ContentStudio(){
         onClick={()=>{const task=sourceTasks.find(task=>task.item.id===entry.id);
          if(task)choose(task.item);
         }}>Aufgabe zu Notizen öffnen</button>
+       {batchProposal&&<div className="cx-answer-proposal">
+        <strong>Qualitätskorrekturen · ungeprüft</strong>
+        {batchProposal.changes.map(change=><p key={change.field}>
+         <b>{change.field}:</b> {change.before} → {change.after}</p>)}
+        <button type="button" className="exp-secondary" disabled={busy}
+         onClick={()=>stageQualityBatch(entry)}>Qualitätskorrekturen im Entwurf vorbereiten</button>
+       </div>}
        {proposal&&<button type="button" className="exp-secondary" disabled={busy}
         onClick={()=>stageReviewCitation(entry)}>Quellenlink im Entwurf vorbereiten</button>}
        {answerProposal&&!wordingProposal&&<div className="cx-answer-proposal">

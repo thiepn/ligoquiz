@@ -12,7 +12,7 @@ import {sampleQuiztafel} from '../src/games/quiztafel/trial-bank';
 import type {GameType} from '../src/domain/game/contracts';
 import {trialDraftBundle,trialDraftItems} from '../src/content/trial-draft-bundle';
 import {contentReviewTasks,originalSourceLead,historicalTrialCorrection,draftSourceCitation} from '../src/content/editorial-source-review';
-import {exportReviewWorksheet,worksheetCell,previewReviewWorksheet,worksheetSourceProposal,worksheetAnswerProposal,worksheetWordingProposal,worksheetDetailProposal,refreshReviewWorksheet} from '../src/content/editorial-worklist';
+import {exportReviewWorksheet,worksheetCell,previewReviewWorksheet,worksheetSourceProposal,worksheetAnswerProposal,worksheetWordingProposal,worksheetDetailProposal,refreshReviewWorksheet,worksheetQualityBatchProposal} from '../src/content/editorial-worklist';
 
 const teams=Array.from({length:5},(_,i)=>({id:'team-'+i,name:'Team '+(i+1),order:i}));
 const item=(game:GameType,payload:unknown):ContentItem=>createDraft(game,payload,123);
@@ -728,5 +728,72 @@ describe('G27 source-specific multi-visit editorial reconciliation',()=>{
   expect(worksheetSourceProposal(modified,q)).toBeNull();
   expect(()=>refreshReviewWorksheet(csv+csv.split('\r\n')[1]+'\r\n',tasks)).toThrow();
   expect(()=>refreshReviewWorksheet('bad,csv',tasks)).toThrow();
+ });
+});
+
+describe('G29 source-checked original multi-field editorial corrections',()=>{
+ const note=(item:ContentItem,answer:string,details:string,url='https://example.org/original')=>{
+  const task=contentReviewTasks([item])[0]!;
+  const values=[answer,url,'',details,''].map(worksheetCell).join(',');
+  const csv=exportReviewWorksheet([task]).replace(/,"","","","",""\r\n$/u,','+values+'\r\n');
+  return previewReviewWorksheet(csv,[task]).rows[0]!;
+ };
+ it('combines two original clue revisions and a source-bound manual answer correction',()=>{
+  const item=trialDraftItems().find(i=>i.id==='rq-h1')!,snapshot=JSON.stringify(item);
+  const proposal=worksheetQualityBatchProposal(note(item,'Vorschlag: Ein redaktioneller Zielname',
+   'Hinweis 1: Erster präziser Hinweis.\nHinweis 2: Zweiter präziser Hinweis.'),item);
+  expect(proposal?.changes.map(x=>x.field)).toEqual(['Hinweis 1','Hinweis 2','Antwort']);
+  expect((proposal!.payload.clues as string[]).slice(0,2)).toEqual([
+   'Erster präziser Hinweis.','Zweiter präziser Hinweis.']);
+  expect((proposal!.payload.clues as string[])[2]).toBe((item.payload as {clues:string[]}).clues[2]);
+  expect(proposal?.payload.answer).toBe('Ein redaktioneller Zielname');
+  expect(validatePayload(item.game,proposal!.payload)).toEqual([]);
+  expect(JSON.stringify(item)).toBe(snapshot);
+  expect(item.review).toBeUndefined();
+ });
+ it('allows source-linked accepted names only in original manually judged formats',()=>{
+  for(const id of ['rq-w4','qt-natur-6','vb-a-david']){
+   const item=trialDraftItems().find(i=>i.id===id)!;
+   const proposal=worksheetQualityBatchProposal(note(item,'Antwortvarianten: Alternative A | Alternative B',''),item);
+   expect(proposal?.changes[0]?.field).toBe('Antwortvarianten');
+   expect(String(proposal!.payload[item.game==='verbindungen'?'target':'answer']))
+    .toContain(' / Alternative A / Alternative B');
+   expect(validatePayload(item.game,proposal!.payload)).toEqual([]);
+  }
+  for(const id of ['rq-s1','ll-02','ud-01','vb-b-week','vb-wall-1']){
+   const item=trialDraftItems().find(i=>i.id===id)!;
+   expect(worksheetQualityBatchProposal(note(item,'Antwortvarianten: Alternative',''),item)).toBeNull();
+  }
+ });
+ it('combines original sequence wording and proof while preserving stable IDs',()=>{
+  const item=trialDraftItems().find(i=>i.id==='vb-b-week')!;
+  const proposal=worksheetQualityBatchProposal(note(item,'Vorschlag: Freitag',
+   'Fragevorschlag: Welche Folge wird fortgesetzt?\n'+
+   'Folgenelement 2: Angepasster Schritt.\nErklärungsvorschlag: Eine unabhängige Begründung wird geprüft.'),item);
+  expect(proposal?.payload.prompt).toBe('Welche Folge wird fortgesetzt?');
+  expect((proposal?.payload.items as string[])[1]).toBe('Angepasster Schritt.');
+  expect(proposal?.payload.answer).toBe('Freitag');
+  expect(validatePayload(item.game,proposal!.payload)).toEqual([]);
+  expect((proposal?.payload as {id:string}).id).toBe(item.id);
+ });
+ it('refuses stale notes, untrusted sources, duplicate markers and unsupported or repeated alternatives',()=>{
+  const item=trialDraftItems().find(i=>i.id==='rq-w4')!;
+  const current=note(item,'Antwortvarianten: Vienna','');
+  expect(worksheetQualityBatchProposal({...current,status:'changed'},item)).toBeNull();
+  expect(worksheetQualityBatchProposal(current,{...item,status:'approved'})).toBeNull();
+  expect(worksheetQualityBatchProposal(note(item,'Antwortvarianten: Vienna','','http://example.org'),item)).toBeNull();
+  for(const answer of ['Antwortvarianten: Wien','Antwortvarianten: Vienna | Vienna',
+   'Antwortvarianten: '+'x'.repeat(101)]){
+   expect(worksheetQualityBatchProposal(note(item,answer,''),item)).toBeNull();
+  }
+  expect(worksheetQualityBatchProposal(note(item,'',
+   'Fragevorschlag: Erste Frage?\nFragevorschlag: Zweite Frage?'),item)).toBeNull();
+  expect(worksheetQualityBatchProposal(note(item,'','Unbekannt: Daten ändern'),item)).toBeNull();
+  const modified={...item,payload:{...item.payload as object,prompt:'Nach Export verändert'}};
+  const task=contentReviewTasks([item])[0]!;
+  const csv=exportReviewWorksheet([task]).replace(/,"","","","",""\r\n$/u,
+   ',"Antwortvarianten: Vienna","https://example.org/source","","",""\r\n');
+  const stale=previewReviewWorksheet(csv,contentReviewTasks([modified])).rows[0]!;
+  expect(worksheetQualityBatchProposal(stale,modified)).toBeNull();
  });
 });

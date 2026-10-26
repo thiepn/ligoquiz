@@ -1,4 +1,4 @@
-import {validatePayload,type ContentItem} from './contracts';
+import {validatePayload,normalizedKey,type ContentItem} from './contracts';
 import type {SourceReviewTask} from './editorial-source-review';
 
 /** A local-only research worksheet; blank reviewer fields are deliberately not decisions. */
@@ -329,4 +329,75 @@ export function refreshReviewWorksheet(source:string,tasks:readonly SourceReview
   return [...row.slice(0,14),...(notes??['','','','',''])].map(worksheetCell).join(',');
  }).join('\r\n')+'\r\n';
  return {csv,carried:currentIds.size,excludedChanged:review.changed,excludedMissing:review.missing};
+}
+
+export type QualityBatchChange={field:string;before:string;after:string};
+export type QualityBatchProposal={
+ payload:Record<string,unknown>;reference:string;changes:readonly QualityBatchChange[];
+};
+/**
+ * Stage several independent reviewer-sourced corrections in the original
+ * unsaved G10 editor. This does not decide accepted answers or source rights.
+ */
+export function worksheetQualityBatchProposal(note:ImportedReviewNote,item:ContentItem):QualityBatchProposal|null{
+ const reference=worksheetSourceProposal(note,item);
+ if(!reference||note.status!=='current'||note.id!==item.id||item.status!=='draft')return null;
+ const p=item.payload as Record<string,unknown>,payload:Record<string,unknown>={...p,reference};
+ const changes:QualityBatchChange[]=[],used=new Set<string>();
+ const add=(field:string,before:string,after:string)=>{
+  if(used.has(field)||before===after)return false;
+  used.add(field);changes.push({field,before,after});return true;
+ };
+ const lines=(note.notes.find(x=>x.heading==='Spielleitung geprüft')?.text??'')
+  .split(/\r?\n/u).map(x=>x.trim()).filter(Boolean);
+ if(lines.length>8)return null;
+ const wording=lines.filter(x=>/^(?:Fragevorschlag: |Hinweis [1-4]: )/u.test(x));
+ const details=lines.filter(x=>!wording.includes(x));
+ const single=(text:string):ImportedReviewNote=>({...note,notes:note.notes.map(x=>
+  x.heading==='Spielleitung geprüft'?{...x,text}:x)});
+ for(const line of wording){
+  const proposal=worksheetWordingProposal(single(line),item);
+  if(!proposal)return null;
+  const field=proposal.kind==='clue'?'Hinweis '+((proposal.clueIndex??0)+1):'Fragestellung';
+  if(!add(field,proposal.before,proposal.after))return null;
+  if(proposal.kind==='clue'){
+   const clues=(payload.clues as string[]|undefined)??(p.clues as string[]);
+   const next=clues.slice();next[proposal.clueIndex!]=proposal.after;payload.clues=next;
+  }else payload.prompt=proposal.after;
+ }
+ if(details.length){
+  const proposal=worksheetDetailProposal(single(details.join('\n')),item);
+  if(!proposal)return null;
+  for(const change of proposal.changes.filter(x=>x.field!=='Antwort')){
+   if(!add(change.field,change.before,change.after))return null;
+  }
+  for(const field of ['hint','explanation','items','tiles','groups']){
+   if(field in proposal.payload&&proposal.payload[field]!==p[field])
+    payload[field]=proposal.payload[field];
+  }
+ }
+ const answerNote=note.notes.find(x=>x.heading==='Antwort geprüft')?.text.trim()??'';
+ if(answerNote.startsWith('Vorschlag: ')){
+  const proposal=worksheetAnswerProposal(note,item);
+  if(!proposal||!add('Antwort',proposal.before,proposal.after))return null;
+  payload[proposal.field]=proposal.after;
+ }else if(answerNote.startsWith('Antwortvarianten: ')){
+  const field=item.game==='verbindungen'&&p.kind==='clues'?'target':
+   item.game==='rundenquiz'&&['wissen','finale'].includes(String(p.round))?'answer':
+   item.game==='quiztafel'?'answer':null;
+  const original=field&&typeof p[field]==='string'?p[field] as string:null;
+  if(!field||!original||original.includes(' / '))return null;
+  const variants=answerNote.slice('Antwortvarianten: '.length).split('|').map(x=>x.trim());
+  const normalized=[normalizedKey(original),...variants.map(normalizedKey)];
+  if(variants.length===0||variants.length>3||variants.some(x=>!x||x.length>100||
+   /[\r\n/<>]/u.test(x)||[...x].some(c=>c.charCodeAt(0)<32))||
+   new Set(normalized).size!==normalized.length)return null;
+  const after=[original,...variants].join(' / ');
+  if(after.length>500||!add('Antwortvarianten',original,after))return null;
+  payload[field]=after;
+ }else if(answerNote.startsWith('Vorschlag:')||answerNote.startsWith('Antwortvarianten:')){
+  return null;
+ }
+ if(!changes.length||validatePayload(item.game,payload).length)return null;
+ return {payload,reference,changes};
 }

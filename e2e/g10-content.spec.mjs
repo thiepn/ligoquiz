@@ -445,3 +445,37 @@ test('G28 launch inventory exposes real source counts and actionable five-engine
  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
  await expect(panel).toContainText('NO_GO');
 });
+
+test('G29 native editorial correction combines source-linked hints and accepted variants in a draft',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ await queue.getByRole('combobox',{name:'Prüfgruppe'}).selectOption('lookup');
+ await queue.getByRole('checkbox',{name:'Nur Qualitätsrisiken'}).check();
+ await queue.getByRole('button',{name:/rq-h1/}).click();
+ await expect(page.getByRole('region',{name:'Quellenabgleich'})).toContainText('Gleiches Hinweisziel');
+ const waiting=page.waitForEvent('download');
+ await queue.getByRole('button',{name:'Alle Aufgaben als CSV'}).click();
+ const file=await waiting,csv=await readFile(await file.path(),'utf8');
+ const corrections=['Antwortvarianten: König David','https://example.org/source','',
+  'Hinweis 1: Angepasster erster Hinweis.\nHinweis 2: Angepasster zweiter Hinweis.','']
+  .map(value=>'"'+value.replace(/"/g,'""')+'"').join(',');
+ const notesCsv=csv.split('\r\n').map(line=>line.startsWith('"rq-h1",')?
+  line.replace(/,"","","","",""$/,','+corrections):line).join('\r\n');
+ const notes=page.getByRole('region',{name:'CSV-Prüfnotizen'});
+ await notes.getByLabel('CSV-Prüfnotizen öffnen').setInputFiles({
+  name:'g29.csv',mimeType:'text/csv',buffer:Buffer.from(notesCsv),
+ });
+ await expect(notes).toContainText('1 zugeordnet · 0 veraltet · 0 fehlen');
+ await notes.getByRole('button',{name:'Qualitätskorrekturen im Entwurf vorbereiten'}).click();
+ const editor=page.getByRole('region',{name:'Aufgabe bearbeiten'});
+ await expect(editor.getByRole('textbox',{name:'Lösung',exact:true})).toHaveValue('David / König David');
+ await expect(editor).toContainText('Angepasster erster Hinweis.');
+ await expect(editor).toContainText('Angepasster zweiter Hinweis.');
+ await expect(editor.getByRole('heading',{name:'Entwurf',exact:true})).toBeVisible();
+ await editor.getByRole('button',{name:'Änderungen als Entwurf speichern'}).click();
+ await expect(notes).toContainText('0 zugeordnet · 1 veraltet · 0 fehlen');
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+});
