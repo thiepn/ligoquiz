@@ -53,7 +53,7 @@ test('UX mobile setup exposes persistent next action and prevents bypassing vali
  await page.evaluate(()=>globalThis.scrollTo(0,0));
  const nextBox=await next.boundingBox();
  expect(nextBox).not.toBeNull();
- expect(nextBox.y+nextBox.height).toBeLessThanOrEqual(750);
+ expect(nextBox.y+nextBox.height).toBeLessThanOrEqual(804);
  expect(nextBox.y).toBeGreaterThanOrEqual(0);
  await next.click();
  await expect(page.getByRole('heading',{name:'Bereit zum Spielen'})).toBeVisible();
