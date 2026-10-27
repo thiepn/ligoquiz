@@ -113,3 +113,10 @@
 .g38-rotation-actions button,.g38-review-decision button{min-height:44px}
 .g38-review-decision label{display:flex;flex-direction:column;gap:.25rem}
 .g38-review-decision select{font:inherit;min-height:44px}
+
+.g39-work-queue{margin:.75rem 0;padding:.65rem;border:1px solid var(--border,#68717b)}
+.g39-work-queue p{margin:.25rem 0 .5rem}
+.g39-team-lanes{display:flex;flex-wrap:wrap;gap:.5rem}
+.g39-team-lanes span{padding:.4rem .55rem;border:1px solid var(--border,#68717b);overflow-wrap:anywhere}
+@media(max-width:600px){.g39-team-lanes{display:grid;grid-template-columns:1fr}
+.g38-rotation-actions button{width:100%;text-align:left}}

@@ -10,7 +10,8 @@ import {buildEveningCueSheet,currentEveningCue,moveEveningCue,
  nextUnresolvedCue,nextTeamTurnCue,nextUntestedCue,markForCue,
  validRehearsalMarks,toggleRehearsalMark,rehearsalProgress,
  type EveningCue,type RehearsalMark} from '../../content/evening-rehearsal-queue';
-import {buildTeamRotation,nextRotationTurn,rotationDecisionSummary,
+import {buildTeamRotation,nextActionableRotationTurn,nextBlockedRotationTurn,
+ buildRotationWorkQueue,rotationDecisionSummary,
  validEditorialHolds,setEditorialHold,type EditorialHold,
  type EditorialHoldReason} from '../../content/team-turn-rotation';
 import {fiveGameReadiness,originalSlotCandidates,selectOriginalSlot,
@@ -56,6 +57,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
  const [resolutionMessage,setResolutionMessage]=useState('');
  const [undoRepair,setUndoRepair]=useState<{key:string;before:Record<string,string>}|null>(null);
  const [overrides,setOverrides]=useState<Record<string,Record<string,string>>>({});
+ const teamChoice=teamFilter<=teams?teamFilter:0;
  const configKey=game+'/'+profile+'/'+teams;
  const plan=useMemo(()=>composeContentPack(items,game,profile,teams,overrides[configKey]??{}),
   [items,game,profile,teams,overrides,configKey]);
@@ -253,6 +255,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
  const rotation=useMemo(()=>buildTeamRotation(cueSheet,teams,validMarks,validHolds),
   [cueSheet,teams,validMarks,validHolds]);
  const rotationSummary=useMemo(()=>rotationDecisionSummary(rotation),[rotation]);
+ const workQueue=useMemo(()=>buildRotationWorkQueue(rotation),[rotation]);
  const cueReceipt=markForCue(cue);
  const currentHold=cueReceipt?validHolds.find(h=>h.game===cueReceipt.game&&
   h.slot===cueReceipt.slot&&h.sourceId===cueReceipt.sourceId&&
@@ -266,8 +269,15 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
  }
  function moveToRotationTurn(preferred?:number,withMarks=validMarks){
   const proposed=buildTeamRotation(cueSheet,teams,withMarks,validHolds);
-  const next=nextRotationTurn(proposed,game,stepIndex,preferred);
+  const next=nextActionableRotationTurn(proposed,game,stepIndex,preferred);
   openEveningCue(next?cueSheet.cues[next.cueIndex]??null:null);
+ }
+ function moveToBlockedTurn(reason:'hold'|'source'){
+  const next=nextBlockedRotationTurn(rotation,game,stepIndex,reason,
+   teamChoice===0?undefined:teamChoice);
+  if(!next)return;
+  openEveningCue(cueSheet.cues[next.cueIndex]??null);
+  if(reason==='source')setFocusedIssue(next.game+'/'+next.slot);
  }
  async function checkSourceCustody():Promise<void>{
   const original=await prepareSavedDraft(items,{game,profile,teams,step:stepIndex,
@@ -276,7 +286,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
    throw Error('Originalquellen in G10 verändert. Erst neu laden oder Quellkonflikt beheben.');
  }
  async function markAndRotate(){
-  if(rotationBusy||!cue||!cueReceipt||saveState==='stale'||
+  if(rotationBusy||!cue||!cueReceipt||currentHold||saveState==='stale'||
    saveState==='error'||saveState==='loading')return;
   setRotationBusy(true);setRotationMessage('');
   try{
@@ -284,11 +294,13 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
    const updated=isCueRehearsed?validMarks:
     toggleRehearsalMark(cueSheet,validMarks,cue);
    const next=buildTeamRotation(cueSheet,teams,updated,validHolds);
-   const nextTurn=nextRotationTurn(next,game,stepIndex,
-    teamFilter===0?undefined:teamFilter);
+   const nextTurn=nextActionableRotationTurn(next,game,stepIndex,
+    teamChoice===0?undefined:teamChoice);
    setRehearsed(updated);
    openEveningCue(nextTurn?cueSheet.cues[nextTurn.cueIndex]??null:null);
-   setRotationMessage('Probenstand geändert. Für dauerhafte Übernahme Abendplan speichern.');
+   setRotationMessage(nextTurn?
+    'Probenstand geändert. Für dauerhafte Übernahme Abendplan speichern.':
+    'Keine weitere probefähige Teamaufgabe. Fehlende Quellen oder Korrekturvermerke getrennt bearbeiten und Abendplan speichern.');
   }catch(e){setRotationMessage(e instanceof Error?e.message:'Quellenprüfung fehlgeschlagen');}
   finally{setRotationBusy(false);}
  }
@@ -342,7 +354,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
  }
  function setGameSelection(next:GameType){setGame(next);setStepIndex(0);}
  function setProfileSelection(next:GameProfile){setProfile(next);setStepIndex(0);}
- function setTeamsSelection(next:3|4|5){setTeams(next);setStepIndex(0);}
+ function setTeamsSelection(next:3|4|5){setTeams(next);setTeamFilter(0);setStepIndex(0);}
  function downloadPlan(){
   const blob=new Blob([exportPreparationPlan(plan)],{type:'application/json;charset=utf-8'});
   const url=URL.createObjectURL(blob),link=document.createElement('a');
@@ -552,7 +564,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
     <button type="button" className="exp-secondary"
      disabled={!cueSheet.cues.some(x=>x.teamNumber!==null)}
      onClick={()=>openEveningCue(nextTeamTurnCue(cueSheet,game,stepIndex,
-      teamFilter===0?undefined:teamFilter))}>
+      teamChoice===0?undefined:teamChoice))}>
      Nächste Teamaufgabe
     </button>
     <button type="button" className="exp-secondary"
@@ -561,7 +573,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
      Nächste ungetestete Aufgabe
     </button>
     <label>Teamfilter
-     <select aria-label="G37 Teamfilter" value={teamFilter<=teams?teamFilter:0}
+     <select aria-label="G37 Teamfilter" value={teamChoice}
       onChange={e=>setTeamFilter(Number(e.target.value))}>
       <option value={0}>Alle Teams</option>
       {Array.from({length:teams},(_,i)=>i+1).map(n=>
@@ -587,15 +599,30 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
       <span>{t.missing} ohne Quelle · {t.held} Korrekturen</span>
      </div>)}
     </div>
+    <div className="g39-work-queue" aria-label="G39 Aktionsfähige Teamliste">
+     <p><strong>{workQueue.practice.length} probefähig</strong> · {workQueue.hold.length} mit Korrekturvermerk
+      {' '}· {workQueue.source.length} ohne Quelle · {workQueue.done.length} abgeschlossen</p>
+     <div className="g39-team-lanes">
+      {workQueue.perTeam.map(t=><span key={t.team}>
+       Team {t.team}: {t.practice} bereit · {t.hold} prüfen · {t.source} unbelegt
+      </span>)}
+     </div>
+    </div>
     <div className="g38-rotation-actions">
      <button type="button" className="exp-secondary"
-      disabled={!rotation.turns.some(t=>!t.rehearsed&&
-       (teamFilter===0||t.team===teamFilter))}
-      onClick={()=>moveToRotationTurn(teamFilter===0?undefined:teamFilter)}>
+      disabled={rotationBusy||!workQueue.practice.some(t=>teamChoice===0||t.team===teamChoice)}
+      onClick={()=>moveToRotationTurn(teamChoice===0?undefined:teamChoice)}>
       Nächster fairer Teamturn
      </button>
      <button type="button" className="exp-secondary"
-      disabled={!cueReceipt||rotationBusy||saveState==='stale'||saveState==='error'}
+      disabled={!workQueue.hold.some(t=>teamChoice===0||t.team===teamChoice)}
+      onClick={()=>moveToBlockedTurn('hold')}>Nächsten Korrekturfall anzeigen</button>
+     <button type="button" className="exp-secondary"
+      disabled={!workQueue.source.some(t=>teamChoice===0||t.team===teamChoice)}
+      onClick={()=>moveToBlockedTurn('source')}>Nächsten unbelegten Teamplatz anzeigen</button>
+     <button type="button" className="exp-secondary"
+      disabled={!cueReceipt||Boolean(currentHold)||rotationBusy||
+       saveState==='stale'||saveState==='error'||saveState==='loading'}
       onClick={()=>void markAndRotate()}>
       Aufgabe proben und Teamwechsel
      </button>
