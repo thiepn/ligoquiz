@@ -121,3 +121,56 @@ export function rotationDecisionSummary(rotation:TeamRotation):{
    Math.min(...totals.map(t=>t.assigned)),
   rightsApproved:false};
 }
+
+/** A queue lane is editorial workflow state, not a scored game or an approval. */
+export type RotationLane='practice'|'hold'|'source'|'done';
+export function rotationLane(turn:RotationTurn):RotationLane{
+ if(turn.missing||turn.sourceId===null)return 'source';
+ if(turn.onHold!==null)return 'hold';
+ return turn.rehearsed?'done':'practice';
+}
+export type RotationWorkQueue={
+ practice:readonly RotationTurn[];hold:readonly RotationTurn[];
+ source:readonly RotationTurn[];done:readonly RotationTurn[];
+ perTeam:readonly {team:number;practice:number;hold:number;source:number;done:number}[];
+ release:'NO_GO';publicationAuthorized:false;
+};
+/** Every real team slot belongs to exactly one mutually exclusive lane. */
+export function buildRotationWorkQueue(rotation:TeamRotation):RotationWorkQueue{
+ const practice:RotationTurn[]=[],hold:RotationTurn[]=[],source:RotationTurn[]=[],done:RotationTurn[]=[];
+ const lanes={practice,hold,source,done};
+ for(const turn of rotation.turns)lanes[rotationLane(turn)].push(turn);
+ const perTeam=Array.from({length:rotation.teams},(_,i)=>{
+  const team=i+1;
+  return {team,practice:practice.filter(t=>t.team===team).length,
+   hold:hold.filter(t=>t.team===team).length,
+   source:source.filter(t=>t.team===team).length,
+   done:done.filter(t=>t.team===team).length};
+ });
+ return {practice,hold,source,done,perTeam,release:'NO_GO',
+  publicationAuthorized:false};
+}
+function nextLane(rotation:TeamRotation,game:GameType,localIndex:number,
+ lane:RotationLane,preferredTeam?:number):RotationTurn|null{
+ if(preferredTeam!==undefined&&(!Number.isInteger(preferredTeam)||
+  preferredTeam<1||preferredTeam>rotation.teams))return null;
+ const options=rotation.turns.filter(t=>rotationLane(t)===lane&&
+  (preferredTeam===undefined||t.team===preferredTeam));
+ if(!options.length)return null;
+ const current=rotation.turns.findIndex(t=>t.game===game&&t.localIndex===localIndex);
+ if(current<0)return options[0]??null;
+ for(let i=1;i<=rotation.turns.length;i++){
+  const candidate=rotation.turns[(current+i)%rotation.turns.length]!;
+  if(options.includes(candidate))return candidate;
+ }
+ return null;
+}
+/** Missing or held source slots are never presented as practice-ready. */
+export function nextActionableRotationTurn(rotation:TeamRotation,game:GameType,
+ localIndex:number,preferredTeam?:number):RotationTurn|null{
+ return nextLane(rotation,game,localIndex,'practice',preferredTeam);
+}
+export function nextBlockedRotationTurn(rotation:TeamRotation,game:GameType,
+ localIndex:number,reason:'hold'|'source',preferredTeam?:number):RotationTurn|null{
+ return nextLane(rotation,game,localIndex,reason,preferredTeam);
+}

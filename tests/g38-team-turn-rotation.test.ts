@@ -4,6 +4,7 @@ import {trialDraftItems} from '../src/content/trial-draft-bundle';
 import {GAME_TYPES} from '../src/domain/game/contracts';
 import {buildEveningCueSheet,markForCue,toggleRehearsalMark} from '../src/content/evening-rehearsal-queue';
 import {buildTeamRotation,nextRotationTurn,rotationDecisionSummary,HOLD_REASONS,
+ rotationLane,buildRotationWorkQueue,nextActionableRotationTurn,nextBlockedRotationTurn,
  setEditorialHold,validEditorialHolds} from '../src/content/team-turn-rotation';
 import {prepareSavedDraft,PreparationRepository,reconcileSavedDraft,
  previewSelectiveRecovery,commitSelectiveRecovery,assertSavedPreparation
@@ -142,5 +143,83 @@ describe('G38 original source-bound team-turn practice and G10 correction decisi
   expect((await reconcileSavedDraft(recovered,updated)).status).toBe('ready');
   expect(recovered.release).toBe('NO_GO');
   await repo.close();
+ });
+});
+
+describe('G39 source-aware actionable moderator queue',()=>{
+ it('partitions every original 3–5 team slot exactly once without authorizing play',()=>{
+  for(const profile of ['kurz','standard','lang'] as const)
+   for(const teams of [3,4,5] as const){
+    const sheet=buildEveningCueSheet(bank,profile,teams);
+    const rotation=buildTeamRotation(sheet,teams,[]);
+    const queue=buildRotationWorkQueue(rotation);
+    expect(queue.practice.length+queue.hold.length+queue.source.length+
+     queue.done.length).toBe(rotation.turns.length);
+    expect(queue.practice.every(t=>t.sourceId!==null&&!t.missing&&!t.rehearsed&&
+     t.onHold===null)).toBe(true);
+    expect(queue.perTeam.map(t=>t.team)).toEqual(
+     Array.from({length:teams},(_,i)=>i+1));
+    expect(queue.perTeam.every(t=>t.practice+t.hold+t.source+t.done===
+     rotation.perTeam[t.team-1]!.assigned)).toBe(true);
+    expect(queue.release).toBe('NO_GO');
+    expect(queue.publicationAuthorized).toBe(false);
+   }
+ });
+ it('skips correction-held and missing-source turns while retaining independent turns',()=>{
+  const sheet=buildEveningCueSheet(bank,'kurz',3);
+  const first=buildTeamRotation(sheet,3,[]).turns;
+  const a=first[0]!,b=first[1]!,c=first[2]!;
+  const missingSheet=buildEveningCueSheet(bank,'kurz',3,
+   {[b.game]:{[b.slot]:''}});
+  const heldCue=missingSheet.cues.find(x=>x.game===a.game&&x.slot===a.slot&&
+   (x.phase==='ready'||x.phase==='prepared'))!;
+  const holds=setEditorialHold(missingSheet,[],heldCue,'rights');
+  const rotation=buildTeamRotation(missingSheet,3,[],holds);
+  const queue=buildRotationWorkQueue(rotation);
+  expect(queue.hold.some(t=>t.game===a.game&&t.slot===a.slot)).toBe(true);
+  expect(queue.source.some(t=>t.game===b.game&&t.slot===b.slot)).toBe(true);
+  expect(rotationLane(rotation.turns.find(t=>t.slot===c.slot&&t.game===c.game)!))
+   .toBe('practice');
+  const next=nextActionableRotationTurn(rotation,a.game,a.localIndex);
+  expect(next).not.toBeNull();
+  expect(next!.slot).not.toBe(a.slot);
+  expect(next!.slot).not.toBe(b.slot);
+  expect(nextBlockedRotationTurn(rotation,a.game,a.localIndex,'hold')).toMatchObject({
+   slot:a.slot,sourceId:a.sourceId});
+  expect(nextBlockedRotationTurn(rotation,a.game,a.localIndex,'source')).toMatchObject({
+   slot:b.slot});
+  expect(nextActionableRotationTurn(rotation,a.game,a.localIndex,6)).toBeNull();
+  expect(nextBlockedRotationTurn(rotation,a.game,a.localIndex,'hold',0)).toBeNull();
+ });
+ it('moves a source from held to practice, then done; all held turns remain blocked',()=>{
+  const sheet=buildEveningCueSheet(bank,'kurz',3);
+  const turn=buildTeamRotation(sheet,3,[]).turns[0]!;
+  const cue=sheet.cues[turn.cueIndex]!;
+  const hold=setEditorialHold(sheet,[],cue,'question');
+  const held=buildTeamRotation(sheet,3,[],hold);
+  expect(rotationLane(held.turns[0]!)).toBe('hold');
+  expect(nextActionableRotationTurn(held,turn.game,turn.localIndex,turn.team))
+   ?.slot).not.toBe(turn.slot);
+  const cleared=buildTeamRotation(sheet,3,[],setEditorialHold(sheet,hold,cue,null));
+  expect(rotationLane(cleared.turns[0]!)).toBe('practice');
+  const marked=toggleRehearsalMark(sheet,[],cue);
+  const completed=buildTeamRotation(sheet,3,marked);
+  expect(rotationLane(completed.turns[0]!)).toBe('done');
+  expect(buildRotationWorkQueue(completed).done).toHaveLength(1);
+  const changed=bank.map(x=>x.id===turn.sourceId?{...x,revision:x.revision+1}:x);
+  const fresh=buildEveningCueSheet(changed,'kurz',3);
+  expect(buildRotationWorkQueue(buildTeamRotation(fresh,3,marked,hold)).hold)
+   .toHaveLength(0);
+ });
+ it('reports exhaustion correctly when every practice slot is blocked or complete',()=>{
+  const sheet=buildEveningCueSheet(bank,'kurz',3);
+  const cues=sheet.cues.filter(x=>x.teamNumber!==null&&
+   (x.phase==='ready'||x.phase==='prepared')&&x.sourceId!==null);
+  const held=cues.reduce((acc,cue)=>setEditorialHold(sheet,acc,cue,'source'),
+   [] as EditorialHold[]);
+  const rotation=buildTeamRotation(sheet,3,[],held);
+  expect(buildRotationWorkQueue(rotation).practice).toHaveLength(0);
+  expect(nextActionableRotationTurn(rotation,'quiztafel',0)).toBeNull();
+  expect(rotation.release).toBe('NO_GO');
  });
 });
