@@ -125,3 +125,14 @@
 .cx-answer-proposal{border-left:3px solid #826f56;padding:12px;background:#f5f3ee;display:grid;gap:8px}
 .cx-answer-proposal strong,.cx-answer-proposal p{font-size:14px;line-height:1.5;overflow-wrap:anywhere;margin:0}
 .cx-answer-proposal button{justify-self:start;min-height:36px}
+
+/* G40: source-by-source research navigation uses the existing G10 editor. */
+.cx-source-nav{display:flex;align-items:center;flex-wrap:wrap;gap:9px;
+ padding:10px 14px;border-bottom:1px solid #dce2de}
+.cx-source-nav span{font-size:12px;line-height:1.5;color:#52626b}
+.cx-source-nav button{min-height:40px;text-align:left}
+.cx-source-filter>label:has(select){display:flex;align-items:center;gap:7px}
+.cx-source-filter select{min-height:40px}
+@media(max-width:600px){.cx-source-nav button{flex:1 1 100%}
+.cx-source-filter>label:has(select){flex:1 1 100%}
+.cx-source-filter select{flex:1}}

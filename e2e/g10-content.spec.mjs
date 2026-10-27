@@ -870,3 +870,67 @@ test('G39 rehearsal isolates held questions, resets team filter and recovers loc
  await expect(rotation.getByRole('button',{name:'Aufgabe proben und Teamwechsel'})).toBeDisabled();
  await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
 });
+
+
+test('G40 original source research cursor protects unsaved edits across direct, next and catalog navigation',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ const nav=queue.getByLabel('Quellenprüfung durchgehen');
+ const editor=page.getByRole('region',{name:'Aufgabe bearbeiten'});
+ await expect(queue.locator('.cx-source-item')).toHaveCount(12);
+ await nav.getByRole('button',{name:'Nächste Prüfaufgabe'}).click();
+ await expect(nav).toContainText('Aufgabe 1 von 12');
+ await expect(editor).toContainText('rq-s1');
+ await page.getByRole('textbox',{name:'Lösung',exact:true}).fill('Ungespeicherter Prüfeintrag');
+ await queue.getByRole('button',{name:/rq-s1/}).click();
+ await expect(page.getByRole('textbox',{name:'Lösung',exact:true}))
+  .toHaveValue('Ungespeicherter Prüfeintrag');
+ page.once('dialog',dialog=>dialog.dismiss());
+ await nav.getByRole('button',{name:'Nächste Prüfaufgabe'}).click();
+ await expect(nav).toContainText('Aufgabe 1 von 12');
+ await expect(page.getByRole('textbox',{name:'Lösung',exact:true}))
+  .toHaveValue('Ungespeicherter Prüfeintrag');
+ page.once('dialog',dialog=>dialog.dismiss());
+ await page.getByRole('region',{name:'Aufgabenbestand'}).getByRole('button',{name:/rq-w4/}).click();
+ await expect(page.getByRole('textbox',{name:'Lösung',exact:true}))
+  .toHaveValue('Ungespeicherter Prüfeintrag');
+ page.once('dialog',dialog=>dialog.accept());
+ await nav.getByRole('button',{name:'Nächste Prüfaufgabe'}).click();
+ await expect(nav).toContainText('Aufgabe 2 von 12');
+ await expect(page.getByRole('textbox',{name:'Lösung',exact:true}))
+  .not.toHaveValue('Ungespeicherter Prüfeintrag');
+ await page.reload();
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig'))
+  .toHaveCount(5);
+ await expect(queue.locator('.cx-source-item')).toHaveCount(12);
+});
+
+test('G40 source lookup can be reviewed game-by-game with bounded wrap and filtered CSV',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ const nav=queue.getByLabel('Quellenprüfung durchgehen');
+ await queue.getByRole('combobox',{name:'Prüfgruppe'}).selectOption('lookup');
+ await queue.getByRole('combobox',{name:'Quellenprüfung Spiel filtern'}).selectOption('verbindungen');
+ const subset=queue.locator('.cx-source-item'),count=await subset.count();
+ expect(count).toBeGreaterThan(1);
+ await nav.getByRole('button',{name:'Vorherige Prüfaufgabe'}).click();
+ await expect(nav).toContainText('Aufgabe '+count+' von '+count);
+ await nav.getByRole('button',{name:'Nächste Prüfaufgabe'}).click();
+ await expect(nav).toContainText('Aufgabe 1 von '+count);
+ const titles=await subset.allTextContents();
+ expect(titles.every(t=>/vb-/.test(t))).toBe(true);
+ const dl=page.waitForEvent('download');
+ await queue.getByRole('button',{name:'Gefilterte Prüfliste als CSV'}).click();
+ const csv=await readFile(await (await dl).path(),'utf8');
+ expect(csv).toContain('"verbindungen"');
+ expect(csv).not.toContain('"quiztafel"');
+ expect(csv).not.toContain('"umfrageduell"');
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig'))
+  .toHaveCount(5);
+});

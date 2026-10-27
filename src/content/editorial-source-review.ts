@@ -108,3 +108,15 @@ export function contentReviewTasks(items:readonly ContentItem[]):SourceReviewTas
   return order[a.route]-order[b.route]||a.item.id.localeCompare(b.item.id);
  });
 }
+
+/**
+ * Navigate the current visible research tasks. This is an editor-only cursor:
+ * neither reaching a task nor following a source constitutes source verification.
+ */
+export function adjacentSourceReviewTask(tasks:readonly SourceReviewTask[],
+ currentId:string|null,direction:-1|1):SourceReviewTask|null{
+ if(tasks.length===0)return null;
+ const index=tasks.findIndex(task=>task.item.id===currentId);
+ if(index<0)return direction===1?tasks[0]!:tasks[tasks.length-1]!;
+ return tasks[(index+direction+tasks.length)%tasks.length]??null;
+}

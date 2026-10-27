@@ -9,7 +9,7 @@ import {qualitySignals} from '../../content/editorial-quality';
 import {LaunchInventoryPanel} from './LaunchInventoryPanel';
 import {StructuredQuestionEditor} from './StructuredQuestionEditor';
 import {trialDraftBundle} from '../../content/trial-draft-bundle';
-import {contentReviewTasks,historicalTrialCorrection,draftSourceCitation,type ReviewRoute} from '../../content/editorial-source-review';
+import {contentReviewTasks,historicalTrialCorrection,draftSourceCitation,adjacentSourceReviewTask,type ReviewRoute} from '../../content/editorial-source-review';
 import {exportReviewWorksheet,previewReviewWorksheet,worksheetSourceProposal,worksheetAnswerProposal,worksheetWordingProposal,worksheetDetailProposal,refreshReviewWorksheet,worksheetQualityBatchProposal} from '../../content/editorial-worklist';
 
 
@@ -62,6 +62,7 @@ export function ContentStudio(){
  const [checklist,setChecklist]=useState<boolean[]>([false,false,false,false]);
  const [profile,setProfile]=useState<GameProfile>('kurz'),[teamCount,setTeamCount]=useState(3);
  const [reviewRoute,setReviewRoute]=useState<ReviewRoute>('primary');
+ const [reviewGame,setReviewGame]=useState<GameType|'alle'>('alle');
  const [reviewSearch,setReviewSearch]=useState('');
  const [repeatsOnly,setRepeatsOnly]=useState(false);
  const [qualityOnly,setQualityOnly]=useState(false);
@@ -95,6 +96,7 @@ export function ContentStudio(){
  const visibleSourceTasks=sourceTasks.filter(x=>{
   const payload=x.item.payload as {prompt?:string;target?:string;answer?:string};
   return x.route===reviewRoute&&
+   (reviewGame==='alle'||x.item.game===reviewGame)&&
    (!repeatsOnly||x.issues.some(issue=>issue.code==='CROSS_GAME_CLUE_REUSE'))&&
    (!qualityOnly||qualitySignals(x.item,x.issues).length>0)&&
    (!normalizedReviewSearch||
@@ -131,13 +133,19 @@ export function ContentStudio(){
   setRightsDraft(item.provenance.rights??'');
   setReviewNote('');setChecklist([false,false,false,false]);setError('');setMessage('');
  }
- function selectFromPreparation(item:ContentItem){
+ function guardedChoose(item:ContentItem){
+  // Selecting the same item must not discard a pending structured or JSON edit.
+  if(current?.id===item.id)return;
   const edited=Boolean(current&&(json!==JSON.stringify(current.payload,null,2)||
    rightsDraft!==(current.provenance.rights??'')||reviewNote.trim()||
    reviewer.trim()||checklist.some(Boolean)));
-  if(current?.id!==item.id&&edited&&
-   !window.confirm('Ungespeicherte Korrekturen verwerfen und die nächste Originalquelle öffnen?'))return;
-  if(current?.id!==item.id)choose(item);
+  if(edited&&!window.confirm(
+   'Ungespeicherte Änderungen verwerfen und eine andere Originalquelle öffnen?'))return;
+  choose(item);
+ }
+ function navigateSourceReview(direction:-1|1){
+  const next=adjacentSourceReviewTask(visibleSourceTasks,current?.id??null,direction);
+  if(next)guardedChoose(next.item);
  }
  async function act(fn:()=>Promise<void>){
   if(busy)return;setBusy(true);setError('');setMessage('');
@@ -346,7 +354,7 @@ export function ContentStudio(){
      <button className="exp-secondary" onClick={()=>{setPreview(null);setImportConsent(false);}}>Abbrechen</button></div>
    </section>}
   <EditorialAuditPanel items={items} preview={preview} onChoose={choose}/>
-  <LaunchInventoryPanel items={items} onChoose={selectFromPreparation}
+  <LaunchInventoryPanel items={items} onChoose={guardedChoose}
    loaded={libraryLoaded} latestItems={()=>repo.list()}/>
   <section className="cx-source-queue" aria-label="Quellenprüfung">
    <div className="cx-catalog-top">
@@ -359,6 +367,13 @@ export function ContentStudio(){
     </select></label>
    </div>
    <div className="cx-source-filter">
+    <label>Spiel
+     <select aria-label="Quellenprüfung Spiel filtern" value={reviewGame}
+      onChange={e=>setReviewGame(e.target.value as GameType|'alle')}>
+      <option value="alle">Alle Spiele</option>
+      {GAME_TYPES.map(game=><option key={game} value={game}>{LABELS[game]}</option>)}
+     </select>
+    </label>
     <input type="search" aria-label="Quellenprüfung durchsuchen" value={reviewSearch}
       onChange={e=>setReviewSearch(e.target.value)} placeholder="Frage oder Kennung"/>
     <label><input type="checkbox" checked={repeatsOnly}
@@ -366,6 +381,20 @@ export function ContentStudio(){
     <label><input type="checkbox" checked={qualityOnly}
      onChange={e=>setQualityOnly(e.target.checked)}/>Nur Qualitätsrisiken</label>
     <span>{visibleSourceTasks.length} Treffer</span>
+   </div>
+   <div className="cx-source-nav" aria-label="Quellenprüfung durchgehen">
+    <span>{visibleSourceTasks.length===0?'Keine passende Quelle':
+     current&&visibleSourceTasks.some(task=>task.item.id===current.id)?
+      'Aufgabe '+(visibleSourceTasks.findIndex(task=>task.item.id===current.id)+1)+
+       ' von '+visibleSourceTasks.length:
+      visibleSourceTasks.length+' ungeprüfte Aufgaben im Filter'}</span>
+    <button type="button" className="exp-secondary"
+     disabled={busy||visibleSourceTasks.length===0}
+     onClick={()=>navigateSourceReview(-1)}>Vorherige Prüfaufgabe</button>
+    <button type="button" className="exp-secondary"
+     disabled={busy||visibleSourceTasks.length===0}
+     onClick={()=>navigateSourceReview(1)}>Nächste Prüfaufgabe</button>
+    <span>Nur Navigation · keine Fakten- oder Rechtebestätigung</span>
    </div>
    <div className="cx-worksheet-actions">
     <button type="button" className="exp-secondary" disabled={busy||visibleSourceTasks.length===0}
@@ -409,7 +438,7 @@ export function ContentStudio(){
        {entry.notes.map(note=><p key={note.heading}><b>{note.heading}:</b> {note.text}</p>)}
        <button type="button" className="exp-secondary" disabled={entry.status!=='current'||busy}
         onClick={()=>{const task=sourceTasks.find(task=>task.item.id===entry.id);
-         if(task)choose(task.item);
+         if(task)guardedChoose(task.item);
         }}>Aufgabe zu Notizen öffnen</button>
        {batchProposal&&<div className="cx-answer-proposal">
         <strong>Qualitätskorrekturen · ungeprüft</strong>
@@ -453,7 +482,7 @@ export function ContentStudio(){
    </section>
    <div className="cx-source-items">
     {visibleSourceTasks.map(task=><button type="button" className="cx-source-item"
-      key={task.item.id} aria-pressed={current?.id===task.item.id} onClick={()=>choose(task.item)}>
+      key={task.item.id} aria-pressed={current?.id===task.item.id} onClick={()=>guardedChoose(task.item)}>
       <strong>{task.item.id}</strong>
       <span>{(task.item.payload as {prompt?:string;target?:string}).prompt??
        (task.item.payload as {target?:string}).target??'Strukturierte Aufgabe'}</span>
@@ -479,7 +508,7 @@ export function ContentStudio(){
       chosen.map(item=>{
        const payload=item.payload as {prompt?:string;target?:string};
        return <button key={item.id} className={'cx-item'+(current?.id===item.id?' selected':'')}
-        aria-pressed={current?.id===item.id} onClick={()=>choose(item)}>
+        aria-pressed={current?.id===item.id} onClick={()=>guardedChoose(item)}>
         <span><b>{LABELS[item.game]}</b><small>{statusText(item.status)}</small></span>
         <strong>{payload.prompt??payload.target??'Strukturierte Aufgabe'}</strong>
         <small>{item.id}</small>
@@ -521,7 +550,7 @@ export function ContentStudio(){
       {selectedSourceTask.issues.filter(issue=>issue.code==='CROSS_GAME_CLUE_REUSE'&&issue.other)
        .map(issue=><button type="button" key={issue.other} className="exp-secondary"
         onClick={()=>{const related=items.find(item=>item.id===issue.other);
-         if(related)choose(related);
+         if(related)guardedChoose(related);
         }}>Zugehörige Frage öffnen: {issue.other}</button>)}
       {draftSourceCitation(current)&&<button type="button" className="exp-secondary"
        disabled={busy||json!==JSON.stringify(current.payload,null,2)}
