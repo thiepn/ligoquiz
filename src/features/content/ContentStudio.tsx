@@ -590,7 +590,7 @@ export function ContentStudio(){
        'Keine Rechteangabe dokumentiert. Rechteinhaber, Lizenz/Erlaubnis und Geltungsbereich extern klären.':
        'Nur selbst eingetragene Rechteangabe; Beleg, Rechteinhaber und Nutzungsumfang unabhängig prüfen.'}</p>
       <p>Quellenlink und Prüfliste sind keine Fakten- oder Rechtefreigabe.</p>
-     </section>
+     </section>}
      {wordingRisk&&<section className="cx-source-evidence cx-g41-original-risk" aria-label="Originalformulierung prüfen">
       <strong>Konkretes Formulierungsrisiko · {current.id}</strong>
       <p>{wordingRisk.title}</p>
