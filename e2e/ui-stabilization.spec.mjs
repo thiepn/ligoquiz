@@ -4,6 +4,9 @@ const viewports = [320,390,768,1440];
 const shots = 'test-results/ui-stabilization';
 
 async function snapshot(page, width, view) {
+ // A focus shortcut can leave sticky/fixed chrome composited midway down
+ // Playwright's full-page screenshot. Capture the actual top-of-page layout.
+ await page.evaluate(()=>globalThis.scrollTo(0,0));
  await page.screenshot({path:`${shots}/${width}-${view}.png`,fullPage:true,animations:'disabled'});
  const geometry = await page.evaluate(() => {
   const doc = globalThis.document.documentElement;
@@ -134,10 +137,36 @@ for(const width of viewports){
    await stage.goto('/'+href);
    await expect(stage.locator('.stage-preview')).toBeVisible();
    await snapshot(stage,width,game.name.toLowerCase()+'-projector');
-   await stage.close();
+   // Exercise the first actual game interaction on each device width. A private
+   // Quiztafel selection never publishes its solution; the other three engines
+   // may publish their prompt but must not reveal the guarded answer.
+   if(game.name==='Quiztafel'){
+    await host.locator('.qt-column').first().getByRole('button',{name:'100'}).click();
+    await expect(host).toHaveAttribute('data-host-phase','prepared');
+    await expect(stage.locator('.qt-stage-grid')).toBeVisible();
+    await expect(stage.locator('main')).not.toContainText('Noah');
+   }else{
+    await host.getByRole('button',{name:'Aufgabe veröffentlichen'}).click();
+    await expect(host).toHaveAttribute('data-host-phase',
+      game.name==='Verbindungen'?'clue-open':'open');
+    const privateAnswer=game.name==='Verbindungen'?'David':
+      game.name==='Umfrageduell'?'Notizblock':
+      'Alle Rosen sind Pflanzen, und keine Pflanze ist ein Metall.';
+    await expect(stage.locator('main')).not.toContainText(privateAnswer);
+    if(game.name==='Verbindungen')await expect(stage.locator('main')).toContainText('Bethlehem');
+    if(game.name==='Logikleiter')await expect(stage.locator('.ll-stage-ladder')).toContainText('Alle Rosen');
+    if(game.name==='Umfrageduell')await expect(stage.locator('.ud-stage')).toContainText('BEISPIELDATEN');
+   }
+   await snapshot(page,width,game.name.toLowerCase()+'-active');
+   await snapshot(stage,width,game.name.toLowerCase()+'-projector-active');
    await page.reload();
    await expect(page.locator(game.host)).toBeVisible();
    await expect(page.locator('.sp-cockpit-quick-stage')).toHaveAttribute('href',href);
+   if(game.name!=='Quiztafel'){
+    await expect(host.getByRole('button',{name:/Spiel.*fortsetzen/})).toBeEnabled();
+    await expect(stage.locator('main')).toContainText('Pause');
+   }
+   await stage.close();
    await snapshot(page,width,game.name.toLowerCase()+'-resumed');
   });
  }
