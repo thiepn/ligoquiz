@@ -2,19 +2,20 @@ import {GAME_TYPES,type GameType,type GameProfile} from '../domain/game/contract
 import type {ContentItem} from './contracts';
 import {sha256} from './migration';
 import {composeContentPack} from './pack-preparation';
+import type {RehearsalMark} from './evening-rehearsal-queue';
 
 export const PREPARATION_DB_NAME='ligoquiz.v2.preparation.g33';
 const FORMAT='ligoquiz-g33-source-only-v1' as const;
 type Selection=Record<string,string>;
 export type StoredSelections=Record<GameType,Selection>;
 export type DraftInput={game:GameType;profile:GameProfile;teams:3|4|5;step:number;
- selections:Partial<Record<GameType,Readonly<Selection>>>};
+ selections:Partial<Record<GameType,Readonly<Selection>>>;rehearsed?:readonly RehearsalMark[]};
 export type SourceStamp={id:string;game:GameType;revision:number;sha256:string};
 export type SlotStamp={game:GameType;slot:string;id:string|null};
 export type SavedPreparation={
  key:'current';format:typeof FORMAT;revision:number;updatedAt:number;
  game:GameType;profile:GameProfile;teams:3|4|5;step:number;
- selections:StoredSelections;assignments:SlotStamp[];sources:SourceStamp[];
+ selections:StoredSelections;assignments:SlotStamp[];sources:SourceStamp[];rehearsed?:RehearsalMark[];
  sourceOnly:true;release:'NO_GO';
 };
 export class PreparationError extends Error{
@@ -66,12 +67,33 @@ export function assertSavedPreparation(raw:unknown):SavedPreparation{
    fail('INVALID','Quellnachweis ist ungültig oder doppelt.');
   sourceIds.add(source.id);
  }
+ const rehearsed=raw.rehearsed===undefined?[]:raw.rehearsed;
+ if(!Array.isArray(rehearsed)||rehearsed.length>300)
+  fail('INVALID','Probenachweise enthalten zu viele oder ungültige Einträge.');
  const selections=raw.selections as StoredSelections;
  const assignmentIds=new Set(raw.assignments.map(s=>(s as SlotStamp).id).filter(Boolean));
  if(assignmentIds.size!==sourceIds.size||[...assignmentIds].some(id=>!sourceIds.has(id!)))
   fail('INVALID','Quellnachweise stimmen nicht mit der Aufgabenwahl überein.');
+ const rehearsalKeys=new Set<string>();
+ for(const mark of rehearsed){
+  if(!plain(mark)||!GAME_TYPES.includes(mark.game as GameType)||
+   typeof mark.slot!=='string'||!SAFE.test(mark.slot)||
+   typeof mark.sourceId!=='string'||!SAFE.test(mark.sourceId)||
+   !Number.isSafeInteger(mark.sourceRevision)||Number(mark.sourceRevision)<0)
+   fail('INVALID','Probenachweis enthält ungültige Quellenreferenzen.');
+  const key=mark.game+'/'+mark.slot;
+  if(rehearsalKeys.has(key))fail('INVALID','Probenplatz wurde mehrfach bestätigt.');
+  rehearsalKeys.add(key);
+  const assignment=raw.assignments.find(x=>plain(x)&&x.game===mark.game&&
+   x.slot===mark.slot) as SlotStamp|undefined;
+  const stamp=raw.sources.find(x=>plain(x)&&x.id===mark.sourceId) as SourceStamp|undefined;
+  if(!assignment||assignment.id!==mark.sourceId||
+   mark.slot.startsWith('category:')||
+   !stamp||stamp.game!==mark.game||stamp.revision!==mark.sourceRevision)
+   fail('INVALID','Probenachweis gehört nicht mehr zu ausgewählter Originalquelle.');
+ }
  if(JSON.stringify(raw).length>90_000)fail('INVALID','Vorbereitungsplan überschreitet die zulässige Größe.');
- return {...raw,selections} as SavedPreparation;
+ return {...raw,selections,rehearsed:rehearsed as RehearsalMark[]} as SavedPreparation;
 }
 function normalizedSelections(input:DraftInput['selections']):StoredSelections{
  return Object.fromEntries(GAME_TYPES.map(g=>[g,{...input[g]}])) as StoredSelections;
@@ -104,7 +126,7 @@ export async function prepareSavedDraft(items:readonly ContentItem[],input:Draft
  const sources=await Promise.all(selected.map(sourceStamp));
  return assertSavedPreparation({key:'current',format:FORMAT,revision,updatedAt:at,
   game:input.game,profile:input.profile,teams:input.teams,step:input.step,
-  selections,assignments,sources,sourceOnly:true,release:'NO_GO'});
+  selections,assignments,sources,rehearsed:[...(input.rehearsed??[])],sourceOnly:true,release:'NO_GO'});
 }
 export type ReconcileResult={status:'ready'|'stale';issues:string[]};
 export async function reconcileSavedDraft(record:SavedPreparation,
@@ -277,6 +299,10 @@ export async function commitSelectiveRecovery(
  const next=await prepareSavedDraft(items,{
   game:saved.game,profile:saved.profile,teams:saved.teams,
   step:saved.step,selections:trusted.selections,
+  rehearsed:(saved.rehearsed??[]).filter(mark=>
+   trusted.selections[mark.game][mark.slot]===mark.sourceId&&
+   items.some(item=>item.id===mark.sourceId&&item.game===mark.game&&
+    item.revision===mark.sourceRevision)),
  },saved.revision+1);
  const check=await reconcileSavedDraft(next,items);
  if(check.status!=='ready')fail('STALE','Wiederhergestellte Auswahl konnte nicht bestätigt werden.');

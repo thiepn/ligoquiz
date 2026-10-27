@@ -71,3 +71,70 @@ export function nextUnresolvedCue(sheet:EveningCueSheet,game:GameType,
  }
  return null;
 }
+
+/** A rehearsal mark is source-bound and never an approval or scoring receipt. */
+export type RehearsalMark={game:GameType;slot:string;sourceId:string;sourceRevision:number};
+const sameMark=(a:RehearsalMark,b:RehearsalMark)=>
+ a.game===b.game&&a.slot===b.slot&&a.sourceId===b.sourceId&&a.sourceRevision===b.sourceRevision;
+export function markForCue(cue:EveningCue|null):RehearsalMark|null{
+ if(!cue?.sourceId||cue.sourceRevision===null)return null;
+ return {game:cue.game,slot:cue.slot,sourceId:cue.sourceId,sourceRevision:cue.sourceRevision};
+}
+export function validRehearsalMarks(sheet:EveningCueSheet,
+ marks:readonly RehearsalMark[]):RehearsalMark[]{
+ const accepted:RehearsalMark[]=[];
+ for(const mark of marks){
+  if(accepted.some(x=>sameMark(x,mark)))continue;
+  const cue=sheet.cues.find(x=>x.game===mark.game&&x.slot===mark.slot&&
+   (x.phase==='ready'||x.phase==='prepared'));
+  const expected=cue?markForCue(cue):null;
+  if(expected&&sameMark(mark,expected))accepted.push({...expected});
+ }
+ return accepted;
+}
+export function toggleRehearsalMark(sheet:EveningCueSheet,
+ marks:readonly RehearsalMark[],cue:EveningCue):RehearsalMark[]{
+ const safe=validRehearsalMarks(sheet,marks),expected=markForCue(cue);
+ if(!expected)return safe;
+ if(!sheet.cues.some(x=>x.game===cue.game&&x.slot===cue.slot&&
+  (x.phase==='ready'||x.phase==='prepared')&&sameMark(expected,markForCue(x)!)))return safe;
+ return safe.some(m=>sameMark(m,expected))?
+  safe.filter(m=>!sameMark(m,expected)):[...safe,expected];
+}
+export function rehearsalProgress(sheet:EveningCueSheet,
+ marks:readonly RehearsalMark[]):{done:number;total:number;perGame:readonly {
+ game:GameType;done:number;total:number}[];publicationAuthorized:false}{
+ const valid=validRehearsalMarks(sheet,marks);
+ const slotCues=sheet.cues.filter(x=>(x.phase==='ready'||x.phase==='prepared')&&x.sourceId!==null);
+ const perGame=GAME_TYPES.map(game=>{
+  const cues=slotCues.filter(x=>x.game===game);
+  return {game,total:cues.length,
+   done:cues.filter(c=>valid.some(m=>sameMark(m,markForCue(c)!))).length};
+ });
+ return {done:perGame.reduce((s,x)=>s+x.done,0),
+  total:perGame.reduce((s,x)=>s+x.total,0),perGame,publicationAuthorized:false};
+}
+function nextEligible(sheet:EveningCueSheet,game:GameType,localIndex:number,
+ predicate:(cue:EveningCue)=>boolean):EveningCue|null{
+ if(!sheet.cues.length)return null;
+ const from=currentEveningCue(sheet,game,localIndex)?.index??0;
+ for(let step=1;step<=sheet.cues.length;step++){
+  const next=sheet.cues[(from+step)%sheet.cues.length]!;
+  if((next.phase==='ready'||next.phase==='prepared')&&predicate(next))return next;
+ }
+ return null;
+}
+/** Team labels are actual original engine slots, not inferred for shared questions. */
+export function nextTeamTurnCue(sheet:EveningCueSheet,
+ game:GameType,localIndex:number,team?:number):EveningCue|null{
+ return nextEligible(sheet,game,localIndex,cue=>
+  cue.teamNumber!==null&&(team===undefined||cue.teamNumber===team));
+}
+export function nextUntestedCue(sheet:EveningCueSheet,
+ marks:readonly RehearsalMark[],game:GameType,localIndex:number):EveningCue|null{
+ const valid=validRehearsalMarks(sheet,marks);
+ return nextEligible(sheet,game,localIndex,cue=>{
+  const expected=markForCue(cue);
+  return expected!==null&&!valid.some(mark=>sameMark(mark,expected));
+ });
+}
