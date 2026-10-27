@@ -197,3 +197,33 @@ test('G36 installed offline original moderator cue changes games and restores st
   await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
  }finally{await context.setOffline(false);}
 });
+
+test('G37 installed offline source-revision-bound moderator rehearsal stays local and reversible',async({page,context})=>{
+ await page.goto('/#/technik');
+ await page.evaluate(()=>globalThis.navigator.serviceWorker.ready);
+ await page.reload();
+ await expect.poll(()=>page.evaluate(()=>Boolean(globalThis.navigator.serviceWorker.controller))).toBe(true);
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ await page.getByRole('combobox',{name:'G28 Profil'}).selectOption('kurz');
+ await page.getByRole('combobox',{name:'G28 Teams'}).selectOption('3');
+ const desk=page.getByRole('region',{name:'G36 Fünf-Spiele-Moderationslauf'});
+ await context.setOffline(true);
+ try{
+  await desk.getByRole('button',{name:'Aufgabe probeweise durchgespielt'}).click();
+  await expect(desk).toContainText('Moderationsprobe: 1 /');
+  const saved=page.getByRole('region',{name:'G33 Lokaler Abendplan'});
+  await saved.getByRole('button',{name:'Abendplan lokal speichern'}).click();
+  await expect(saved).toContainText('Revision 1');
+  await page.reload();
+  await expect(saved).toContainText('Revision 1');
+  await expect(desk).toContainText('Moderationsprobe: 1 /');
+  await expect(desk.getByRole('button',{name:'Probenmarkierung zurücknehmen'})).toBeEnabled();
+  await desk.getByRole('button',{name:'Nächste ungetestete Aufgabe'}).click();
+  await expect(desk).toContainText('2 /');
+  await expect(desk.getByLabel('G36 Öffentliche Phasenvorschau')).not.toContainText('Josua');
+  await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
+ }finally{await context.setOffline(false);}
+});

@@ -770,3 +770,35 @@ test('G36 original five-game cue desk traverses boundaries, reviews source and r
  await expect(queue.locator('.g36-cue>div').first()).toContainText(before?.split(' · ')[0]??'');
  await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
 });
+
+test('G37 source-bound moderator rehearsal marks persist and team routing stays editor only',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ await page.getByRole('combobox',{name:'G28 Profil'}).selectOption('kurz');
+ await page.getByRole('combobox',{name:'G28 Teams'}).selectOption('3');
+ const desk=page.getByRole('region',{name:'G36 Fünf-Spiele-Moderationslauf'});
+ await expect(desk).toContainText('Moderationsprobe: 0 /');
+ await desk.getByRole('button',{name:'Aufgabe probeweise durchgespielt'}).click();
+ await expect(desk).toContainText('Moderationsprobe: 1 /');
+ await desk.getByRole('button',{name:'Nächste ungetestete Aufgabe'}).click();
+ await expect(desk).toContainText('2 /');
+ await desk.getByRole('combobox',{name:'G37 Teamfilter'}).selectOption('2');
+ await desk.getByRole('button',{name:'Nächste Teamaufgabe'}).click();
+ await expect(desk).toContainText('Team 2');
+ await expect(page.getByRole('combobox',{name:'G28 Spiel'})).toHaveValue('quiztafel');
+ await expect(desk.getByLabel('G36 Öffentliche Phasenvorschau')).not.toContainText('Josua');
+ const saved=page.getByRole('region',{name:'G33 Lokaler Abendplan'});
+ await saved.getByRole('button',{name:'Abendplan lokal speichern'}).click();
+ await expect(saved).toContainText('Revision 1');
+ await page.reload();
+ await expect(saved).toContainText('Revision 1');
+ await expect(desk).toContainText('Moderationsprobe: 1 /');
+ await expect(page.getByRole('combobox',{name:'G28 Spiel'})).toHaveValue('quiztafel');
+ await page.getByRole('combobox',{name:'G28 Spiel'}).selectOption('rundenquiz');
+ await expect(desk.getByRole('button',{name:'Probenmarkierung zurücknehmen'})).toBeVisible();
+ await desk.getByRole('button',{name:'Probenmarkierung zurücknehmen'}).click();
+ await expect(desk).toContainText('Moderationsprobe: 0 /');
+ await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
+});
