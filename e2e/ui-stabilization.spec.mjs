@@ -80,6 +80,10 @@ for(const width of viewports){
    await expect(page.locator('.u07-rail-guidance')).toBeHidden();
    await expect(page.locator('.g14-progress')).toBeHidden();
    await expect(page.locator('.u07-phase-steps>li')).toHaveCount(4);
+   const gameAction=await page.locator('[data-host-game="rundenquiz"] [data-host-next]:not(:disabled)').first().boundingBox();
+   const progressRail=await page.locator('[data-host-game="rundenquiz"] .u07-phase-rail').boundingBox();
+   expect(gameAction).not.toBeNull();expect(progressRail).not.toBeNull();
+   expect(gameAction.y,'Mobile gameplay action must precede passive progress').toBeLessThan(progressRail.y);
    const focus=page.locator('.g14-guide button.g14-focus');
    await expect(focus).toBeVisible();
    await focus.click();
@@ -140,6 +144,10 @@ for(const width of viewports){
     await expect(host.locator('.u07-rail-guidance')).toBeHidden();
     await expect(host.locator('.g14-progress')).toBeHidden();
     await expect(host.locator('.u07-phase-steps>li')).toHaveCount(4);
+    const gameAction=await host.locator('[data-host-next]:not(:disabled)').first().boundingBox();
+    const progressRail=await host.locator('.u07-phase-rail').boundingBox();
+    expect(gameAction).not.toBeNull();expect(progressRail).not.toBeNull();
+    expect(gameAction.y,'Mobile gameplay action must precede passive progress').toBeLessThan(progressRail.y);
     const focus=host.locator('.g14-guide button.g14-focus');
     await expect(focus).toBeVisible();
     await focus.click();

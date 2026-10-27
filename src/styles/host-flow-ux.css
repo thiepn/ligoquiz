@@ -97,6 +97,10 @@
    action/focus/status, while eliminating only the duplicate, display-only copy.
    Recovery and pause warnings in G14 remain fully visible and operable. */
 @media(max-width:760px){
+ /* Keep the original interactive task ahead of the display-only step rail.
+    Parent flex ordering is required; DOM order and original commands stay intact. */
+ [data-host-game]:not(.rq-host)>.u07-phase-rail{order:-32}
+ [data-host-game]>.rq-live>.u07-phase-rail{order:-34}
  .sp-shell--spielleitung [data-host-game] .u07-rail-guidance{display:none}
  .sp-shell--spielleitung [data-host-game] .g14-progress{display:none}
  .sp-shell--spielleitung [data-host-game] .g14-guide-foot{margin-top:10px}
