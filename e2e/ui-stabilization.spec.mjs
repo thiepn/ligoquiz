@@ -93,6 +93,25 @@ for(const width of viewports){
   expect(await page.evaluate(()=>globalThis.sessionStorage.getItem('ligoquiz.v2.g4.rundenquiz.host'))).toBe(identity);
   await expect(page.locator('.sp-cockpit-quick-stage')).toHaveAttribute('target','_blank');
   await snapshot(page,width,'resumed-host');
+  // Actual original Rundenquiz transition, with a connected public stage:
+  // private solutions remain guarded even after a live prompt and host reload.
+  const href=await page.locator('.sp-cockpit-quick-stage').getAttribute('href');
+  expect(href).toMatch(/^#.*stage.*event=[a-zA-Z0-9_-]+$/);
+  const stage=await page.context().newPage();
+  await stage.setViewportSize({width,height:844});
+  await stage.goto('/'+href);
+  await expect(page.locator('.rq-utility')).toContainText('1 Beamer verbunden');
+  await page.getByRole('button',{name:'Teams bestätigen'}).click();
+  await page.getByRole('button',{name:'Frage auf Beamer zeigen'}).click();
+  await expect(stage.locator('main')).toContainText('Wer führte Israel nach Mose');
+  await expect(stage.locator('main')).not.toContainText('Josua');
+  await snapshot(page,width,'rundenquiz-active');
+  await snapshot(stage,width,'rundenquiz-projector-active');
+  await page.reload();
+  await expect(page.getByRole('button',{name:'Spiel fortsetzen'})).toBeEnabled();
+  await expect(stage.locator('main')).not.toContainText('Josua');
+  await stage.close();
+  await snapshot(page,width,'rundenquiz-reload-paused');
  });
 }
 
