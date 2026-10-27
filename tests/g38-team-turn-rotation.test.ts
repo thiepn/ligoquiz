@@ -128,7 +128,7 @@ describe('G38 original source-bound team-turn practice and G10 correction decisi
   const factory=new IDBFactory(),repo=new PreparationRepository(factory,'g38-recovery');
   const sheet=buildEveningCueSheet(bank,'kurz',3);
   const cues=sheet.cues.filter(c=>c.teamNumber!==null&&(c.phase==='ready'||c.phase==='prepared'));
-  const a=cues[0]!,b=cues.find(c=>c.sourceId!==a.sourceId)!;
+  const a=cues[0]!,b=cues.find(c=>c.game!==a.game&&c.sourceId!==a.sourceId)!;
   const holds=setEditorialHold(sheet,setEditorialHold(sheet,[],a,'rights'),b,'question');
   const draft=await prepareSavedDraft(bank,{game:a.game,profile:'kurz',
    teams:3,step:a.localIndex,selections:{},holds},1);
