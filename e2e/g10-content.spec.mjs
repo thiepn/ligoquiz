@@ -881,11 +881,14 @@ test('G40 original source research cursor protects unsaved edits across direct, 
  const nav=queue.getByLabel('Quellenprüfung durchgehen');
  const editor=page.getByRole('region',{name:'Aufgabe bearbeiten'});
  await expect(queue.locator('.cx-source-item')).toHaveCount(12);
+ const originalFirst=queue.locator('.cx-source-item').first();
+ const firstId=(await originalFirst.locator('strong').textContent())?.trim();
+ expect(firstId).toMatch(/^(rq|qt)-[a-z0-9-]+$/);
  await nav.getByRole('button',{name:'Nächste Prüfaufgabe'}).click();
  await expect(nav).toContainText('Aufgabe 1 von 12');
- await expect(editor).toContainText('rq-s1');
+ await expect(editor).toContainText(firstId);
  await page.getByRole('textbox',{name:'Lösung',exact:true}).fill('Ungespeicherter Prüfeintrag');
- await queue.getByRole('button',{name:/rq-s1/}).click();
+ await originalFirst.click();
  await expect(page.getByRole('textbox',{name:'Lösung',exact:true}))
   .toHaveValue('Ungespeicherter Prüfeintrag');
  page.once('dialog',dialog=>dialog.dismiss());
