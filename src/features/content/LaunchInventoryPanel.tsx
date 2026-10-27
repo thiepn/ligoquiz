@@ -10,6 +10,9 @@ import {buildEveningCueSheet,currentEveningCue,moveEveningCue,
  nextUnresolvedCue,nextTeamTurnCue,nextUntestedCue,markForCue,
  validRehearsalMarks,toggleRehearsalMark,rehearsalProgress,
  type EveningCue,type RehearsalMark} from '../../content/evening-rehearsal-queue';
+import {buildTeamRotation,nextRotationTurn,rotationDecisionSummary,
+ validEditorialHolds,setEditorialHold,type EditorialHold,
+ type EditorialHoldReason} from '../../content/team-turn-rotation';
 import {fiveGameReadiness,originalSlotCandidates,selectOriginalSlot,
  rehearsalIndexForSlot} from '../../content/original-slot-resolution';
 import {PreparationRepository,prepareSavedDraft,reconcileSavedDraft,
@@ -43,6 +46,10 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
  const [stepIndex,setStepIndex]=useState(0);
  const [teamFilter,setTeamFilter]=useState(0);
  const [rehearsed,setRehearsed]=useState<RehearsalMark[]>([]);
+ const [holds,setHolds]=useState<EditorialHold[]>([]);
+ const [holdReason,setHoldReason]=useState<EditorialHoldReason>('question');
+ const [rotationBusy,setRotationBusy]=useState(false);
+ const [rotationMessage,setRotationMessage]=useState('');
  const [repairSlot,setRepairSlot]=useState<string>('');
  const [focusedIssue,setFocusedIssue]=useState('');
  const [resolving,setResolving]=useState(false);
@@ -73,6 +80,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
      setGame(existing.game);setProfile(existing.profile);setTeams(existing.teams);
      setStepIndex(existing.step);
      setRehearsed(existing.rehearsed??[]);
+     setHolds(existing.holds??[]);
      setOverrides(prev=>({...prev,...Object.fromEntries(GAME_TYPES.map(key=>[
       key+'/'+existing.profile+'/'+existing.teams,
       {...existing.selections[key]},
@@ -89,6 +97,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
   saved.game!==game||saved.profile!==profile||saved.teams!==teams||
   saved.step!==stepIndex||
   JSON.stringify(saved.rehearsed??[])!==JSON.stringify(rehearsed)||
+  JSON.stringify(saved.holds??[])!==JSON.stringify(holds)||
   GAME_TYPES.some(k=>
    JSON.stringify(saved.selections[k])!==JSON.stringify(eveningOverrides[k]))));
  async function saveLocalDraft(){
@@ -108,13 +117,15 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
     }
    }
    const record=await prepareSavedDraft(items,{game,profile,teams,step:stepIndex,
-    selections:eveningOverrides,rehearsed:validRehearsalMarks(cueSheet,rehearsed)},
+    selections:eveningOverrides,rehearsed:validRehearsalMarks(cueSheet,rehearsed),
+    holds:validEditorialHolds(cueSheet,holds)},
     (existing?.revision??0)+1);
    const verdict=await reconcileSavedDraft(record,currentLibrary);
    if(verdict.status!=='ready')throw Error('Quellen wurden in anderem Fenster verändert; zuerst neu laden.');
    await draftRepo.save(record,existing?.revision??null);
    setSaved(record);setSaveState('ready');setSaveIssues([]);
    setRehearsed(record.rehearsed??[]);
+   setHolds(record.holds??[]);
    setSaveMessage('Lokaler Abendplan gespeichert · Revision '+record.revision);
   }catch(e){setSaveMessage(e instanceof Error?e.message:'Speichern fehlgeschlagen');}
   finally{setSaving(false);}
@@ -158,6 +169,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
    setGame(record.game);setProfile(record.profile);setTeams(record.teams);
    setStepIndex(record.step);
    setRehearsed(record.rehearsed??[]);
+   setHolds(record.holds??[]);
    setOverrides(prev=>({...prev,...Object.fromEntries(GAME_TYPES.map(key=>[
     key+'/'+record.profile+'/'+record.teams,{...record.selections[key]},
    ]))}));
@@ -176,6 +188,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
    await draftRepo.clear(saved?.revision??null);
    setSaved(null);setSaveState('empty');setSaveIssues([]);setRecovery(null);
    setRehearsed([]);
+   setHolds([]);
    setSaveMessage('Gespeicherter Abendplan verworfen. Quellen bleiben erhalten.');
   }catch(e){setSaveMessage(e instanceof Error?e.message:'Plan konnte nicht verworfen werden');}
   finally{setSaving(false);}
@@ -235,13 +248,61 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
   [cueSheet,rehearsed]);
  const progress=useMemo(()=>rehearsalProgress(cueSheet,validMarks),
   [cueSheet,validMarks]);
+ const validHolds=useMemo(()=>validEditorialHolds(cueSheet,holds),
+  [cueSheet,holds]);
+ const rotation=useMemo(()=>buildTeamRotation(cueSheet,teams,validMarks,validHolds),
+  [cueSheet,teams,validMarks,validHolds]);
+ const rotationSummary=useMemo(()=>rotationDecisionSummary(rotation),[rotation]);
  const cueReceipt=markForCue(cue);
+ const currentHold=cueReceipt?validHolds.find(h=>h.game===cueReceipt.game&&
+  h.slot===cueReceipt.slot&&h.sourceId===cueReceipt.sourceId&&
+  h.sourceRevision===cueReceipt.sourceRevision):undefined;
  const isCueRehearsed=Boolean(cueReceipt&&validMarks.some(m=>
   m.game===cueReceipt.game&&m.slot===cueReceipt.slot&&
   m.sourceId===cueReceipt.sourceId&&m.sourceRevision===cueReceipt.sourceRevision));
  function openEveningCue(next:EveningCue|null){
   if(!next)return;
   setGame(next.game);setStepIndex(next.localIndex);
+ }
+ function moveToRotationTurn(preferred?:number,withMarks=validMarks){
+  const proposed=buildTeamRotation(cueSheet,teams,withMarks,validHolds);
+  const next=nextRotationTurn(proposed,game,stepIndex,preferred);
+  openEveningCue(next?cueSheet.cues[next.cueIndex]??null:null);
+ }
+ async function checkSourceCustody():Promise<void>{
+  const original=await prepareSavedDraft(items,{game,profile,teams,step:stepIndex,
+   selections:eveningOverrides,rehearsed:validMarks,holds:validHolds},1);
+  if((await reconcileSavedDraft(original,await latestItems())).status!=='ready')
+   throw Error('Originalquellen in G10 verändert. Erst neu laden oder Quellkonflikt beheben.');
+ }
+ async function markAndRotate(){
+  if(rotationBusy||!cue||!cueReceipt||saveState==='stale'||
+   saveState==='error'||saveState==='loading')return;
+  setRotationBusy(true);setRotationMessage('');
+  try{
+   await checkSourceCustody();
+   const updated=isCueRehearsed?validMarks:
+    toggleRehearsalMark(cueSheet,validMarks,cue);
+   const next=buildTeamRotation(cueSheet,teams,updated,validHolds);
+   const nextTurn=nextRotationTurn(next,game,stepIndex,
+    teamFilter===0?undefined:teamFilter);
+   setRehearsed(updated);
+   openEveningCue(nextTurn?cueSheet.cues[nextTurn.cueIndex]??null:null);
+   setRotationMessage('Probenstand geändert. Für dauerhafte Übernahme Abendplan speichern.');
+  }catch(e){setRotationMessage(e instanceof Error?e.message:'Quellenprüfung fehlgeschlagen');}
+  finally{setRotationBusy(false);}
+ }
+ async function updateHold(reason:EditorialHoldReason|null){
+  if(!cue||!cueReceipt||rotationBusy||saveState==='stale'||
+   saveState==='error'||saveState==='loading')return;
+  setRotationBusy(true);setRotationMessage('');
+  try{
+   await checkSourceCustody();
+   setHolds(old=>setEditorialHold(cueSheet,old,cue,reason));
+   setRotationMessage(reason?'Korrekturvermerk für G10 vorgemerkt. Abendplan speichern.':
+    'Korrekturvermerk zurückgenommen. Abendplan speichern.');
+  }catch(e){setRotationMessage(e instanceof Error?e.message:'Quellenprüfung fehlgeschlagen');}
+  finally{setRotationBusy(false);}
  }
  const runSheet=useMemo(()=>gameNightRunSheet(items,profile,teams,eveningOverrides),
   [items,profile,teams,eveningOverrides]);
@@ -514,6 +575,61 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
      {progress.perGame.map(p=><span key={p.game}>{labels[p.game]} {p.done}/{p.total}</span>)}
     </div>
    </div>
+   <section className="g38-rotation" aria-label="G38 Teamrotation und Korrektur">
+    <div className="g28-inventory-head">
+     <h4>Teamrotation</h4>
+     <strong>{rotationSummary.done}/{rotationSummary.assigned} Teamaufgaben geprobt</strong>
+    </div>
+    <div className="g38-team-status">
+     {rotation.perTeam.map(t=><div key={t.team}>
+      <strong>Team {t.team}</strong>
+      <span>{t.rehearsed}/{t.assigned} geprobt</span>
+      <span>{t.missing} ohne Quelle · {t.held} Korrekturen</span>
+     </div>)}
+    </div>
+    <div className="g38-rotation-actions">
+     <button type="button" className="exp-secondary"
+      disabled={!rotation.turns.some(t=>!t.rehearsed&&
+       (teamFilter===0||t.team===teamFilter))}
+      onClick={()=>moveToRotationTurn(teamFilter===0?undefined:teamFilter)}>
+      Nächster fairer Teamturn
+     </button>
+     <button type="button" className="exp-secondary"
+      disabled={!cueReceipt||rotationBusy||saveState==='stale'||saveState==='error'}
+      onClick={()=>void markAndRotate()}>
+      Aufgabe proben und Teamwechsel
+     </button>
+    </div>
+    <div className="g38-review-decision">
+     <label>G10-Prüfgrund
+      <select aria-label="G38 Prüfgrund" value={holdReason}
+       onChange={e=>setHoldReason(e.target.value as EditorialHoldReason)}>
+       <option value="question">Fragestellung korrigieren</option>
+       <option value="source">Quellenbeleg prüfen</option>
+       <option value="rights">Nutzungsrechte klären</option>
+       <option value="rules">Spielregel klären</option>
+      </select>
+     </label>
+     <button type="button" className="exp-secondary"
+      disabled={!cueReceipt||rotationBusy||saveState==='stale'||saveState==='error'}
+      onClick={()=>void updateHold(holdReason)}>Korrekturvermerk setzen</button>
+     {currentHold&&<button type="button" className="exp-secondary"
+      disabled={rotationBusy||saveState==='stale'||saveState==='error'}
+      onClick={()=>void updateHold(null)}>Korrekturvermerk zurücknehmen</button>}
+     {currentHold&&<strong>G10-Korrektur offen · {currentHold.reason}</strong>}
+    </div>
+    {rotationMessage&&<p role="status">{rotationMessage}</p>}
+    <div className="g38-held-sources">
+     {validHolds.map(h=><button type="button" className="exp-secondary"
+      key={h.game+'/'+h.slot}
+      onClick={()=>{const target=cueSheet.cues.find(c=>c.game===h.game&&
+       c.slot===h.slot&&(c.phase==='ready'||c.phase==='prepared'));
+       openEveningCue(target??null);
+       const item=items.find(i=>i.id===h.sourceId);if(item)onChoose(item);}}>
+      {labels[h.game]} · {h.slot} · {h.sourceId} · {h.reason} · G10
+     </button>)}
+    </div>
+   </section>
    <div className="g36-cue">
     <div aria-live="polite">
      {cue?<><strong>{cue.index+1} / {cueSheet.cues.length} · {labels[cue.game]}</strong>

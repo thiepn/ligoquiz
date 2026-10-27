@@ -104,3 +104,12 @@
 .g37-game-progress{display:flex;flex-wrap:wrap;gap:.65rem;margin-top:.4rem}
 .g37-game-progress span{font-size:inherit}
 .g36-cue button[aria-pressed="true"]{outline:2px solid currentColor;outline-offset:1px}
+
+.g38-rotation{border-top:1px solid var(--border,#68717b);margin:.8rem 0;padding:.8rem 0}
+.g38-rotation h4{font-size:1.05rem;margin:0}
+.g38-team-status{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.45rem;margin:.65rem 0}
+.g38-team-status>div{display:flex;flex-direction:column;gap:.3rem;padding:.55rem;border:1px solid var(--border,#68717b)}
+.g38-rotation-actions,.g38-review-decision,.g38-held-sources{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin:.65rem 0}
+.g38-rotation-actions button,.g38-review-decision button{min-height:44px}
+.g38-review-decision label{display:flex;flex-direction:column;gap:.25rem}
+.g38-review-decision select{font:inherit;min-height:44px}
