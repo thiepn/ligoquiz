@@ -198,8 +198,8 @@ describe('G39 source-aware actionable moderator queue',()=>{
   const hold=setEditorialHold(sheet,[],cue,'question');
   const held=buildTeamRotation(sheet,3,[],hold);
   expect(rotationLane(held.turns[0]!)).toBe('hold');
-  expect(nextActionableRotationTurn(held,turn.game,turn.localIndex,turn.team))
-   ?.slot).not.toBe(turn.slot);
+  expect(nextActionableRotationTurn(held,turn.game,turn.localIndex,turn.team)?.slot)
+   .not.toBe(turn.slot);
   const cleared=buildTeamRotation(sheet,3,[],setEditorialHold(sheet,hold,cue,null));
   expect(rotationLane(cleared.turns[0]!)).toBe('practice');
   const marked=toggleRehearsalMark(sheet,[],cue);
