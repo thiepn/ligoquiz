@@ -80,7 +80,8 @@ export function assertSavedPreparation(raw:unknown):SavedPreparation{
   fail('INVALID','Quellnachweise stimmen nicht mit der Aufgabenwahl überein.');
  const rehearsalKeys=new Set<string>();
  for(const mark of rehearsed){
-  if(!plain(mark)||!GAME_TYPES.includes(mark.game as GameType)||
+  if(!plain(mark)||Object.keys(mark).sort().join('|')!=='game|slot|sourceId|sourceRevision'||
+   !GAME_TYPES.includes(mark.game as GameType)||
    typeof mark.slot!=='string'||!SAFE.test(mark.slot)||
    typeof mark.sourceId!=='string'||!SAFE.test(mark.sourceId)||
    !Number.isSafeInteger(mark.sourceRevision)||Number(mark.sourceRevision)<0)
@@ -98,7 +99,8 @@ export function assertSavedPreparation(raw:unknown):SavedPreparation{
  }
  const heldKeys=new Set<string>();
  for(const hold of holds){
-  if(!plain(hold)||!GAME_TYPES.includes(hold.game as GameType)||
+  if(!plain(hold)||Object.keys(hold).sort().join('|')!=='game|reason|slot|sourceId|sourceRevision'||
+   !GAME_TYPES.includes(hold.game as GameType)||
    typeof hold.slot!=='string'||!SAFE.test(hold.slot)||
    typeof hold.sourceId!=='string'||!SAFE.test(hold.sourceId)||
    !Number.isSafeInteger(hold.sourceRevision)||Number(hold.sourceRevision)<0||

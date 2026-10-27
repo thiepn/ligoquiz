@@ -1,4 +1,4 @@
-import {GAME_TYPES,type GameType} from '../domain/game/contracts';
+import type {GameType} from '../domain/game/contracts';
 import {type EveningCue,type EveningCueSheet,type RehearsalMark,
  markForCue,validRehearsalMarks} from './evening-rehearsal-queue';
 
