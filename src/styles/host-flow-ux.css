@@ -73,7 +73,9 @@
 [data-host-game] :is(.rq-utility,.qt-host-toolbar,.vb-host-toolbar,.ll-toolbar,.ud-toolbar) :is(button,a){min-height:44px}
 @media(max-width:700px){
  [data-host-game] .g14-guide{padding:11px 12px}
- [data-host-game] .g14-guide-head{gap:9px}
+ [data-host-game] .g14-guide-head{gap:9px;flex-direction:column;align-items:stretch}
+ [data-host-game] .g14-guide-head>div:first-child{width:100%;min-width:0}
+ [data-host-game] .g14-connect{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:flex-start;justify-items:start;min-width:0;text-align:left;gap:5px 9px}
  [data-host-game] .g14-guide-foot{flex-direction:column;align-items:stretch;gap:10px}
  [data-host-game] .g14-guide-foot button{width:100%;min-height:44px}
  [data-host-game] .g14-optional .g14-facts{grid-template-columns:1fr}

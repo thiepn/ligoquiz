@@ -11,6 +11,14 @@ async function snapshot(page, width, view) {
  });
  expect(geometry.scroll, `${width}px ${view}: ${JSON.stringify(geometry)}`)
   .toBeLessThanOrEqual(geometry.viewport + 2);
+ if(view.includes('host')||view.endsWith('-started')){
+  const heading=page.locator('.g14-guide h3').first();
+  if(await heading.count()){
+   const blockWidth=await heading.evaluate(el=>el.getBoundingClientRect().width);
+   expect(blockWidth, `${width}px host step should not split each word into fragments`)
+    .toBeGreaterThan(Math.min(185,width-110));
+  }
+ }
 }
 
 for(const width of viewports){
