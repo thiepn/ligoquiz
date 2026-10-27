@@ -222,7 +222,8 @@ test('G37 installed offline source-revision-bound moderator rehearsal stays loca
   await expect(desk).toContainText('Moderationsprobe: 1 /');
   await expect(desk.getByRole('button',{name:'Probenmarkierung zurücknehmen'})).toBeEnabled();
   await desk.getByRole('button',{name:'Nächste ungetestete Aufgabe'}).click();
-  await expect(desk).toContainText('2 /');
+  await expect(desk).toContainText('6 / 132 · Rundenquiz');
+  await expect(desk).toContainText('wissen 2 · ready');
   await expect(desk.getByLabel('G36 Öffentliche Phasenvorschau')).not.toContainText('Josua');
   await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
  }finally{await context.setOffline(false);}

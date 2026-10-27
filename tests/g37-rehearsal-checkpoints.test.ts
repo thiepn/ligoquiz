@@ -42,7 +42,10 @@ describe('G37 source-specific, nonapproving original five-game rehearsal',()=>{
   expect(twice).toEqual([]);
   const repeated=validRehearsalMarks(sheet,[...once,...once]);
   expect(repeated).toHaveLength(1);
-  expect(nextUntestedCue(sheet,once,'rundenquiz',0)?.slot).not.toBe(first.slot);
+  const next=nextUntestedCue(sheet,once,'rundenquiz',0);
+  expect(next?.slot).toBe('wissen:2');
+  expect(next?.index).toBe(5);
+  expect(next?.localIndex).toBe(5);
  });
  it('navigates only authentic team-labelled tasks and never fabricates shared-team turns',()=>{
   const sheet=buildEveningCueSheet(bank,'standard',5);

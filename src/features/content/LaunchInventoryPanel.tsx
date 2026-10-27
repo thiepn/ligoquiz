@@ -509,7 +509,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
     </label>
    </div>
    <div className="g37-progress">
-    <strong>Moderationsprobe: {progress.done} / {progress.total} Aufgaben geprüft</strong>
+    <strong>Moderationsprobe: {progress.done} / {progress.total} Aufgaben geprobt</strong>
     <div className="g37-game-progress">
      {progress.perGame.map(p=><span key={p.game}>{labels[p.game]} {p.done}/{p.total}</span>)}
     </div>

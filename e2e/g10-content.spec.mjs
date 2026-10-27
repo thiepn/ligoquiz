@@ -783,7 +783,8 @@ test('G37 source-bound moderator rehearsal marks persist and team routing stays 
  await desk.getByRole('button',{name:'Aufgabe probeweise durchgespielt'}).click();
  await expect(desk).toContainText('Moderationsprobe: 1 /');
  await desk.getByRole('button',{name:'Nächste ungetestete Aufgabe'}).click();
- await expect(desk).toContainText('2 /');
+ await expect(desk).toContainText('6 / 132 · Rundenquiz');
+ await expect(desk).toContainText('wissen 2 · ready');
  await desk.getByRole('combobox',{name:'G37 Teamfilter'}).selectOption('2');
  await desk.getByRole('button',{name:'Nächste Teamaufgabe'}).click();
  await expect(desk).toContainText('Team 2');

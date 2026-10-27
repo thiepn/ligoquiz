@@ -14,3 +14,5 @@ Native moderator G36 five-game cue desk gains:
 Preserve original 79 trial IDs; 704 V1 historical metadata independent; all original G10–G36 authoring, five game engines, CAS, four human approval checks, backup and public-only stage DTO. No new approval/publishing/migration/deployment. G26 NO_GO.
 
 Executable positive/adversarial unit: 45 combinations, team routing, deduped marks per slot, fabricated source and duplicate marker refusal, source-revision invalidation, independent CAS, selective recovery. Real Chromium and installed-offline PWA: mark/save/reload/unmark, team navigation and phase-only projector preview. No release claim.
+
+G37 first full Chromium #40426069925: 228 PASS, 1 FAIL. The newly added browser assertion incorrectly expected phase 2 after navigating to the second question; the real canonical Rundenquiz contains five phases per question, so phase 6 was correctly rendered. Corrected both Chromium and offline expectations to the exact original phase and added an adversarial unit step-index receipt; no game navigation code or assertion rigor weakened.
