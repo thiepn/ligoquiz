@@ -6,8 +6,8 @@ const shots = 'test-results/ui-stabilization';
 async function snapshot(page, width, view) {
  await page.screenshot({path:`${shots}/${width}-${view}.png`,fullPage:true,animations:'disabled'});
  const geometry = await page.evaluate(() => {
-  const doc = document.documentElement;
-  return {viewport:innerWidth,scroll:doc.scrollWidth};
+  const doc = globalThis.document.documentElement;
+  return {viewport:globalThis.innerWidth,scroll:doc.scrollWidth};
  });
  expect(geometry.scroll, `${width}px ${view}: ${JSON.stringify(geometry)}`)
   .toBeLessThanOrEqual(geometry.viewport + 2);
@@ -25,8 +25,8 @@ for(const width of viewports){
    await menu.locator('summary').click();
    await expect(menu).toHaveAttribute('open','');
    const bounds=await page.evaluate(()=>{
-    const m=document.querySelector('.sp-shell-mobile-menu>nav').getBoundingClientRect();
-    const n=document.querySelector('.sp-shell-mobile-bottom').getBoundingClientRect();
+    const m=globalThis.document.querySelector('.sp-shell-mobile-menu>nav').getBoundingClientRect();
+    const n=globalThis.document.querySelector('.sp-shell-mobile-bottom').getBoundingClientRect();
     return {menuBottom:m.bottom,bottomNavTop:n.top};
    });
    expect(bounds.menuBottom,'Mobile menu must not sit under the fixed bottom navigation')
@@ -41,7 +41,7 @@ for(const width of viewports){
   await page.goto('/#/setup');
   await expect(page.getByRole('heading',{name:'Teams festlegen'})).toBeVisible();
   // Setup no longer renders the old desktop sidebar; it must not reserve its column.
-  const columns=await page.locator('.sp-prep-layout').evaluate(el=>getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/));
+  const columns=await page.locator('.sp-prep-layout').evaluate(el=>globalThis.getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/));
   expect(columns,'Unrendered setup sidebar must not reserve an empty track').toHaveLength(1);
   await snapshot(page,width,'teams');
   await page.getByRole('textbox',{name:'Team 1'}).fill('Nord');
@@ -49,11 +49,12 @@ for(const width of viewports){
   await expect(page.getByRole('heading',{name:'Programm wählen'})).toBeVisible();
   await snapshot(page,width,'game-choice');
   if(width<=760){
-   await page.evaluate(()=>scrollTo(0,0));
+   await page.evaluate(()=>globalThis.scrollTo(0,0));
    const action=page.locator('.sp-prep-actions');
    const bounds=await action.boundingBox();
    expect(bounds).not.toBeNull();
    expect(bounds.y+bounds.height).toBeLessThanOrEqual(844);
+   expect(bounds.y+bounds.height,'Focused setup has no bottom nav; action should sit near the viewport edge').toBeGreaterThan(765);
   }
   await page.reload();
   await expect(page.getByRole('heading',{name:'Programm wählen'})).toBeVisible();
@@ -65,12 +66,53 @@ for(const width of viewports){
   await expect(page).toHaveURL(/#\/host$/);
   await expect(page.locator('#sp-host-game')).toBeVisible();
   await snapshot(page,width,'host');
-  const identity=await page.evaluate(()=>sessionStorage.getItem('ligoquiz.v2.g4.rundenquiz.host'));
+  const identity=await page.evaluate(()=>globalThis.sessionStorage.getItem('ligoquiz.v2.g4.rundenquiz.host'));
   expect(identity).toBeTruthy();
   await page.reload();
   await expect(page.locator('#sp-host-game')).toBeVisible();
-  expect(await page.evaluate(()=>sessionStorage.getItem('ligoquiz.v2.g4.rundenquiz.host'))).toBe(identity);
+  expect(await page.evaluate(()=>globalThis.sessionStorage.getItem('ligoquiz.v2.g4.rundenquiz.host'))).toBe(identity);
   await expect(page.locator('.sp-cockpit-quick-stage')).toHaveAttribute('target','_blank');
   await snapshot(page,width,'resumed-host');
  });
+}
+
+const otherGames=[
+ {name:'Quiztafel',host:'.qt-host',first:'Quiztafel auf dem Beamer vorbereiten'},
+ {name:'Verbindungen',host:'.vb-host',first:'Aufgabenreihenfolge bestätigen'},
+ {name:'Logikleiter',host:'.ll-host',first:'Stufenfolge bestätigen'},
+ {name:'Umfrageduell',host:'.ud-host',first:'Aufgabenfolge bestätigen'},
+];
+
+for(const width of viewports){
+ for(const game of otherGames){
+  test(`UI stabilization: ${game.name} host, stage and reload at ${width}px`,async({page,context})=>{
+   await page.setViewportSize({width,height:844});
+   await page.goto('/#/setup');
+   await page.getByRole('button',{name:'Weiter'}).click();
+   await page.getByRole('button',{name:new RegExp(game.name)}).click();
+   await page.getByRole('button',{name:'Weiter'}).click();
+   await page.getByRole('checkbox').check();
+   await page.getByRole('button',{name:'Spielleitung öffnen'}).click();
+   await expect(page).toHaveURL(/#\\/host$/);
+   const host=page.locator(game.host);
+   await expect(host).toBeVisible();
+   await expect(host.getByRole('button',{name:game.first})).toBeEnabled();
+   await snapshot(page,width,game.name.toLowerCase()+'-host');
+   await host.getByRole('button',{name:game.first}).click();
+   await expect(host).toBeVisible();
+   await snapshot(page,width,game.name.toLowerCase()+'-started');
+   const href=await page.locator('.sp-cockpit-quick-stage').getAttribute('href');
+   expect(href).toMatch(/^#\\/stage\\?event=[a-zA-Z0-9_-]+$/);
+   const stage=await context.newPage();
+   await stage.setViewportSize({width,height:844});
+   await stage.goto('/'+href);
+   await expect(stage.locator('.stage-preview')).toBeVisible();
+   await stage.screenshot({path:`${shots}/${width}-${game.name.toLowerCase()}-projector.png`,fullPage:true,animations:'disabled'});
+   await stage.close();
+   await page.reload();
+   await expect(page.locator(game.host)).toBeVisible();
+   await expect(page.locator('.sp-cockpit-quick-stage')).toHaveAttribute('href',href);
+   await snapshot(page,width,game.name.toLowerCase()+'-resumed');
+  });
+ }
 }
