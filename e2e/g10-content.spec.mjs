@@ -934,3 +934,34 @@ test('G40 source lookup can be reviewed game-by-game with bounded wrap and filte
  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig'))
   .toHaveCount(5);
 });
+
+
+test('G40 audit findings and new question creation cannot silently discard unsaved source edits',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ await queue.getByRole('button',{name:/rq-s1/}).click();
+ const editor=page.getByRole('region',{name:'Aufgabe bearbeiten'});
+ await page.getByRole('textbox',{name:'Lösung',exact:true}).fill('Unbelegter Zwischenstand');
+ const audit=page.getByRole('region',{name:'G23 Quellen und Rechteprüfung'});
+ const finding=audit.locator('.g23-finding').filter({hasText:'rq-h1'}).first();
+ await expect(finding).toBeVisible();
+ page.once('dialog',dialog=>dialog.dismiss());
+ await finding.click();
+ await expect(editor).toContainText('rq-s1');
+ await expect(page.getByRole('textbox',{name:'Lösung',exact:true}))
+  .toHaveValue('Unbelegter Zwischenstand');
+ page.once('dialog',dialog=>dialog.dismiss());
+ await page.getByRole('button',{name:'Aufgabe anlegen'}).click();
+ await expect(page.locator('.cx-item')).toHaveCount(79);
+ await expect(editor).toContainText('rq-s1');
+ page.once('dialog',dialog=>dialog.accept());
+ await finding.click();
+ await expect(editor).toContainText('rq-h1');
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig'))
+  .toHaveCount(5);
+ await page.reload();
+ await expect(page.locator('.cx-item')).toHaveCount(79);
+});

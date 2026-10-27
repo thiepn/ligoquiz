@@ -133,13 +133,15 @@ export function ContentStudio(){
   setRightsDraft(item.provenance.rights??'');
   setReviewNote('');setChecklist([false,false,false,false]);setError('');setMessage('');
  }
+ function hasPendingEditorChanges(){
+  return Boolean(current&&(json!==JSON.stringify(current.payload,null,2)||
+   rightsDraft!==(current.provenance.rights??'')||reviewNote.trim()||
+   reviewer.trim()||checklist.some(Boolean)));
+ }
  function guardedChoose(item:ContentItem){
   // Selecting the same item must not discard a pending structured or JSON edit.
   if(current?.id===item.id)return;
-  const edited=Boolean(current&&(json!==JSON.stringify(current.payload,null,2)||
-   rightsDraft!==(current.provenance.rights??'')||reviewNote.trim()||
-   reviewer.trim()||checklist.some(Boolean)));
-  if(edited&&!window.confirm(
+  if(hasPendingEditorChanges()&&!window.confirm(
    'Ungespeicherte Änderungen verwerfen und eine andere Originalquelle öffnen?'))return;
   choose(item);
  }
@@ -153,6 +155,8 @@ export function ContentStudio(){
   finally{setBusy(false);}
  }
  async function add(){
+  if(hasPendingEditorChanges()&&!window.confirm(
+   'Ungespeicherte Änderungen verwerfen und eine neue Frage anlegen?'))return;
   await act(async()=>{
    const id='neu-'+crypto.randomUUID();
    const item=createDraft(templateGame,starter(templateGame,id));
@@ -353,7 +357,7 @@ export function ContentStudio(){
        disabled={busy||!importConsent}>Vorschau ausdrücklich importieren</button>
      <button className="exp-secondary" onClick={()=>{setPreview(null);setImportConsent(false);}}>Abbrechen</button></div>
    </section>}
-  <EditorialAuditPanel items={items} preview={preview} onChoose={choose}/>
+  <EditorialAuditPanel items={items} preview={preview} onChoose={guardedChoose}/>
   <LaunchInventoryPanel items={items} onChoose={guardedChoose}
    loaded={libraryLoaded} latestItems={()=>repo.list()}/>
   <section className="cx-source-queue" aria-label="Quellenprüfung">
