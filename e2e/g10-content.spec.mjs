@@ -1010,7 +1010,7 @@ test('G41 two source-exact wording corrections are advisory and leave all 79 ori
 test('G41 rights-declaration filter never equates self-entered rights text with release clearance',async({page})=>{
  await page.goto('/#/inhalte');
  await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
- await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/'}).check();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
  await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
  const queue=page.getByRole('region',{name:'Quellenprüfung'});
  await queue.getByRole('combobox',{name:'Prüfgruppe'}).selectOption('lookup');
