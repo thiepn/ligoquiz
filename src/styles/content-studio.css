@@ -136,3 +136,9 @@
 @media(max-width:600px){.cx-source-nav button{flex:1 1 100%}
 .cx-source-filter>label:has(select){flex:1 1 100%}
 .cx-source-filter select{flex:1}}
+
+/* G41: directly actionable original-source wording and rights triage. */
+.cx-rights-summary{padding:10px 14px;margin:0;border-bottom:1px solid #dce2de;
+ font-size:13px;line-height:1.55;color:#52626b}
+.cx-source-item .cx-g41-risk{color:#78431f;font-weight:700}
+.cx-g41-original-risk{border-left-color:#a16d37;background:#fbf7ef}

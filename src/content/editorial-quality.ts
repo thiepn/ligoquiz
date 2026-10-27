@@ -1,8 +1,9 @@
 import {normalizedKey,type ContentItem} from './contracts';
 import type {AuditIssue} from './editorial-audit';
+import {originalWordingRisk} from './editorial-source-review';
 export type QualitySignal={
  code:'CITATION_PINPOINT'|'CLUE_REPEAT'|'ANSWER_LEAK'|'EXPLANATION_UNCLEAR'|
- 'ILLUSTRATIVE_ONLY'|'CROSS_GAME_REVEAL'|'DUPLICATE_SOURCE';
+ 'ILLUSTRATIVE_ONLY'|'CROSS_GAME_REVEAL'|'DUPLICATE_SOURCE'|'ORIGINAL_WORDING_RISK';
  message:string;relatedId?:string;
 };
 /** Original payload checks are editorial triage, not fact, grading or rights approval. */
@@ -19,6 +20,8 @@ export function qualitySignals(item:ContentItem,issues:readonly AuditIssue[]=[])
   !/\b\d{1,3}\s*[,.:]\s*\d{1,3}/u.test(reference)&&
   !/\b(?:Art\.|§)\s*\d+/iu.test(reference))
   add('CITATION_PINPOINT','Originalquelle benötigt eine genaue Belegstelle oder direktes Dokument');
+ const originalRisk=originalWordingRisk(item);
+ if(originalRisk)add('ORIGINAL_WORDING_RISK',originalRisk.problem);
  if(item.game==='umfrageduell'&&(p.source as {kind?:string}|undefined)?.kind==='illustrative')
   add('ILLUSTRATIVE_ONLY','Frei erfundene Beispielrangfolge; keine erhobene Umfrage');
  const answer=typeof p.answer==='string'?p.answer:typeof p.target==='string'?p.target:'';

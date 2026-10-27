@@ -1,6 +1,6 @@
 import {auditLibrary,type AuditIssue} from './editorial-audit';
 import {trialDraftItems,TRIAL_DRAFT_SOURCE} from './trial-draft-bundle';
-import type {ContentItem} from './contracts';
+import {validatePayload,type ContentItem} from './contracts';
 
 type PrimaryReference={name:string;url:string;comparison:string};
 const PRIMARY_LEADS:Readonly<Record<string,PrimaryReference>>={
@@ -119,4 +119,58 @@ export function adjacentSourceReviewTask(tasks:readonly SourceReviewTask[],
  const index=tasks.findIndex(task=>task.item.id===currentId);
  if(index<0)return direction===1?tasks[0]!:tasks[tasks.length-1]!;
  return tasks[(index+direction+tasks.length)%tasks.length]??null;
+}
+
+/**
+ * G41: Two identified original wording risks. A reference is a research lead,
+ * never evidence of rights, an independent human review or a publication grant.
+ * Original sample identity and every payload field must still match exactly.
+ */
+export type OriginalWordingRisk={
+ title:string;problem:string;prompt:string;reference:string;
+ leadName:string;leadUrl:string;
+};
+const WORDING_RISKS:Readonly<Record<string,OriginalWordingRisk>>={
+ 'll-05':{
+  title:'Drei-Kisten-Rätsel: Eindeutigkeit der Ausgangslage',
+  problem:'Die Aufgabenstellung sagt nicht, dass die Inhalte „nur Äpfel“, „nur Birnen“ und „Gemischt“ je genau einmal vorliegen. Ohne diese Bedingung ist eine eindeutige Zuordnung aus einer Ziehung nicht gesichert.',
+  prompt:'Drei Kisten enthalten jeweils genau eine der folgenden Füllungen: nur Äpfel, nur Birnen oder eine Mischung aus Äpfeln und Birnen. Sie tragen die Aufschriften „Äpfel“, „Birnen“ und „Gemischt“. Alle drei Aufschriften sind falsch. Aus welcher Kiste zieht man blind genau eine Frucht, um danach die Inhalte aller drei Kisten eindeutig zu bestimmen?',
+  reference:'Logikleiter – eigens erstellter Probetext; mathematisches Analogon (Äpfel/Orangen), als Recherchehinweis: https://prob.hhu.de/w/index.php/Apples_and_Oranges_%28Apple_Interview_Question%29',
+  leadName:'Heinrich-Heine-Universität Düsseldorf · ProB, Apples and Oranges',
+  leadUrl:'https://prob.hhu.de/w/index.php/Apples_and_Oranges_%28Apple_Interview_Question%29',
+ },
+ 'rq-s2':{
+  title:'Psalter: Psalmen statt uneindeutiger Kapitelzählung',
+  problem:'Die Antwort 150 ist für die hebräische Psalmzählung korrekt. „Kapitel“ ist hier weniger präzise als „Psalmen“; unterschiedliche griechische/hebräische Unterteilungen sollten nicht unterschlagen werden.',
+  prompt:'Wie viele einzelne Psalmen umfasst der Psalter nach der hebräischen Zählung?',
+  reference:'Psalmen 1–150; USCCB, The Book of Psalms (hebräische Zählung), Recherchehinweis: https://bible.usccb.org/bible/psalms/0',
+  leadName:'USCCB · The Book of Psalms',
+  leadUrl:'https://bible.usccb.org/bible/psalms/0',
+ },
+};
+export function originalWordingRisk(item:ContentItem):OriginalWordingRisk|null{
+ const risk=WORDING_RISKS[item.id],baseline=originals.get(item.id);
+ if(!risk||!baseline||item.status==='quarantined'||
+  item.provenance.origin!=='sample'||
+  !(item.provenance.sourceVersion===TRIAL_DRAFT_SOURCE||
+    (item.id==='rq-s2'&&item.provenance.sourceVersion===EARLIER_RQ_SOURCE))||
+  item.game!==baseline.game||
+  item.provenance.sourceKey!==baseline.provenance.sourceKey||
+  item.provenance.sourceId!==baseline.provenance.sourceId||
+  JSON.stringify(item.payload)!==JSON.stringify(baseline.payload))return null;
+ return risk;
+}
+/** Validated, ephemeral copy only. No write, approval, or rights inference. */
+export function originalWordingDraftProposal(item:ContentItem):
+ {risk:OriginalWordingRisk;payload:Record<string,unknown>}|null{
+ const risk=originalWordingRisk(item);
+ if(!risk||item.status!=='draft')return null;
+ const payload={...item.payload as Record<string,unknown>,
+  prompt:risk.prompt,reference:risk.reference};
+ if(validatePayload(item.game,payload).length>0)return null;
+ return {risk,payload};
+}
+/** A populated self-declaration is not independently checked rights evidence. */
+export function rightsClaimState(item:ContentItem):'missing'|'self-declared'{
+ return item.provenance.rights?.trim()?'self-declared':'missing';
 }

@@ -9,7 +9,7 @@ import {qualitySignals} from '../../content/editorial-quality';
 import {LaunchInventoryPanel} from './LaunchInventoryPanel';
 import {StructuredQuestionEditor} from './StructuredQuestionEditor';
 import {trialDraftBundle} from '../../content/trial-draft-bundle';
-import {contentReviewTasks,historicalTrialCorrection,draftSourceCitation,adjacentSourceReviewTask,type ReviewRoute} from '../../content/editorial-source-review';
+import {contentReviewTasks,historicalTrialCorrection,draftSourceCitation,adjacentSourceReviewTask,originalWordingRisk,originalWordingDraftProposal,rightsClaimState,type ReviewRoute} from '../../content/editorial-source-review';
 import {exportReviewWorksheet,previewReviewWorksheet,worksheetSourceProposal,worksheetAnswerProposal,worksheetWordingProposal,worksheetDetailProposal,refreshReviewWorksheet,worksheetQualityBatchProposal} from '../../content/editorial-worklist';
 
 
@@ -66,6 +66,8 @@ export function ContentStudio(){
  const [reviewSearch,setReviewSearch]=useState('');
  const [repeatsOnly,setRepeatsOnly]=useState(false);
  const [qualityOnly,setQualityOnly]=useState(false);
+ const [wordingOnly,setWordingOnly]=useState(false);
+ const [rightsFilter,setRightsFilter]=useState<'all'|'missing'|'self-declared'>('all');
  const [reviewCsv,setReviewCsv]=useState('');
  const [reviewCsvError,setReviewCsvError]=useState('');
  async function refresh(){
@@ -99,6 +101,8 @@ export function ContentStudio(){
    (reviewGame==='alle'||x.item.game===reviewGame)&&
    (!repeatsOnly||x.issues.some(issue=>issue.code==='CROSS_GAME_CLUE_REUSE'))&&
    (!qualityOnly||qualitySignals(x.item,x.issues).length>0)&&
+   (!wordingOnly||Boolean(originalWordingRisk(x.item)))&&
+   (rightsFilter==='all'||rightsClaimState(x.item)===rightsFilter)&&
    (!normalizedReviewSearch||
    [x.item.id,payload.prompt??'',payload.target??'',payload.answer??'']
     .join(' ').toLocaleLowerCase('de-DE').includes(normalizedReviewSearch));
@@ -110,6 +114,8 @@ export function ContentStudio(){
  },[reviewCsv,sourceTasks]);
  const selectedSourceTask=current?sourceTasks.find(x=>x.item.id===current.id):null;
  const historicalCorrection=current?historicalTrialCorrection(current):null;
+ const wordingRisk=current?originalWordingRisk(current):null;
+ const wordingProposal=current?originalWordingDraftProposal(current):null;
  const pack=useMemo(()=>{
   const games=GAME_TYPES.map(game=>{
    const result=coverage(items,game,profile,teamCount);
@@ -384,8 +390,22 @@ export function ContentStudio(){
       onChange={e=>setRepeatsOnly(e.target.checked)}/>Nur wiederholte Hinweisziele</label>
     <label><input type="checkbox" checked={qualityOnly}
      onChange={e=>setQualityOnly(e.target.checked)}/>Nur Qualitätsrisiken</label>
+    <label><input type="checkbox" checked={wordingOnly}
+     onChange={e=>setWordingOnly(e.target.checked)}/>Nur konkrete Formulierungsrisiken</label>
+    <label>Rechtehinweis
+     <select aria-label="Rechtehinweis filtern" value={rightsFilter}
+      onChange={e=>setRightsFilter(e.target.value as typeof rightsFilter)}>
+      <option value="all">Alle (keine Rechtefreigabe)</option>
+      <option value="missing">Kein Rechtenachweis eingetragen</option>
+      <option value="self-declared">Rechteangabe vorhanden (unverifiziert)</option>
+     </select>
+    </label>
     <span>{visibleSourceTasks.length} Treffer</span>
    </div>
+   <p className="cx-rights-summary">
+    {sourceTasks.filter(x=>rightsClaimState(x.item)==='missing').length} ohne dokumentierte Rechteangabe ·
+    {' '}{sourceTasks.filter(x=>rightsClaimState(x.item)==='self-declared').length} mit selbst eingetragener, ungeprüfter Rechteangabe.
+    {' '}Keine dieser Angaben ist ein Rechtenachweis oder eine externe Freigabe.</p>
    <div className="cx-source-nav" aria-label="Quellenprüfung durchgehen">
     <span>{visibleSourceTasks.length===0?'Keine passende Quelle':
      current&&visibleSourceTasks.some(task=>task.item.id===current.id)?
@@ -491,7 +511,9 @@ export function ContentStudio(){
       <span>{(task.item.payload as {prompt?:string;target?:string}).prompt??
        (task.item.payload as {target?:string}).target??'Strukturierte Aufgabe'}</span>
       <small>{task.lead?.name??(task.route==='illustrative'?'Keine beobachtete Rangfolge':'Quelle eigenständig suchen')}
-       {' · '}{task.issues.length} Prüfhilfen</small>
+       {' · '}{task.issues.length} Prüfhilfen · {rightsClaimState(task.item)==='missing'?
+        'Rechteangabe fehlt':'Rechteangabe ungeprüft'}</small>
+      {originalWordingRisk(task.item)&&<small className="cx-g41-risk">Konkretes Formulierungsrisiko · Korrekturvorschlag</small>}
     </button>)}
     {visibleSourceTasks.length===0&&<p>Keine Aufgaben in dieser Prüfgruppe.</p>}
    </div>
@@ -564,7 +586,27 @@ export function ContentStudio(){
         setJson(JSON.stringify({...current.payload as object,reference:citation},null,2));
         setMessage('Quellenvorschlag im Editor vorbereitet. Antwort und genaue Belegstelle vor dem Speichern unabhängig prüfen.');
        }}>Quellenangabe im Entwurf vorbereiten</button>}
+      <p><b>Rechte:</b> {rightsClaimState(current)==='missing'?
+       'Keine Rechteangabe dokumentiert. Rechteinhaber, Lizenz/Erlaubnis und Geltungsbereich extern klären.':
+       'Nur selbst eingetragene Rechteangabe; Beleg, Rechteinhaber und Nutzungsumfang unabhängig prüfen.'}</p>
       <p>Quellenlink und Prüfliste sind keine Fakten- oder Rechtefreigabe.</p>
+     </section>
+     {wordingRisk&&<section className="cx-source-evidence cx-g41-original-risk" aria-label="Originalformulierung prüfen">
+      <strong>Konkretes Formulierungsrisiko · {current.id}</strong>
+      <p>{wordingRisk.title}</p>
+      <p>{wordingRisk.problem}</p>
+      <p><b>Ungeprüfter Verbesserungsvorschlag:</b> {wordingRisk.prompt}</p>
+      <p><a href={wordingRisk.leadUrl} target="_blank" rel="noopener noreferrer">
+       Recherchequelle: {wordingRisk.leadName}</a> (keine Lizenz-/Faktenfreigabe)</p>
+      {wordingProposal&&<button type="button" className="exp-secondary"
+       disabled={busy||json!==JSON.stringify(current.payload,null,2)}
+       onClick={()=>{
+        const proposal=originalWordingDraftProposal(current);
+        if(!proposal)return;
+        setJson(JSON.stringify(proposal.payload,null,2));
+        setMessage('Quellenspezifische Formulierung nur im ungespeicherten Entwurf vorbereitet. Eigenständig prüfen; keine Freigabe.');
+       }}>Formulierung als ungespeicherten Entwurf vorbereiten</button>}
+      {current.status!=='draft'&&<p>Nur im Entwurfsstatus vorbereitbar; Prüfung oder Freigabe nicht umgehen.</p>}
      </section>}
      {historicalCorrection&&<section className="cx-source-evidence" aria-label="Historische Frage korrigieren">
       <strong>Mehrdeutige Probefrage · Korrekturvorschlag</strong>

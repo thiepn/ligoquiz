@@ -968,3 +968,64 @@ test('G40 audit findings and new question creation cannot silently discard unsav
  await page.reload();
  await expect(page.locator('.cx-item')).toHaveCount(79);
 });
+
+
+test('G41 two source-exact wording corrections are advisory and leave all 79 originals unapproved',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ const editor=page.getByRole('region',{name:'Aufgabe bearbeiten'});
+ await queue.getByRole('combobox',{name:'Prüfgruppe'}).selectOption('lookup');
+ await queue.getByRole('checkbox',{name:'Nur konkrete Formulierungsrisiken'}).check();
+ await expect(queue.locator('.cx-source-item')).toHaveCount(2);
+ await expect(queue).toContainText('ll-05');
+ await expect(queue).toContainText('rq-s2');
+ await expect(queue).toContainText('79 ohne dokumentierte Rechteangabe');
+ await queue.getByRole('button',{name:/ll-05/}).click();
+ const risk=page.getByRole('region',{name:'Originalformulierung prüfen'});
+ await expect(risk).toContainText('jeweils genau eine');
+ await risk.getByRole('button',{name:'Formulierung als ungespeicherten Entwurf vorbereiten'}).click();
+ await expect(editor.getByRole('textbox',{name:'Fragestellung'}))
+  .toHaveValue(/jeweils genau eine/);
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig'))
+  .toHaveCount(5);
+ page.once('dialog',dialog=>dialog.dismiss());
+ await queue.getByRole('button',{name:/rq-s2/}).click();
+ await expect(editor.getByRole('textbox',{name:'Fragestellung'}))
+  .toHaveValue(/jeweils genau eine/);
+ page.once('dialog',dialog=>dialog.accept());
+ await queue.getByRole('button',{name:/rq-s2/}).click();
+ await expect(risk).toContainText('hebräische Psalmzählung');
+ await risk.getByRole('button',{name:'Formulierung als ungespeicherten Entwurf vorbereiten'}).click();
+ await expect(editor.getByRole('textbox',{name:'Fragestellung'}))
+  .toHaveValue(/hebräischen Zählung/);
+ await page.reload();
+ await expect(page.locator('.cx-item')).toHaveCount(79);
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig'))
+  .toHaveCount(5);
+});
+
+test('G41 rights-declaration filter never equates self-entered rights text with release clearance',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/'}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const queue=page.getByRole('region',{name:'Quellenprüfung'});
+ await queue.getByRole('combobox',{name:'Prüfgruppe'}).selectOption('lookup');
+ await queue.getByRole('combobox',{name:'Rechtehinweis filtern'}).selectOption('self-declared');
+ await expect(queue.locator('.cx-source-item')).toHaveCount(0);
+ await queue.getByRole('combobox',{name:'Rechtehinweis filtern'}).selectOption('missing');
+ await expect(queue.locator('.cx-source-item')).toHaveCount(57);
+ await queue.getByRole('button',{name:/ll-05/}).click();
+ await page.getByRole('textbox',{name:'Nutzungsrechte und externe Freigabegrundlage'}).fill('Nur selbst eingetragener Dokumentationshinweis; Beleg fehlt');
+ await page.getByRole('button',{name:'Änderungen als Entwurf speichern'}).click();
+ await expect(page.getByRole('status')).toContainText('Entwurf gespeichert');
+ await expect(queue.locator('.cx-source-item')).toHaveCount(56);
+ await queue.getByRole('combobox',{name:'Rechtehinweis filtern'}).selectOption('self-declared');
+ await expect(queue.locator('.cx-source-item')).toHaveCount(1);
+ await expect(queue).toContainText('ungeprüft');
+ await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig'))
+  .toHaveCount(5);
+});
