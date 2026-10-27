@@ -835,3 +835,38 @@ test('G38 original team round-robin, source-specific rights hold and editor cont
  await expect(page.getByRole('region',{name:'Aufgabe bearbeiten'})).toBeVisible();
  await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
 });
+
+
+test('G39 rehearsal isolates held questions, resets team filter and recovers local correction',async({page})=>{
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ await page.getByRole('combobox',{name:'G28 Profil'}).selectOption('kurz');
+ await page.getByRole('combobox',{name:'G28 Teams'}).selectOption('5');
+ const desk=page.getByRole('region',{name:'G36 Fünf-Spiele-Moderationslauf'});
+ const rotation=page.getByRole('region',{name:'G38 Teamrotation und Korrektur'});
+ const work=rotation.getByLabel('G39 Aktionsfähige Teamliste');
+ await expect(work).toContainText('probefähig');
+ await desk.getByRole('combobox',{name:'G37 Teamfilter'}).selectOption('5');
+ await page.getByRole('combobox',{name:'G28 Teams'}).selectOption('3');
+ await expect(desk.getByRole('combobox',{name:'G37 Teamfilter'})).toHaveValue('0');
+ await rotation.getByRole('button',{name:'Nächster fairer Teamturn'}).click();
+ await expect(desk.locator('.g36-cue').first()).toContainText('Team 1');
+ await rotation.getByRole('combobox',{name:'G38 Prüfgrund'}).selectOption('rights');
+ await rotation.getByRole('button',{name:'Korrekturvermerk setzen'}).click();
+ await expect(work).toContainText('1 mit Korrekturvermerk');
+ await expect(rotation.getByRole('button',{name:'Aufgabe proben und Teamwechsel'})).toBeDisabled();
+ await rotation.getByRole('button',{name:'Nächster fairer Teamturn'}).click();
+ await expect(desk.locator('.g36-cue').first()).toContainText('Team 2');
+ await rotation.getByRole('button',{name:'Nächsten Korrekturfall anzeigen'}).click();
+ await expect(desk.locator('.g36-cue').first()).toContainText('Team 1');
+ await expect(rotation).toContainText('G10-Korrektur offen · rights');
+ const saved=page.getByRole('region',{name:'G33 Lokaler Abendplan'});
+ await saved.getByRole('button',{name:'Abendplan lokal speichern'}).click();
+ await expect(saved).toContainText('Revision 1');
+ await page.reload();
+ await expect(work).toContainText('1 mit Korrekturvermerk');
+ await expect(rotation.getByRole('button',{name:'Aufgabe proben und Teamwechsel'})).toBeDisabled();
+ await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
+});
