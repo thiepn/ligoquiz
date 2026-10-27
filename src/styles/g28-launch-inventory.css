@@ -97,3 +97,10 @@
 .g36-roster{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.5rem;margin:.8rem 0}
 .g36-roster>div{display:flex;flex-direction:column;gap:.3rem;padding:.55rem;border:1px solid var(--border,#68717b)}
 @media(max-width:660px){.g36-cue{grid-template-columns:1fr}}
+
+.g36-queue-controls label{display:flex;align-items:center;gap:.35rem}
+.g36-queue-controls select{font:inherit;min-height:44px}
+.g37-progress{margin:.6rem 0}
+.g37-game-progress{display:flex;flex-wrap:wrap;gap:.65rem;margin-top:.4rem}
+.g37-game-progress span{font-size:inherit}
+.g36-cue button[aria-pressed="true"]{outline:2px solid currentColor;outline-offset:1px}

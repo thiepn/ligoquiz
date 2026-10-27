@@ -7,7 +7,9 @@ import {buildEditorialRehearsal,projectedRehearsalFrame} from '../../content/gam
 import {gameNightRunSheet,sourceRepairChoices,applySourceRepair,prioritizedReviewSlots
 } from '../../content/game-night-repairs';
 import {buildEveningCueSheet,currentEveningCue,moveEveningCue,
- nextUnresolvedCue,type EveningCue} from '../../content/evening-rehearsal-queue';
+ nextUnresolvedCue,nextTeamTurnCue,nextUntestedCue,markForCue,
+ validRehearsalMarks,toggleRehearsalMark,rehearsalProgress,
+ type EveningCue,type RehearsalMark} from '../../content/evening-rehearsal-queue';
 import {fiveGameReadiness,originalSlotCandidates,selectOriginalSlot,
  rehearsalIndexForSlot} from '../../content/original-slot-resolution';
 import {PreparationRepository,prepareSavedDraft,reconcileSavedDraft,
@@ -39,6 +41,8 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
  const [teams,setTeams]=useState<3|4|5>(5);
  const [showAll,setShowAll]=useState(false);
  const [stepIndex,setStepIndex]=useState(0);
+ const [teamFilter,setTeamFilter]=useState(0);
+ const [rehearsed,setRehearsed]=useState<RehearsalMark[]>([]);
  const [repairSlot,setRepairSlot]=useState<string>('');
  const [focusedIssue,setFocusedIssue]=useState('');
  const [resolving,setResolving]=useState(false);
@@ -68,6 +72,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
     if(existing&&result?.status==='ready'){
      setGame(existing.game);setProfile(existing.profile);setTeams(existing.teams);
      setStepIndex(existing.step);
+     setRehearsed(existing.rehearsed??[]);
      setOverrides(prev=>({...prev,...Object.fromEntries(GAME_TYPES.map(key=>[
       key+'/'+existing.profile+'/'+existing.teams,
       {...existing.selections[key]},
@@ -82,7 +87,9 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
  },[draftRepo,loaded,items]);
  const pendingChanges=Boolean(saved&&(
   saved.game!==game||saved.profile!==profile||saved.teams!==teams||
-  saved.step!==stepIndex||GAME_TYPES.some(k=>
+  saved.step!==stepIndex||
+  JSON.stringify(saved.rehearsed??[])!==JSON.stringify(rehearsed)||
+  GAME_TYPES.some(k=>
    JSON.stringify(saved.selections[k])!==JSON.stringify(eveningOverrides[k]))));
  async function saveLocalDraft(){
   if(saving||!loaded||saveState==='loading')return;
@@ -101,11 +108,13 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
     }
    }
    const record=await prepareSavedDraft(items,{game,profile,teams,step:stepIndex,
-    selections:eveningOverrides},(existing?.revision??0)+1);
+    selections:eveningOverrides,rehearsed:validRehearsalMarks(cueSheet,rehearsed)},
+    (existing?.revision??0)+1);
    const verdict=await reconcileSavedDraft(record,currentLibrary);
    if(verdict.status!=='ready')throw Error('Quellen wurden in anderem Fenster verändert; zuerst neu laden.');
    await draftRepo.save(record,existing?.revision??null);
    setSaved(record);setSaveState('ready');setSaveIssues([]);
+   setRehearsed(record.rehearsed??[]);
    setSaveMessage('Lokaler Abendplan gespeichert · Revision '+record.revision);
   }catch(e){setSaveMessage(e instanceof Error?e.message:'Speichern fehlgeschlagen');}
   finally{setSaving(false);}
@@ -148,6 +157,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
    const record=await commitSelectiveRecovery(draftRepo,saved,fromLibrary,recovery);
    setGame(record.game);setProfile(record.profile);setTeams(record.teams);
    setStepIndex(record.step);
+   setRehearsed(record.rehearsed??[]);
    setOverrides(prev=>({...prev,...Object.fromEntries(GAME_TYPES.map(key=>[
     key+'/'+record.profile+'/'+record.teams,{...record.selections[key]},
    ]))}));
@@ -165,6 +175,7 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
   try{
    await draftRepo.clear(saved?.revision??null);
    setSaved(null);setSaveState('empty');setSaveIssues([]);setRecovery(null);
+   setRehearsed([]);
    setSaveMessage('Gespeicherter Abendplan verworfen. Quellen bleiben erhalten.');
   }catch(e){setSaveMessage(e instanceof Error?e.message:'Plan konnte nicht verworfen werden');}
   finally{setSaving(false);}
@@ -220,6 +231,14 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
  const cueSheet=useMemo(()=>buildEveningCueSheet(items,profile,teams,eveningOverrides),
   [items,profile,teams,eveningOverrides]);
  const cue=currentEveningCue(cueSheet,game,stepIndex);
+ const validMarks=useMemo(()=>validRehearsalMarks(cueSheet,rehearsed),
+  [cueSheet,rehearsed]);
+ const progress=useMemo(()=>rehearsalProgress(cueSheet,validMarks),
+  [cueSheet,validMarks]);
+ const cueReceipt=markForCue(cue);
+ const isCueRehearsed=Boolean(cueReceipt&&validMarks.some(m=>
+  m.game===cueReceipt.game&&m.slot===cueReceipt.slot&&
+  m.sourceId===cueReceipt.sourceId&&m.sourceRevision===cueReceipt.sourceRevision));
  function openEveningCue(next:EveningCue|null){
   if(!next)return;
   setGame(next.game);setStepIndex(next.localIndex);
@@ -469,6 +488,31 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
      onClick={()=>openEveningCue(nextUnresolvedCue(cueSheet,game,stepIndex))}>
      Nächste Quelle prüfen
     </button>
+    <button type="button" className="exp-secondary"
+     disabled={!cueSheet.cues.some(x=>x.teamNumber!==null)}
+     onClick={()=>openEveningCue(nextTeamTurnCue(cueSheet,game,stepIndex,
+      teamFilter===0?undefined:teamFilter))}>
+     Nächste Teamaufgabe
+    </button>
+    <button type="button" className="exp-secondary"
+     disabled={progress.done===progress.total}
+     onClick={()=>openEveningCue(nextUntestedCue(cueSheet,validMarks,game,stepIndex))}>
+     Nächste ungetestete Aufgabe
+    </button>
+    <label>Teamfilter
+     <select aria-label="G37 Teamfilter" value={teamFilter<=teams?teamFilter:0}
+      onChange={e=>setTeamFilter(Number(e.target.value))}>
+      <option value={0}>Alle Teams</option>
+      {Array.from({length:teams},(_,i)=>i+1).map(n=>
+       <option key={n} value={n}>Team {n}</option>)}
+     </select>
+    </label>
+   </div>
+   <div className="g37-progress">
+    <strong>Moderationsprobe: {progress.done} / {progress.total} Aufgaben geprüft</strong>
+    <div className="g37-game-progress">
+     {progress.perGame.map(p=><span key={p.game}>{labels[p.game]} {p.done}/{p.total}</span>)}
+    </div>
    </div>
    <div className="g36-cue">
     <div aria-live="polite">
@@ -478,6 +522,11 @@ export function LaunchInventoryPanel({items,onChoose,loaded,latestItems}:{
       <p>Quelle: {cue.sourceId??'Nicht besetzt'}
        {cue.sourceRevision!==null?' · Revision '+cue.sourceRevision:''}</p>
       {cue.needsReview&&<strong>Quelle redaktionell offen</strong>}
+      {cueReceipt&&<button type="button" className="exp-secondary"
+       aria-pressed={isCueRehearsed}
+       onClick={()=>setRehearsed(old=>toggleRehearsalMark(cueSheet,old,cue))}>
+       {isCueRehearsed?'Probenmarkierung zurücknehmen':'Aufgabe probeweise durchgespielt'}
+      </button>}
       {cue.sourceId&&<button type="button" className="exp-secondary"
        onClick={()=>{const found=items.find(x=>x.id===cue.sourceId);if(found)onChoose(found);}}>
        Originalquelle in G10 öffnen
