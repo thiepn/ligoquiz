@@ -73,6 +73,15 @@ for(const width of viewports){
   await page.getByRole('button',{name:'Spielleitung öffnen'}).click();
   await expect(page).toHaveURL(/#\/host$/);
   await expect(page.locator('#sp-host-game')).toBeVisible();
+  if(width<=760){
+   await expect(page.locator('.u07-rail-guidance')).toBeHidden();
+   await expect(page.locator('.g14-progress')).toBeHidden();
+   await expect(page.locator('.u07-phase-steps>li')).toHaveCount(4);
+   const focus=page.locator('.g14-guide button.g14-focus');
+   await expect(focus).toBeVisible();
+   await focus.click();
+   await expect(page.locator('[data-host-game="rundenquiz"] [data-host-next]:not(:disabled)').first()).toBeFocused();
+  }
   await snapshot(page,width,'host');
   const identity=await page.evaluate(()=>globalThis.sessionStorage.getItem('ligoquiz.v2.g4.rundenquiz.host'));
   expect(identity).toBeTruthy();
@@ -105,6 +114,15 @@ for(const width of viewports){
    const host=page.locator(game.host);
    await expect(host).toBeVisible();
    await expect(host.getByRole('button',{name:game.first})).toBeEnabled();
+   if(width<=760){
+    await expect(host.locator('.u07-rail-guidance')).toBeHidden();
+    await expect(host.locator('.g14-progress')).toBeHidden();
+    await expect(host.locator('.u07-phase-steps>li')).toHaveCount(4);
+    const focus=host.locator('.g14-guide button.g14-focus');
+    await expect(focus).toBeVisible();
+    await focus.click();
+    await expect(host.locator('[data-host-next]:not(:disabled)').first()).toBeFocused();
+   }
    await snapshot(page,width,game.name.toLowerCase()+'-host');
    await host.getByRole('button',{name:game.first}).click();
    await expect(host).toBeVisible();
@@ -115,7 +133,7 @@ for(const width of viewports){
    await stage.setViewportSize({width,height:844});
    await stage.goto('/'+href);
    await expect(stage.locator('.stage-preview')).toBeVisible();
-   await stage.screenshot({path:`${shots}/${width}-${game.name.toLowerCase()}-projector.png`,fullPage:true,animations:'disabled'});
+   await snapshot(stage,width,game.name.toLowerCase()+'-projector');
    await stage.close();
    await page.reload();
    await expect(page.locator(game.host)).toBeVisible();

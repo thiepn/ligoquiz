@@ -92,4 +92,15 @@
  [data-host-game] .g14-guide h3{font-size:18px}
  [data-host-game] [data-host-next]{font-size:15px}
 }
+/* Small host screens had two adjacent 'next action' prompts and two progress
+   blocks ahead of the genuine game controls. Keep the four-step rail and G14
+   action/focus/status, while eliminating only the duplicate, display-only copy.
+   Recovery and pause warnings in G14 remain fully visible and operable. */
+@media(max-width:760px){
+ .sp-shell--spielleitung [data-host-game] .u07-rail-guidance{display:none}
+ .sp-shell--spielleitung [data-host-game] .g14-progress{display:none}
+ .sp-shell--spielleitung [data-host-game] .g14-guide-foot{margin-top:10px}
+ .sp-shell--spielleitung [data-host-game] .g14-guide{margin:7px 0 10px}
+ .sp-shell--spielleitung [data-host-game] .u07-phase-rail{margin-bottom:6px}
+}
 @media(prefers-reduced-motion:reduce){[data-host-game] *{scroll-behavior:auto!important}}
