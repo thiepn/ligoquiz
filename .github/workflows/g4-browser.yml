@@ -15,7 +15,9 @@ jobs:
     name: Host and projector (Chromium)
     # Pinned Playwright 1.56.1 Chromium is unsupported by ubuntu-26.04 (verified U15 CI).
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    # G41: 20-minute job cap cancelled the full 236-test browser suite at test 153
+    # after slow Chromium setup. Preserve every browser/offline assertion.
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
