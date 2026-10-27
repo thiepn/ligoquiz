@@ -5,7 +5,7 @@ import {GAME_TYPES} from '../src/domain/game/contracts';
 import {buildEveningCueSheet,markForCue,toggleRehearsalMark} from '../src/content/evening-rehearsal-queue';
 import {buildTeamRotation,nextRotationTurn,rotationDecisionSummary,HOLD_REASONS,
  rotationLane,buildRotationWorkQueue,nextActionableRotationTurn,nextBlockedRotationTurn,
- setEditorialHold,validEditorialHolds} from '../src/content/team-turn-rotation';
+ setEditorialHold,validEditorialHolds,type EditorialHold} from '../src/content/team-turn-rotation';
 import {prepareSavedDraft,PreparationRepository,reconcileSavedDraft,
  previewSelectiveRecovery,commitSelectiveRecovery,assertSavedPreparation
 } from '../src/content/pack-draft-store';
