@@ -3,19 +3,20 @@ import type {ContentItem} from './contracts';
 import {sha256} from './migration';
 import {composeContentPack} from './pack-preparation';
 import type {RehearsalMark} from './evening-rehearsal-queue';
+import {HOLD_REASONS,type EditorialHold} from './team-turn-rotation';
 
 export const PREPARATION_DB_NAME='ligoquiz.v2.preparation.g33';
 const FORMAT='ligoquiz-g33-source-only-v1' as const;
 type Selection=Record<string,string>;
 export type StoredSelections=Record<GameType,Selection>;
 export type DraftInput={game:GameType;profile:GameProfile;teams:3|4|5;step:number;
- selections:Partial<Record<GameType,Readonly<Selection>>>;rehearsed?:readonly RehearsalMark[]};
+ selections:Partial<Record<GameType,Readonly<Selection>>>;rehearsed?:readonly RehearsalMark[];holds?:readonly EditorialHold[]};
 export type SourceStamp={id:string;game:GameType;revision:number;sha256:string};
 export type SlotStamp={game:GameType;slot:string;id:string|null};
 export type SavedPreparation={
  key:'current';format:typeof FORMAT;revision:number;updatedAt:number;
  game:GameType;profile:GameProfile;teams:3|4|5;step:number;
- selections:StoredSelections;assignments:SlotStamp[];sources:SourceStamp[];rehearsed?:RehearsalMark[];
+ selections:StoredSelections;assignments:SlotStamp[];sources:SourceStamp[];rehearsed?:RehearsalMark[];holds?:EditorialHold[];
  sourceOnly:true;release:'NO_GO';
 };
 export class PreparationError extends Error{
@@ -68,6 +69,9 @@ export function assertSavedPreparation(raw:unknown):SavedPreparation{
   sourceIds.add(source.id);
  }
  const rehearsed=raw.rehearsed===undefined?[]:raw.rehearsed;
+ const holds=raw.holds===undefined?[]:raw.holds;
+ if(!Array.isArray(holds)||holds.length>300)
+  fail('INVALID','Korrekturvermerke enthalten zu viele oder ungültige Einträge.');
  if(!Array.isArray(rehearsed)||rehearsed.length>300)
   fail('INVALID','Probenachweise enthalten zu viele oder ungültige Einträge.');
  const selections=raw.selections as StoredSelections;
@@ -92,8 +96,28 @@ export function assertSavedPreparation(raw:unknown):SavedPreparation{
    !stamp||stamp.game!==mark.game||stamp.revision!==mark.sourceRevision)
    fail('INVALID','Probenachweis gehört nicht mehr zu ausgewählter Originalquelle.');
  }
+ const heldKeys=new Set<string>();
+ for(const hold of holds){
+  if(!plain(hold)||!GAME_TYPES.includes(hold.game as GameType)||
+   typeof hold.slot!=='string'||!SAFE.test(hold.slot)||
+   typeof hold.sourceId!=='string'||!SAFE.test(hold.sourceId)||
+   !Number.isSafeInteger(hold.sourceRevision)||Number(hold.sourceRevision)<0||
+   !HOLD_REASONS.includes(hold.reason as EditorialHold['reason']))
+   fail('INVALID','Korrekturvermerk ist ungültig.');
+  const identity=hold.game+'/'+hold.slot;
+  if(heldKeys.has(identity))fail('INVALID','Quellplatz hat doppelte Korrekturvermerke.');
+  heldKeys.add(identity);
+  const assignment=raw.assignments.find(a=>plain(a)&&a.game===hold.game&&
+   a.slot===hold.slot) as SlotStamp|undefined;
+  const source=raw.sources.find(x=>plain(x)&&x.id===hold.sourceId) as SourceStamp|undefined;
+  if(!assignment||assignment.id!==hold.sourceId||
+   hold.slot.startsWith('category:')||!source||
+   source.game!==hold.game||source.revision!==hold.sourceRevision)
+   fail('INVALID','Korrekturvermerk gehört nicht mehr zur Originalquelle.');
+ }
  if(JSON.stringify(raw).length>90_000)fail('INVALID','Vorbereitungsplan überschreitet die zulässige Größe.');
- return {...raw,selections,rehearsed:rehearsed as RehearsalMark[]} as SavedPreparation;
+ return {...raw,selections,rehearsed:rehearsed as RehearsalMark[],
+  holds:holds as EditorialHold[]} as SavedPreparation;
 }
 function normalizedSelections(input:DraftInput['selections']):StoredSelections{
  return Object.fromEntries(GAME_TYPES.map(g=>[g,{...input[g]}])) as StoredSelections;
@@ -126,7 +150,7 @@ export async function prepareSavedDraft(items:readonly ContentItem[],input:Draft
  const sources=await Promise.all(selected.map(sourceStamp));
  return assertSavedPreparation({key:'current',format:FORMAT,revision,updatedAt:at,
   game:input.game,profile:input.profile,teams:input.teams,step:input.step,
-  selections,assignments,sources,rehearsed:[...(input.rehearsed??[])],sourceOnly:true,release:'NO_GO'});
+  selections,assignments,sources,rehearsed:[...(input.rehearsed??[])],holds:[...(input.holds??[])],sourceOnly:true,release:'NO_GO'});
 }
 export type ReconcileResult={status:'ready'|'stale';issues:string[]};
 export async function reconcileSavedDraft(record:SavedPreparation,
@@ -303,6 +327,10 @@ export async function commitSelectiveRecovery(
    trusted.selections[mark.game][mark.slot]===mark.sourceId&&
    items.some(item=>item.id===mark.sourceId&&item.game===mark.game&&
     item.revision===mark.sourceRevision)),
+  holds:(saved.holds??[]).filter(hold=>
+   trusted.selections[hold.game][hold.slot]===hold.sourceId&&
+   items.some(item=>item.id===hold.sourceId&&item.game===hold.game&&
+    item.revision===hold.sourceRevision)),
  },saved.revision+1);
  const check=await reconcileSavedDraft(next,items);
  if(check.status!=='ready')fail('STALE','Wiederhergestellte Auswahl konnte nicht bestätigt werden.');
