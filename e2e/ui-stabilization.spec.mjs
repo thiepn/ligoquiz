@@ -152,6 +152,13 @@ for(const width of viewports){
     await expect(host.locator('.u07-rail-guidance')).toBeHidden();
     await expect(host.locator('.g14-progress')).toBeHidden();
     await expect(host.locator('.u07-phase-steps>li')).toHaveCount(4);
+    // The real source-owned setup transition must be present in the first
+    // viewport for every game, not buried beneath decorative/status panels.
+    const firstAction=await host.getByRole('button',{name:game.first}).boundingBox();
+    const moderation=await host.locator('.g14-guide').boundingBox();
+    expect(firstAction).not.toBeNull();expect(moderation).not.toBeNull();
+    expect(firstAction.y+firstAction.height,game.name+' first action must precede guide').toBeLessThan(moderation.y);
+    expect(firstAction.y+firstAction.height,game.name+' first action must fit in phone viewport').toBeLessThanOrEqual(844);
     if(game.name==='Quiztafel'){
      const setupAction=await host.getByRole('button',{name:game.first}).boundingBox();
      const gridPreview=await host.locator('.qt-grid').boundingBox();

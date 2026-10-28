@@ -103,6 +103,7 @@ export function VerbindungenHost(){
    <span>{viewers} Beamer bestätigt</span><span>Revision {event?.revision??0}</span>
    <a href="#/spielen">Zur Übersicht</a></div>
   {!vb?<p role="status">Sitzung wird geprüft …</p>:<>
+   {vb.phase==='setup'&&!event?.recoveryRequired&&<div className="u07-start-actions"><button data-host-next className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void send({type:'START'})}>Aufgabenreihenfolge bestätigen</button></div>}
    <HostGameplayRail game="verbindungen" phase={vb.phase} paused={vb.paused}
     recovery={Boolean(event?.recoveryRequired)} completed={vb.phase==='complete'?vb.assignments.length:vb.index} total={vb.assignments.length}/>
    <HostModerationGuide game="verbindungen" phase={vb.phase} paused={vb.paused}
@@ -125,7 +126,7 @@ export function VerbindungenHost(){
    </div>}
    {vb.phase==='setup'&&<div className="vb-card u08-vb-card"><h3>Verbindungen vorbereiten</h3>
     <p>{NEEDS[vb.profile].clues}× Vier Hinweise und {NEEDS[vb.profile].sequences}× Folge ergänzen pro Team; anschließend eine gemeinsame Wand.</p>
-    <button data-host-next className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void send({type:'START'})}>Aufgabenreihenfolge bestätigen</button></div>}
+</div>}
    {task&&vb.phase!=='setup'&&vb.phase!=='complete'&&<div className="vb-card u08-vb-card">
     <div className="u08-task-kicker"><span>{sectionName} · {task.assignment.teamId?activeTeam?.name:'Alle Teams'}</span><span>Aufgabe {Math.min(vb.index+1,vb.assignments.length)} / {vb.assignments.length}</span></div>
     {task.puzzle.kind==='clues'&&<>

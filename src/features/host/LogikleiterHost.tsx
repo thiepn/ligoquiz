@@ -91,6 +91,7 @@ export function LogikleiterHost(){
    <a href="#/spielen">Übersicht</a>
   </div>
   {!ll?<p role="status">Sitzung wird geprüft …</p>:<>
+   {ll.phase==='setup'&&!event?.recoveryRequired&&<div className="u07-start-actions"><button data-host-next className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void send({type:'START'})}>Stufenfolge bestätigen</button></div>}
    <HostGameplayRail game="logikleiter" phase={ll.phase} paused={ll.paused}
     recovery={Boolean(event?.recoveryRequired)} completed={ll.phase==='complete'?ll.rungs.length:ll.index} total={ll.rungs.length}/>
    <HostModerationGuide game="logikleiter" phase={ll.phase} paused={ll.paused}
@@ -115,7 +116,7 @@ export function LogikleiterHost(){
    </div>}
    {ll.phase==='setup'&&<div className="ll-card u08-ll-card"><h3>Leiter vorbereiten</h3>
     <p>{ll.rungs.length} gemeinsam gespielte Stufen mit 10 bis {rungValue(ll.rungs.length-1)} Punkten.</p>
-    <button data-host-next className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void send({type:'START'})}>Stufenfolge bestätigen</button>
+
    </div>}
    {rung&&ll.phase!=='setup'&&<div className="ll-card u08-ll-card">
     <div className="u08-task-kicker"><span>STUFE {ll.index+1} · {rungValue(ll.index)} PUNKTE</span>

@@ -142,6 +142,7 @@ export function UmfrageduellHost(){
   <div className="ud-toolbar u09-utility"><a href={stageUrl(identity.eventId)} target="_blank" rel="noopener noreferrer">Beamer öffnen ↗</a>
    <span>{viewers} Beamer bestätigt</span><span>Revision {event?.revision??0}</span><a href="#/spielen">Übersicht</a></div>
   {!ud?<p role="status">Sitzung wird geladen …</p>:<>
+   {ud.phase==='setup'&&!event?.recoveryRequired&&<div className="u07-start-actions"><button data-host-next className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void send({type:'START'})}>Aufgabenfolge bestätigen</button></div>}
    <HostGameplayRail game="umfrageduell" phase={ud.phase} paused={ud.paused}
      recovery={Boolean(event?.recoveryRequired)} completed={ud.phase==='complete'?ud.surveys.length:ud.index} total={ud.surveys.length}/>
    <HostModerationGuide game="umfrageduell" phase={ud.phase} paused={ud.paused}
@@ -166,7 +167,7 @@ export function UmfrageduellHost(){
     <p>Alle enthaltenen Verteilungen sind frei erfundene Spieldaten, keine Umfrageergebnisse realer Personen.</p>
     <p>{ud.surveys.length} Aufgaben: {ud.surveys.filter(q=>q.format==='popular').length} × Beliebteste Antwort,
      {' '}{ud.surveys.filter(q=>q.format==='top3').length} × Top 3.</p>
-    <button data-host-next className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void send({type:'START'})}>Aufgabenfolge bestätigen</button></div>}
+</div>}
    {task&&ud.phase!=='setup'&&<div className="ud-card u09-card u09-task">
     <div className="u09-task-kicker"><span>{task.format==='popular'?'BELIEBTESTE ANTWORT':'DREI ANTWORTEN, EIN RANGLISTENSPIEL'}</span>
      <span>AUFGABE {ud.index+1} / {ud.surveys.length}</span></div>
