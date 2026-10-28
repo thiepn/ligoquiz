@@ -156,6 +156,20 @@ for(const width of viewports){
    await snapshot(page,width,game.name.toLowerCase()+'-host');
    await host.getByRole('button',{name:game.first}).click();
    await expect(host).toBeVisible();
+   if(width<=700&&game.name==='Quiztafel'){
+    const grid=host.locator('.qt-grid');
+    const measurement=await grid.evaluate(el=>({viewport:el.clientWidth,content:el.scrollWidth,
+      columns:Array.from(el.querySelectorAll('.qt-column')).map(col=>col.getBoundingClientRect().width),
+      whiteSpace:globalThis.getComputedStyle(el.querySelector('.qt-cell')).whiteSpace}));
+    expect(measurement.columns.length).toBeGreaterThanOrEqual(3);
+    expect(Math.min(...measurement.columns),'category names need readable width').toBeGreaterThanOrEqual(111);
+    expect(measurement.content,'board must scroll internally rather than crush categories').toBeGreaterThan(measurement.viewport+80);
+    expect(measurement.whiteSpace,'point values must never split into digits').toBe('nowrap');
+    await expect(host.locator('.qt-grid-scroll-hint')).toBeVisible();
+    await grid.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect.poll(()=>grid.evaluate(el=>el.scrollLeft)).toBeGreaterThan(0);
+   }
    await snapshot(page,width,game.name.toLowerCase()+'-started');
    const href=await page.locator('.sp-cockpit-quick-stage').getAttribute('href');
    expect(href).toMatch(/^#.*stage.*event=[a-zA-Z0-9_-]+$/);

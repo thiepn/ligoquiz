@@ -152,7 +152,8 @@ export function QuiztafelHost(){
         <div className="qt-board-title"><h3>Spieltafel</h3>
           <p>{inPrivateSelection?'Feld nur für die Spielleitung ausgewählt – noch nicht veröffentlicht.':
             'Nur ein offenes Feld wählen. Vergebene Felder bleiben geschlossen.'}</p></div>
-        <div className="qt-grid u07-qt-grid" role="group" aria-label="Spieltafel mit wählbaren Kategorien" style={{gridTemplateColumns:'repeat('+qt.categories.length+',minmax(0,1fr))'}}>
+        <p id="qt-grid-scroll-hint" className="qt-grid-scroll-hint">Kategorien bei Bedarf seitlich scrollen.</p>
+        <div className="qt-grid u07-qt-grid" role="group" tabIndex={0} aria-label="Spieltafel mit wählbaren Kategorien" aria-describedby="qt-grid-scroll-hint" style={{gridTemplateColumns:'repeat('+qt.categories.length+',minmax(112px,1fr))'}}>
           {qt.categories.map(category=><div className="qt-column" key={category.id}>
             <h4>{category.name}</h4>
             {Array.from({length:DEPTH[qt.profile]},(_,index)=>{
