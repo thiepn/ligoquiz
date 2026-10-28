@@ -80,6 +80,10 @@ for(const width of viewports){
    await expect(page.locator('.u07-rail-guidance')).toBeHidden();
    await expect(page.locator('.g14-progress')).toBeHidden();
    await expect(page.locator('.u07-phase-steps>li')).toHaveCount(4);
+   const setupAction=await page.getByRole('button',{name:'Teams bestätigen'}).boundingBox();
+   const privateCard=await page.locator('.rq-question').boundingBox();
+   expect(setupAction).not.toBeNull();expect(privateCard).not.toBeNull();
+   expect(setupAction.y+setupAction.height,'First Rundenquiz action must precede its passive preview').toBeLessThan(privateCard.y);
    const gameAction=await page.locator('[data-host-game="rundenquiz"] [data-host-next]:not(:disabled)').first().boundingBox();
    const progressRail=await page.locator('[data-host-game="rundenquiz"] .u07-phase-rail').boundingBox();
    expect(gameAction).not.toBeNull();expect(progressRail).not.toBeNull();
@@ -144,6 +148,12 @@ for(const width of viewports){
     await expect(host.locator('.u07-rail-guidance')).toBeHidden();
     await expect(host.locator('.g14-progress')).toBeHidden();
     await expect(host.locator('.u07-phase-steps>li')).toHaveCount(4);
+    if(game.name==='Quiztafel'){
+     const setupAction=await host.getByRole('button',{name:game.first}).boundingBox();
+     const gridPreview=await host.locator('.qt-grid').boundingBox();
+     expect(setupAction).not.toBeNull();expect(gridPreview).not.toBeNull();
+     expect(setupAction.y+setupAction.height,'Quiztafel preparation action precedes board preview').toBeLessThan(gridPreview.y);
+    }
     const gameAction=await host.locator('[data-host-next]:not(:disabled)').first().boundingBox();
     const progressRail=await host.locator('.u07-phase-rail').boundingBox();
     expect(gameAction).not.toBeNull();expect(progressRail).not.toBeNull();

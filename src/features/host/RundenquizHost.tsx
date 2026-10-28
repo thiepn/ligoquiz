@@ -262,6 +262,7 @@ export function RundenquizHost(){
     <h3>Endstand</h3>{rq.teams.map(t=><p key={t.id}>{t.name}: {computed[t.id]??0} Punkte · Abendpunkte {(eveningHalfPoints(rq)[t.id]??0)/2}</p>)}
    </div>}
    {rq && rq.phase!=='complete'&&<div className="rq-control u07-rq-control">
+    {rq.phase==='setup'&&!isPaused&&<div className="rq-start-actions"><button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'START'})}>Teams bestätigen</button></div>}
     {q&&<div className="rq-question u07-rq-question" aria-label="Private Fragenkarte">
      <div className="u07-question-kicker"><span>{title(q.round)} · Aufgabe {rq.index+1} / {rq.questions.length}</span>
       <span>{q.durationSeconds} Sekunden empfohlen</span></div>
@@ -290,7 +291,6 @@ export function RundenquizHost(){
     {isPaused&&<p className="u07-pause-note" role="status">Pausiert. Fortsetzung nur über „Fortsetzen“.</p>}
     {isPaused ? <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'RESUME'})}>Spiel fortsetzen</button>
     :<div className="rq-actions">
-      {rq.phase==='setup' && <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'START'})}>Teams bestätigen</button>}
       {rq.phase==='ready' && <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'PUBLISH'})}>Frage auf Beamer zeigen</button>}
       {rq.phase==='open' && <>
         {q?.round==='hinweise'&&<>

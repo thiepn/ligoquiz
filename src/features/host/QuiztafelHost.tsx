@@ -152,6 +152,8 @@ export function QuiztafelHost(){
         <div className="qt-board-title"><h3>Spieltafel</h3>
           <p>{inPrivateSelection?'Feld nur für die Spielleitung ausgewählt – noch nicht veröffentlicht.':
             'Nur ein offenes Feld wählen. Vergebene Felder bleiben geschlossen.'}</p></div>
+        {qt.phase==='setup'&&<button data-host-next className="g3-tech-primary" disabled={!ready||busy}
+          onClick={()=>void send({type:'START'})}>Quiztafel auf dem Beamer vorbereiten</button>}
         <p id="qt-grid-scroll-hint" className="qt-grid-scroll-hint">Kategorien bei Bedarf seitlich scrollen.</p>
         <div className="qt-grid u07-qt-grid" role="group" tabIndex={0} aria-label="Spieltafel mit wählbaren Kategorien" aria-describedby="qt-grid-scroll-hint" style={{gridTemplateColumns:'repeat('+qt.categories.length+',minmax(112px,1fr))'}}>
           {qt.categories.map(category=><div className="qt-column" key={category.id}>
@@ -168,8 +170,6 @@ export function QuiztafelHost(){
             })}
           </div>)}
         </div>
-        {qt.phase==='setup'&&<button data-host-next className="g3-tech-primary" disabled={!ready||busy}
-          onClick={()=>void send({type:'START'})}>Quiztafel auf dem Beamer vorbereiten</button>}
         {qt.phase==='prepared'&&<div className="qt-decision u07-qt-prepared">
           <div><span className="eyebrow">PRIVATE FELDAUSWAHL</span>
             <h3>{currentCategory?.name} / {tile?.value} Punkte</h3>

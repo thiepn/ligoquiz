@@ -159,6 +159,9 @@
 .sp-shell--spielleitung .u07-rq .rq-status strong{font-size:clamp(16px,1.8vw,21px);color:#fff}
 .sp-shell--spielleitung .u07-rq .rq-status span{color:#FFE45C;font-weight:900;letter-spacing:.02em}
 .sp-shell--spielleitung .u07-rq .rq-control{padding:14px 0;min-width:0}
+.sp-shell--spielleitung .u07-rq .rq-start-actions{display:flex;align-items:stretch;margin:0 0 12px}
+.sp-shell--spielleitung .u07-rq .rq-start-actions>button{width:100%;font-size:16px;min-height:56px}
+.sp-shell--spielleitung .u07-qt .qt-board-host>button[data-host-next]{display:block;width:100%;margin:0 0 15px;font-size:16px;min-height:56px}
 .sp-shell--spielleitung .u07-rq .rq-question{
  display:grid;gap:11px;min-width:0;margin:0 0 12px;
  border:2px solid #CCD9ED;border-top:7px solid #285BFF;
