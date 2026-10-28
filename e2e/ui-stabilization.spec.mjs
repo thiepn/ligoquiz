@@ -205,7 +205,7 @@ for(const width of viewports){
    const colors=await page.locator(selector).first().evaluate((node,parentSelector)=>{
     const ancestor=node.closest(parentSelector);
     if(!ancestor)throw Error('Background owner not found');
-    return {fg:getComputedStyle(node).color,bg:getComputedStyle(ancestor).backgroundColor};
+    return {fg:globalThis.getComputedStyle(node).color,bg:globalThis.getComputedStyle(ancestor).backgroundColor};
    },backgroundSelector);
    expect(textContrast(colors.fg,colors.bg),label+' '+JSON.stringify(colors))
     .toBeGreaterThanOrEqual(4.5);
@@ -221,7 +221,7 @@ for(const width of viewports){
   await expect(page.locator('.cx-item')).toHaveCount(2);
   await assertContrast('.cx-item:not(.selected) > small','.cx-item','Unselected source ID');
   await assertContrast('.cx-item.selected > small','.cx-item','Current source ID');
-  const size=await page.evaluate(()=>({viewport:innerWidth,scroll:document.documentElement.scrollWidth}));
+  const size=await page.evaluate(()=>({viewport:globalThis.innerWidth,scroll:globalThis.document.documentElement.scrollWidth}));
   expect(size.scroll,'Readability improvements must not cause horizontal overflow')
    .toBeLessThanOrEqual(size.viewport+2);
  });
