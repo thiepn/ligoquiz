@@ -76,6 +76,11 @@ for(const width of viewports){
   await page.getByRole('button',{name:'Spielleitung öffnen'}).click();
   await expect(page).toHaveURL(/#\/host$/);
   await expect(page.locator('#sp-host-game')).toBeVisible();
+  const shellStage=page.locator('.sp-cockpit-quick-stage');
+  const hostStage=page.locator('[data-host-game="rundenquiz"] .rq-utility > a[href^="#/stage"]');
+  await expect(hostStage).toHaveAttribute('href',await shellStage.getAttribute('href'));
+  if(width<=760){await expect(shellStage).toBeVisible();await expect(hostStage).toBeHidden();}
+  else await expect(hostStage).toBeVisible();
   if(width<=760){
    await expect(page.locator('.u07-rail-guidance')).toBeHidden();
    await expect(page.locator('.g14-progress')).toBeHidden();
@@ -190,6 +195,11 @@ for(const width of viewports){
    const host=page.locator(game.host);
    await expect(host).toBeVisible();
    await expect(host.getByRole('button',{name:game.first})).toBeEnabled();
+   const shellStage=page.locator('.sp-cockpit-quick-stage');
+   const hostStage=host.locator(':is(.qt-host-toolbar,.vb-host-toolbar,.ll-toolbar,.ud-toolbar) > a[href^="#/stage"]');
+   await expect(hostStage).toHaveAttribute('href',await shellStage.getAttribute('href'));
+   if(width<=760){await expect(shellStage).toBeVisible();await expect(hostStage).toBeHidden();}
+   else await expect(hostStage).toBeVisible();
    if(width<=760){
     await expect(host.locator('.u07-rail-guidance')).toBeHidden();
     await expect(host.locator('.g14-progress')).toBeHidden();
