@@ -31,8 +31,8 @@
 .cx-item>span b{font-size:11px;text-transform:uppercase;letter-spacing:.7px}
 .cx-item>span small{font-size:10px;color:#58705b}
 .cx-item>strong{font-size:13px;line-height:1.4;font-weight:650;overflow-wrap:anywhere}
-.cx-item>small{font-size:10px;color:#819096;overflow-wrap:anywhere}
-.cx-empty,.cx-editor-empty{padding:24px;font-size:13px;color:#708087}
+.cx-item>small{font-size:12px;color:#465964;overflow-wrap:anywhere}
+.cx-empty,.cx-editor-empty{padding:24px;font-size:14px;color:#53636a}
 .cx-editor{padding:clamp(16px,2vw,28px);display:grid;gap:15px;min-width:0;align-content:start}
 .cx-editor-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:2px solid #2b3943;padding-bottom:14px}
 .cx-editor-head h2{font-size:22px;margin:5px 0}

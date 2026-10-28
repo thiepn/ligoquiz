@@ -181,6 +181,52 @@ for(const width of viewports){
  });
 }
 
+// WCAG AA: source IDs and empty states are task-essential small text.
+// The former #819096 on a selected #f4f0e3 row had just ~2.89:1 contrast;
+// #708087 empty states on white were ~4.1:1. Test actual computed colors
+// across mobile and desktop, for both selected and unselected source rows.
+function textContrast(foreground,background){
+ const luminance=(color)=>{
+  const values=color.match(/\\d+(?:\\.\\d+)?/g)?.slice(0,3).map(Number);
+  if(!values||values.length!==3)throw Error('Expected computed RGB color: '+color);
+  return values.map(value=>{
+   const channel=value/255;
+   return channel<=0.04045?channel/12.92:((channel+0.055)/1.055)**2.4;
+  }).reduce((total,value,index)=>total+value*[0.2126,0.7152,0.0722][index],0);
+ };
+ const light=luminance(foreground),dark=luminance(background);
+ return (Math.max(light,dark)+0.05)/(Math.min(light,dark)+0.05);
+}
+for(const width of viewports){
+ test(`UI stabilization: catalog text AA contrast and draft selection at ${width}px`,async({page})=>{
+  await page.setViewportSize({width,height:844});
+  await page.goto('/#/inhalte');
+  const assertContrast=async(selector,backgroundSelector,label)=>{
+   const colors=await page.locator(selector).first().evaluate((node,parentSelector)=>{
+    const ancestor=node.closest(parentSelector);
+    if(!ancestor)throw Error('Background owner not found');
+    return {fg:getComputedStyle(node).color,bg:getComputedStyle(ancestor).backgroundColor};
+   },backgroundSelector);
+   expect(textContrast(colors.fg,colors.bg),label+' '+JSON.stringify(colors))
+    .toBeGreaterThanOrEqual(4.5);
+  };
+  await expect(page.locator('.cx-empty')).toBeVisible();
+  await expect(page.locator('.cx-editor-empty')).toBeVisible();
+  await assertContrast('.cx-empty','.cx-main','Empty catalog guidance');
+  await assertContrast('.cx-editor-empty','.cx-main','Empty editor guidance');
+  await page.getByRole('button',{name:'Aufgabe anlegen'}).click();
+  await expect(page.locator('.cx-item.selected > small')).toHaveCount(1);
+  await assertContrast('.cx-item.selected > small','.cx-item','Selected source ID');
+  await page.getByRole('button',{name:'Aufgabe anlegen'}).click();
+  await expect(page.locator('.cx-item')).toHaveCount(2);
+  await assertContrast('.cx-item:not(.selected) > small','.cx-item','Unselected source ID');
+  await assertContrast('.cx-item.selected > small','.cx-item','Current source ID');
+  const size=await page.evaluate(()=>({viewport:innerWidth,scroll:document.documentElement.scrollWidth}));
+  expect(size.scroll,'Readability improvements must not cause horizontal overflow')
+   .toBeLessThanOrEqual(size.viewport+2);
+ });
+}
+
 const otherGames=[
  {name:'Quiztafel',host:'.qt-host',first:'Quiztafel auf dem Beamer vorbereiten'},
  {name:'Verbindungen',host:'.vb-host',first:'Aufgabenreihenfolge bestätigen'},
