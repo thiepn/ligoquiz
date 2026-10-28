@@ -84,6 +84,10 @@ for(const width of viewports){
    const privateCard=await page.locator('.rq-question').boundingBox();
    expect(setupAction).not.toBeNull();expect(privateCard).not.toBeNull();
    expect(setupAction.y+setupAction.height,'First Rundenquiz action must precede its passive preview').toBeLessThan(privateCard.y);
+   const guide=await page.locator('[data-host-game="rundenquiz"] .g14-guide').boundingBox();
+   expect(guide).not.toBeNull();
+   expect(setupAction.y+setupAction.height).toBeLessThan(guide.y);
+   expect(setupAction.y+setupAction.height,'Rundenquiz start action belongs on first phone viewport').toBeLessThanOrEqual(844);
    const gameAction=await page.locator('[data-host-game="rundenquiz"] [data-host-next]:not(:disabled)').first().boundingBox();
    const progressRail=await page.locator('[data-host-game="rundenquiz"] .u07-phase-rail').boundingBox();
    expect(gameAction).not.toBeNull();expect(progressRail).not.toBeNull();
@@ -153,6 +157,10 @@ for(const width of viewports){
      const gridPreview=await host.locator('.qt-grid').boundingBox();
      expect(setupAction).not.toBeNull();expect(gridPreview).not.toBeNull();
      expect(setupAction.y+setupAction.height,'Quiztafel preparation action precedes board preview').toBeLessThan(gridPreview.y);
+     const guide=await host.locator('.g14-guide').boundingBox();
+     expect(guide).not.toBeNull();
+     expect(setupAction.y+setupAction.height).toBeLessThan(guide.y);
+     expect(setupAction.y+setupAction.height,'Quiztafel start action belongs on first phone viewport').toBeLessThanOrEqual(844);
     }
     const gameAction=await host.locator('[data-host-next]:not(:disabled)').first().boundingBox();
     const progressRail=await host.locator('.u07-phase-rail').boundingBox();

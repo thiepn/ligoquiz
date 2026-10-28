@@ -20,6 +20,12 @@
 [data-host-game]>.rq-live>.rq-control{order:-35}
 [data-host-game]>.rq-live>.rq-end{order:-34}
 
+/* Setup confirmation is an original protected transition, not a duplicate control.
+   Render it immediately after the game toolbar before passive host-status panels.
+   Recovery-required sessions never expose the setup action. */
+[data-host-game]:not(.rq-host)>.u07-start-actions{order:-38}
+[data-host-game]>.rq-live>.u07-start-actions{order:-39}
+
 /* The host always sees the current phase and action above passive facts. */
 [data-host-game] .g14-guide{padding:13px 16px;margin:10px 0 12px;border-left:5px solid #285bff;background:#f4f7ff}
 [data-host-game] .g14-guide-head{align-items:center}
