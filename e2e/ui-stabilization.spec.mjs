@@ -146,7 +146,7 @@ for(const width of viewports){
   await menu.getByRole('button',{name:'Aufgabenbestand'}).click();
   await expect(menu).not.toHaveAttribute('open','');
   await expect(page.locator('#cx-jump-catalog')).toBeFocused();
-  await expect(page).toHaveURL(/#\\/inhalte$/);
+  await expect(page).toHaveURL(/#\/inhalte$/);
   const catalogPosition=await page.locator('#cx-jump-catalog').boundingBox();
   const navPosition=await nav.boundingBox();
   expect(catalogPosition.y,'Target heading must not hide under sticky jump navigation')
@@ -160,7 +160,7 @@ for(const width of viewports){
   await menu.getByRole('button',{name:'Redaktionspult'}).click();
   await expect(page.locator('#cx-jump-editor')).toBeFocused();
   await expect(page.locator('#cx-jump-editor')).toContainText('Entwurf');
-  await expect(page).toHaveURL(/#\\/inhalte$/);
+  await expect(page).toHaveURL(/#\/inhalte$/);
   await snapshot(page,width,'content-jump-editor');
   await page.reload();
   await expect(page.locator('.cx-item')).toHaveCount(1);
