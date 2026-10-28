@@ -187,7 +187,7 @@ for(const width of viewports){
 // across mobile and desktop, for both selected and unselected source rows.
 function textContrast(foreground,background){
  const luminance=(color)=>{
-  const values=color.match(/\\d+(?:\\.\\d+)?/g)?.slice(0,3).map(Number);
+  const values=color.match(/\d+(?:\.\d+)?/g)?.slice(0,3).map(Number);
   if(!values||values.length!==3)throw Error('Expected computed RGB color: '+color);
   return values.map(value=>{
    const channel=value/255;
