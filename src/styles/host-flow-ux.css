@@ -20,6 +20,14 @@
 [data-host-game]>.rq-live>.rq-control{order:-35}
 [data-host-game]>.rq-live>.rq-end{order:-34}
 
+/* Setup confirmation is an original protected transition, not a duplicate control.
+   Render it immediately after the game toolbar before passive host-status panels.
+   Recovery-required sessions never expose the setup action. */
+[data-host-game]:not(.rq-host)>.u07-start-actions{order:-38}
+.sp-shell--spielleitung [data-host-game] .u07-start-actions{display:flex;align-items:stretch;min-width:0;margin:8px 0 12px}
+.sp-shell--spielleitung [data-host-game] .u07-start-actions>button{width:100%;min-width:0;min-height:56px;font-size:16px}
+[data-host-game]>.rq-live>.u07-start-actions{order:-39}
+
 /* The host always sees the current phase and action above passive facts. */
 [data-host-game] .g14-guide{padding:13px 16px;margin:10px 0 12px;border-left:5px solid #285bff;background:#f4f7ff}
 [data-host-game] .g14-guide-head{align-items:center}
@@ -73,7 +81,9 @@
 [data-host-game] :is(.rq-utility,.qt-host-toolbar,.vb-host-toolbar,.ll-toolbar,.ud-toolbar) :is(button,a){min-height:44px}
 @media(max-width:700px){
  [data-host-game] .g14-guide{padding:11px 12px}
- [data-host-game] .g14-guide-head{gap:9px}
+ [data-host-game] .g14-guide-head{gap:9px;flex-direction:column;align-items:stretch}
+ [data-host-game] .g14-guide-head>div:first-child{width:100%;min-width:0}
+ [data-host-game] .g14-connect{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:flex-start;justify-items:start;min-width:0;text-align:left;gap:5px 9px}
  [data-host-game] .g14-guide-foot{flex-direction:column;align-items:stretch;gap:10px}
  [data-host-game] .g14-guide-foot button{width:100%;min-height:44px}
  [data-host-game] .g14-optional .g14-facts{grid-template-columns:1fr}
@@ -89,5 +99,33 @@
  [data-host-game] .g14-guide-head{flex-wrap:wrap}
  [data-host-game] .g14-guide h3{font-size:18px}
  [data-host-game] [data-host-next]{font-size:15px}
+}
+/* Small host screens had two adjacent 'next action' prompts and two progress
+   blocks ahead of the genuine game controls. Keep the four-step rail and G14
+   action/focus/status, while eliminating only the duplicate, display-only copy.
+   Recovery and pause warnings in G14 remain fully visible and operable. */
+@media(max-width:760px){
+ /* Keep the original interactive task ahead of the display-only step rail.
+    Parent flex ordering is required; DOM order and original commands stay intact. */
+ [data-host-game]:not(.rq-host)>.u07-phase-rail{order:-32}
+ [data-host-game]>.rq-live>.u07-phase-rail{order:-34}
+ .sp-shell--spielleitung [data-host-game] .u07-rail-guidance{display:none}
+ .sp-shell--spielleitung [data-host-game] .g14-progress{display:none}
+ .sp-shell--spielleitung [data-host-game] .g14-guide-foot{margin-top:10px}
+ .sp-shell--spielleitung [data-host-game] .g14-guide{margin:7px 0 10px}
+ .sp-shell--spielleitung [data-host-game] .u07-phase-rail{margin-bottom:6px}
+}
+/* The projector URL is source-owned and must remain accessible inside each
+   host even when the shell also exposes it. On mobile make the duplicate
+   visually secondary instead of hiding it from keyboard/assistive access. */
+@media(max-width:760px){
+ .sp-shell--spielleitung:has(.sp-cockpit-quick-stage[href^="#/stage"])
+ [data-host-game] :is(.rq-utility,.qt-host-toolbar,.vb-host-toolbar,.ll-toolbar,.ud-toolbar) > a[href^="#/stage"]{
+  display:inline-flex!important;align-items:center;justify-content:center;
+  min-height:44px;padding:8px 12px!important;
+  background:#eef2f9!important;color:#1e3a64!important;
+  border:1px solid #a7b6cf!important;box-shadow:none!important;
+  font:750 12px/1.3 system-ui!important;text-decoration:underline;
+ }
 }
 @media(prefers-reduced-motion:reduce){[data-host-game] *{scroll-behavior:auto!important}}

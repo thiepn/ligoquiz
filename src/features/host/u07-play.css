@@ -159,6 +159,8 @@
 .sp-shell--spielleitung .u07-rq .rq-status strong{font-size:clamp(16px,1.8vw,21px);color:#fff}
 .sp-shell--spielleitung .u07-rq .rq-status span{color:#FFE45C;font-weight:900;letter-spacing:.02em}
 .sp-shell--spielleitung .u07-rq .rq-control{padding:14px 0;min-width:0}
+.sp-shell--spielleitung :is(.u07-rq,.u07-qt) .u07-start-actions{display:flex;align-items:stretch;min-width:0;margin:8px 0 12px}
+.sp-shell--spielleitung :is(.u07-rq,.u07-qt) .u07-start-actions>button{width:100%;font-size:16px;min-height:56px}
 .sp-shell--spielleitung .u07-rq .rq-question{
  display:grid;gap:11px;min-width:0;margin:0 0 12px;
  border:2px solid #CCD9ED;border-top:7px solid #285BFF;
@@ -328,6 +330,7 @@
 .sp-shell--spielleitung .u07-qt .qt-board-title p{
  font-size:12px;line-height:1.5;color:#59637B;max-width:58ch;
 }
+.sp-shell--spielleitung .u07-qt .qt-grid-scroll-hint{display:none}
 .sp-shell--spielleitung .u07-qt .qt-grid{
  display:grid;min-width:0;width:100%;max-width:100%;
  gap:clamp(5px,.85vw,11px);
@@ -481,7 +484,9 @@
  .sp-shell--spielleitung .u07-rq .u07-judge-grid{grid-template-columns:minmax(0,1fr)}
  .sp-shell--spielleitung .u07-rq .rq-timer button{flex:1 1 75px}
  .sp-shell--spielleitung .u07-qt .qt-board-host{padding:12px 9px}
- .sp-shell--spielleitung .u07-qt .qt-grid{gap:5px;overflow-x:auto;max-width:100%}
+ .sp-shell--spielleitung .u07-qt .qt-grid-scroll-hint{display:block;margin:0 0 8px;color:#3F4C76;font:750 13px/1.4 system-ui}
+ .sp-shell--spielleitung .u07-qt .qt-grid{gap:5px;overflow-x:auto;max-width:100%;scrollbar-width:thin;scroll-padding-inline:8px}
+ .sp-shell--spielleitung .u07-qt .qt-column .qt-cell{white-space:nowrap}
  .sp-shell--spielleitung .u07-qt .qt-column{padding:5px}
  .sp-shell--spielleitung .u07-qt .qt-column h4{font-size:11px;min-height:51px}
  .sp-shell--spielleitung .u07-qt .qt-column .qt-cell{min-height:47px;height:47px;font-size:15px}

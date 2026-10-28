@@ -47,7 +47,7 @@
  }
  /* Keep the only valid next step within thumb reach on long content-editor screens. */
  .sp-shell .sp-prep .sp-prep-actions{
-  position:sticky;bottom:calc(69px + env(safe-area-inset-bottom,0px));
+  position:sticky;bottom:calc(8px + env(safe-area-inset-bottom,0px));
   z-index:12;display:flex;flex-wrap:nowrap;gap:8px;
   margin:12px -2px 0;padding:10px;
   background:#F8FAFF;border:2px solid #C4D3EC;

@@ -1,0 +1,9 @@
+# G36 — Continuous five-game moderator cue desk
+
+G35 source Verify #40396686371 PASS 409/409; exact-head browser/offline #40396686406 FAIL with 226 Chromium PASS and 1 Chromium FAIL. Reproduced: original G35 source-choice collection was a named div lacking accessible region semantics, so browser and assistive navigation could not locate it. Fixed in G36 with a named section without weakening the original assertion.
+
+G36 implements a native editor/host-side game-night cue desk reusing G30 five-engine assignments, G31 actual host phase descriptions, G33 local source-only IndexedDB revision-CAS persistence, G35 original source options and G34 surgical recovery. It sequentially follows the original five games across Kurz/Standard/Lang and 3/4/5 teams, allows previous/next phase and next distinct reviewer-needed slot, offers native G10 corrections, and exposes actual per-team turn counts. Saved current game and moderator step recover after reload or installed-offline PWA restart. The public preview is a restricted phase-label visualization; it never creates a projector endpoint or exposes original private question/answer payload, authorizes grading, or changes an actual host game. This does not claim genuine physical game-night evidence.
+
+Original 79 V2 trial IDs, distinct 704 V1 historical metadata, five original engines, G10 editor/rights/approval/custody, G23–G35, stage-only public DTO, G26 NO_GO remain unchanged. No merge, rebase, approval, migration, source publication, production writes or deployment.
+
+Validation: 45 profile/team/game unit combinations; phase counts; five-game boundaries and wrap; redacted stage text; independent team turns; missing source queue; keyboard/browser game and source navigation; installed-offline local cue persistence. All exact-head automated outcomes to be reported after genuine CI.

@@ -130,7 +130,7 @@ export function HostModerationGuide(props:HostGuideInput){
     <small className="g14-current-step">{state.step}</small>
     <h3>Als Nächstes: {state.next}</h3>
     {(props.recovery||props.paused)&&<p>{state.warning}</p>}</div>
-   <div className="g14-connect"><strong>{props.viewers}</strong><span>Beamerfenster bestätigt</span></div>
+   <div className="g14-connect" aria-live="polite" aria-atomic="true"><strong>{props.viewers}</strong><span>{props.viewers===0?'Kein Beamerfenster bestätigt':'Beamerfenster bestätigt'}</span></div>
   </div>
   <details className="g14-optional">
    <summary>Beamer- und Wertungsstatus</summary>

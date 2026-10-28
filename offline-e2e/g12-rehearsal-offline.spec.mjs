@@ -64,3 +64,236 @@ for (const [label, selector, count] of games) {
     }
   });
 }
+
+test('G33 original source-only pack plan survives installed PWA offline reload without enabling play',async({page,context})=>{
+ await page.goto('/#/technik');
+ await page.evaluate(()=>globalThis.navigator.serviceWorker.ready);
+ await page.reload();
+ await expect.poll(()=>page.evaluate(()=>Boolean(globalThis.navigator.serviceWorker.controller))).toBe(true);
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ await page.getByRole('combobox',{name:'G28 Profil'}).selectOption('kurz');
+ await page.getByRole('combobox',{name:'G28 Teams'}).selectOption('3');
+ await page.getByRole('combobox',{name:'G28 Spiel'}).selectOption('logikleiter');
+ const saved=page.getByRole('region',{name:'G33 Lokaler Abendplan'});
+ await saved.getByRole('button',{name:'Abendplan lokal speichern'}).click();
+ await expect(saved).toContainText('Revision 1');
+ await context.setOffline(true);
+ try{
+  await page.reload();
+  await expect(page.getByRole('heading',{name:'Inhaltsatelier'})).toBeVisible();
+  await expect(saved).toContainText('Revision 1');
+  await expect(page.getByRole('combobox',{name:'G28 Spiel'})).toHaveValue('logikleiter');
+  await expect(page.getByRole('combobox',{name:'G28 Profil'})).toHaveValue('kurz');
+  await expect(page.getByRole('combobox',{name:'G28 Teams'})).toHaveValue('3');
+  await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
+  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+ }finally{await context.setOffline(false);}
+});
+
+test('G34 installed offline G10 source revision recovery keeps other slots and never authorizes release',async({page,context})=>{
+ await page.goto('/#/technik');
+ await page.evaluate(()=>globalThis.navigator.serviceWorker.ready);
+ await page.reload();
+ await expect.poll(()=>page.evaluate(()=>Boolean(globalThis.navigator.serviceWorker.controller))).toBe(true);
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ const persisted=page.getByRole('region',{name:'G33 Lokaler Abendplan'});
+ await persisted.getByRole('button',{name:'Abendplan lokal speichern'}).click();
+ await expect(persisted).toContainText('Revision 1');
+ const plan=page.getByRole('region',{name:'G30 Original-Packplanung'});
+ await plan.getByText(/Aufgabenplätze und Originalquellen wählen/).click();
+ const source=await plan.getByRole('combobox',{name:'G30 wissen 1'}).inputValue();
+ const sibling=await plan.getByRole('combobox',{name:'G30 wissen 2'}).inputValue();
+ await plan.getByRole('button',{name:source+' in G10 prüfen'}).first().click();
+ const editor=page.getByRole('region',{name:'Aufgabe bearbeiten'});
+ const prompt=editor.getByRole('textbox',{name:'Fragestellung'});
+ await prompt.fill((await prompt.inputValue())+' – offline redaktionell geändert');
+ await editor.getByRole('button',{name:'Änderungen als Entwurf speichern'}).click();
+ await expect(persisted).toContainText('Quellen geändert');
+ await context.setOffline(true);
+ try{
+  await page.reload();
+  await expect(persisted).toContainText('Quellen geändert');
+  const recover=persisted.getByRole('region',{name:'G34 Teilwiederherstellung'});
+  await recover.getByRole('button',{name:'Gültige Quellen prüfen'}).click();
+  await expect(recover.getByLabel('G34 Betroffene Quellplätze')).toContainText(source);
+  page.once('dialog',dialog=>dialog.accept());
+  await recover.getByRole('button',{name:/Quellen behalten · .* Plätze leeren/}).click();
+  await expect(persisted).toContainText('Revision 2');
+  await page.reload();
+  await expect(persisted).toContainText('Revision 2');
+  await plan.getByText(/Aufgabenplätze und Originalquellen wählen/).click();
+  await expect(plan.getByRole('combobox',{name:'G30 wissen 1'})).toHaveValue('');
+  await expect(plan.getByRole('combobox',{name:'G30 wissen 2'})).toHaveValue(sibling);
+  await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
+ }finally{await context.setOffline(false);}
+});
+
+test('G35 offline editor fills one original source slot and retains approved-authority NO_GO',async({page,context})=>{
+ await page.goto('/#/technik');
+ await page.evaluate(()=>globalThis.navigator.serviceWorker.ready);
+ await page.reload();
+ await expect.poll(()=>page.evaluate(()=>Boolean(globalThis.navigator.serviceWorker.controller))).toBe(true);
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ await page.getByRole('combobox',{name:'G28 Profil'}).selectOption('kurz');
+ await page.getByRole('combobox',{name:'G28 Teams'}).selectOption('3');
+ const pack=page.getByRole('region',{name:'G30 Original-Packplanung'});
+ await pack.getByText(/Aufgabenplätze und Originalquellen wählen/).click();
+ await pack.getByRole('combobox',{name:'G30 wissen 1'}).selectOption('');
+ await context.setOffline(true);
+ try{
+  const g35=page.getByRole('region',{name:'G35 Fünf-Spiele-Quellenwahl'});
+  await g35.getByRole('combobox',{name:'G35 Quellenplatz'}).selectOption('rundenquiz/wissen:1');
+  const options=g35.getByRole('region',{name:'G35 Alternative Originalquellen'});
+  const button=options.getByRole('button',{name:/als Entwurf wählen/}).first();
+  const label=await button.textContent(),chosen=label?.trim().split(' ')[0];
+  expect(chosen).toMatch(/^rq-/);
+  await button.click();
+  await expect(pack.getByRole('combobox',{name:'G30 wissen 1'})).toHaveValue(chosen);
+  const saved=page.getByRole('region',{name:'G33 Lokaler Abendplan'});
+  await saved.getByRole('button',{name:'Abendplan lokal speichern'}).click();
+  await expect(saved).toContainText('Revision 1');
+  await page.reload();
+  await expect(saved).toContainText('Revision 1');
+  await pack.getByText(/Aufgabenplätze und Originalquellen wählen/).click();
+  await expect(pack.getByRole('combobox',{name:'G30 wissen 1'})).toHaveValue(chosen);
+  await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
+ }finally{await context.setOffline(false);}
+});
+
+test('G36 installed offline original moderator cue changes games and restores stage-safe phase',async({page,context})=>{
+ await page.goto('/#/technik');
+ await page.evaluate(()=>globalThis.navigator.serviceWorker.ready);
+ await page.reload();
+ await expect.poll(()=>page.evaluate(()=>Boolean(globalThis.navigator.serviceWorker.controller))).toBe(true);
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ await page.getByRole('combobox',{name:'G28 Profil'}).selectOption('kurz');
+ await page.getByRole('combobox',{name:'G28 Teams'}).selectOption('3');
+ const queue=page.getByRole('region',{name:'G36 Fünf-Spiele-Moderationslauf'});
+ await context.setOffline(true);
+ try{
+  await queue.getByRole('button',{name:'Vorherige Phase'}).click();
+  await expect(page.getByRole('combobox',{name:'G28 Spiel'})).toHaveValue('umfrageduell');
+  await expect(queue).toContainText('Beamer-Vorschau');
+  const saved=page.getByRole('region',{name:'G33 Lokaler Abendplan'});
+  await saved.getByRole('button',{name:'Abendplan lokal speichern'}).click();
+  await expect(saved).toContainText('Revision 1');
+  await page.reload();
+  await expect(saved).toContainText('Revision 1');
+  await expect(page.getByRole('combobox',{name:'G28 Spiel'})).toHaveValue('umfrageduell');
+  await expect(queue).toContainText('NO_GO');
+  await expect(queue.getByLabel('G36 Öffentliche Phasenvorschau')).not.toContainText('Josua');
+  await expect(page.getByRole('region',{name:'Spielbare Inhalte'}).getByText('Unvollständig')).toHaveCount(5);
+ }finally{await context.setOffline(false);}
+});
+
+test('G37 installed offline source-revision-bound moderator rehearsal stays local and reversible',async({page,context})=>{
+ await page.goto('/#/technik');
+ await page.evaluate(()=>globalThis.navigator.serviceWorker.ready);
+ await page.reload();
+ await expect.poll(()=>page.evaluate(()=>Boolean(globalThis.navigator.serviceWorker.controller))).toBe(true);
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ await page.getByRole('combobox',{name:'G28 Profil'}).selectOption('kurz');
+ await page.getByRole('combobox',{name:'G28 Teams'}).selectOption('3');
+ const desk=page.getByRole('region',{name:'G36 Fünf-Spiele-Moderationslauf'});
+ await context.setOffline(true);
+ try{
+  await desk.getByRole('button',{name:'Aufgabe probeweise durchgespielt'}).click();
+  await expect(desk).toContainText('Moderationsprobe: 1 /');
+  const saved=page.getByRole('region',{name:'G33 Lokaler Abendplan'});
+  await saved.getByRole('button',{name:'Abendplan lokal speichern'}).click();
+  await expect(saved).toContainText('Revision 1');
+  await page.reload();
+  await expect(saved).toContainText('Revision 1');
+  await expect(desk).toContainText('Moderationsprobe: 1 /');
+  await expect(desk.getByRole('button',{name:'Probenmarkierung zurücknehmen'})).toBeEnabled();
+  await desk.getByRole('button',{name:'Nächste ungetestete Aufgabe'}).click();
+  await expect(desk).toContainText('6 / 132 · Rundenquiz');
+  await expect(desk).toContainText('wissen 2 · ready');
+  await expect(desk.getByLabel('G36 Öffentliche Phasenvorschau')).not.toContainText('Josua');
+  await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
+ }finally{await context.setOffline(false);}
+});
+
+test('G38 offline five-game real team turn decision survives save/reload and remains NO_GO',async({page,context})=>{
+ await page.goto('/#/technik');
+ await page.evaluate(()=>globalThis.navigator.serviceWorker.ready);
+ await page.reload();
+ await expect.poll(()=>page.evaluate(()=>Boolean(globalThis.navigator.serviceWorker.controller))).toBe(true);
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ await page.getByRole('combobox',{name:'G28 Profil'}).selectOption('kurz');
+ await page.getByRole('combobox',{name:'G28 Teams'}).selectOption('3');
+ const rotation=page.getByRole('region',{name:'G38 Teamrotation und Korrektur'});
+ const desk=page.getByRole('region',{name:'G36 Fünf-Spiele-Moderationslauf'});
+ await context.setOffline(true);
+ try{
+  await rotation.getByRole('button',{name:'Nächster fairer Teamturn'}).click();
+  await expect(desk.locator('.g36-cue').first()).toContainText('Team 1');
+  await rotation.getByRole('button',{name:'Aufgabe proben und Teamwechsel'}).click();
+  await expect(desk.locator('.g36-cue').first()).toContainText('Team 2');
+  await rotation.getByRole('combobox',{name:'G38 Prüfgrund'}).selectOption('source');
+  await rotation.getByRole('button',{name:'Korrekturvermerk setzen'}).click();
+  const saved=page.getByRole('region',{name:'G33 Lokaler Abendplan'});
+  await saved.getByRole('button',{name:'Abendplan lokal speichern'}).click();
+  await expect(saved).toContainText('Revision 1');
+  await page.reload();
+  await expect(saved).toContainText('Revision 1');
+  await expect(rotation).toContainText('G10-Korrektur offen · source');
+  await expect(rotation).toContainText('1/');
+  await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
+  await expect(desk.getByLabel('G36 Öffentliche Phasenvorschau')).not.toContainText('Josua');
+ }finally{await context.setOffline(false);}
+});
+
+
+test('G39 installed offline keeps held corrections out of ready queue and preserves release denial',async({page,context})=>{
+ await page.goto('/#/technik');
+ await page.evaluate(()=>globalThis.navigator.serviceWorker.ready);
+ await page.reload();
+ await expect.poll(()=>page.evaluate(()=>Boolean(globalThis.navigator.serviceWorker.controller))).toBe(true);
+ await page.goto('/#/inhalte');
+ await page.getByRole('button',{name:'Probeaufgaben als Entwürfe prüfen'}).click();
+ await page.getByRole('checkbox',{name:/Ich bestätige die Vorschau/}).check();
+ await page.getByRole('button',{name:'Vorschau ausdrücklich importieren'}).click();
+ await page.getByRole('combobox',{name:'G28 Profil'}).selectOption('kurz');
+ await page.getByRole('combobox',{name:'G28 Teams'}).selectOption('3');
+ const rotation=page.getByRole('region',{name:'G38 Teamrotation und Korrektur'});
+ const work=rotation.getByLabel('G39 Aktionsfähige Teamliste');
+ const desk=page.getByRole('region',{name:'G36 Fünf-Spiele-Moderationslauf'});
+ await context.setOffline(true);
+ try{
+  await rotation.getByRole('button',{name:'Nächster fairer Teamturn'}).click();
+  await rotation.getByRole('combobox',{name:'G38 Prüfgrund'}).selectOption('source');
+  await rotation.getByRole('button',{name:'Korrekturvermerk setzen'}).click();
+  await expect(work).toContainText('1 mit Korrekturvermerk');
+  await rotation.getByRole('button',{name:'Nächster fairer Teamturn'}).click();
+  await expect(desk.locator('.g36-cue').first()).toContainText('Team 2');
+  await rotation.getByRole('button',{name:'Nächsten Korrekturfall anzeigen'}).click();
+  await expect(desk.locator('.g36-cue').first()).toContainText('Team 1');
+  const saved=page.getByRole('region',{name:'G33 Lokaler Abendplan'});
+  await saved.getByRole('button',{name:'Abendplan lokal speichern'}).click();
+  await expect(saved).toContainText('Revision 1');
+  await page.reload();
+  await expect(work).toContainText('1 mit Korrekturvermerk');
+  await expect(rotation.getByRole('button',{name:'Aufgabe proben und Teamwechsel'})).toBeDisabled();
+  await expect(desk.getByLabel('G36 Öffentliche Phasenvorschau')).not.toContainText('sourceId');
+  await expect(page.getByRole('region',{name:'G32 Fünf-Spiele-Abendplan'})).toContainText('NO_GO');
+ }finally{await context.setOffline(false);}
+});

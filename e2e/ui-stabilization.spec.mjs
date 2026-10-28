@@ -1,0 +1,351 @@
+import {test,expect} from '@playwright/test';
+
+const viewports = [320,390,768,1440];
+const shots = 'test-results/ui-stabilization';
+
+async function snapshot(page, width, view) {
+ // A focus shortcut can leave sticky/fixed chrome composited midway down
+ // Playwright's full-page screenshot. Capture the actual top-of-page layout.
+ await page.evaluate(()=>globalThis.scrollTo(0,0));
+ await page.screenshot({path:`${shots}/${width}-${view}.png`,fullPage:true,animations:'disabled'});
+ const geometry = await page.evaluate(() => {
+  const doc = globalThis.document.documentElement;
+  return {viewport:globalThis.innerWidth,scroll:doc.scrollWidth};
+ });
+ expect(geometry.scroll, `${width}px ${view}: ${JSON.stringify(geometry)}`)
+  .toBeLessThanOrEqual(geometry.viewport + 2);
+ if(view.includes('host')||view.endsWith('-started')){
+  const heading=page.locator('.g14-guide h3').first();
+  if(await heading.count()){
+   const blockWidth=await heading.evaluate(el=>el.getBoundingClientRect().width);
+   expect(blockWidth, `${width}px host step should not split each word into fragments`)
+    .toBeGreaterThan(Math.min(185,width-110));
+  }
+ }
+}
+
+for(const width of viewports){
+ test(`UI stabilization: ${width}px navigation, setup, persistence and host`,async({page})=>{
+  await page.setViewportSize({width,height:844});
+  await page.goto('/#/spielen');
+  await expect(page.getByRole('heading',{level:1})).toBeVisible();
+  await snapshot(page,width,'lobby');
+
+  if(width<=760){
+   const menu=page.locator('.sp-shell-mobile-menu');
+   await menu.locator('summary').click();
+   await expect(menu).toHaveAttribute('open','');
+   const bounds=await page.evaluate(()=>{
+    const m=globalThis.document.querySelector('.sp-shell-mobile-menu>nav').getBoundingClientRect();
+    const n=globalThis.document.querySelector('.sp-shell-mobile-bottom').getBoundingClientRect();
+    return {menuBottom:m.bottom,bottomNavTop:n.top};
+   });
+   expect(bounds.menuBottom,'Mobile menu must not sit under the fixed bottom navigation')
+    .toBeLessThanOrEqual(bounds.bottomNavTop+2);
+   await menu.getByRole('link',{name:/Backstage/}).first().click();
+  }else{
+   await page.getByRole('navigation',{name:'Hauptnavigation'})
+    .getByRole('link',{name:/Backstage/}).click();
+  }
+  await expect(page).toHaveURL(/#\/inhalte$/);
+  await snapshot(page,width,'content');
+  await page.goto('/#/setup');
+  await expect(page.getByRole('heading',{name:'Teams festlegen'})).toBeVisible();
+  // Setup no longer renders the old desktop sidebar; it must not reserve its column.
+  const columns=await page.locator('.sp-prep-layout').evaluate(el=>globalThis.getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/));
+  expect(columns,'Unrendered setup sidebar must not reserve an empty track').toHaveLength(1);
+  await snapshot(page,width,'teams');
+  await page.getByRole('textbox',{name:'Team 1'}).fill('Nord');
+  await page.getByRole('button',{name:'Weiter'}).click();
+  await expect(page.getByRole('heading',{name:'Programm wählen'})).toBeVisible();
+  await snapshot(page,width,'game-choice');
+  if(width<=760){
+   await page.evaluate(()=>globalThis.scrollTo(0,0));
+   const action=page.locator('.sp-prep-actions');
+   const bounds=await action.boundingBox();
+   expect(bounds).not.toBeNull();
+   expect(bounds.y+bounds.height).toBeLessThanOrEqual(844);
+   expect(bounds.y+bounds.height,'Focused setup has no bottom nav; action should sit near the viewport edge').toBeGreaterThan(765);
+  }
+  await page.reload();
+  await expect(page.getByRole('heading',{name:'Programm wählen'})).toBeVisible();
+  await page.getByRole('button',{name:'Weiter'}).click();
+  await expect(page.getByRole('heading',{name:'Bereit zum Spielen'})).toBeVisible();
+  await snapshot(page,width,'ready');
+  await page.getByRole('checkbox').check();
+  await page.getByRole('button',{name:'Spielleitung öffnen'}).click();
+  await expect(page).toHaveURL(/#\/host$/);
+  await expect(page.locator('#sp-host-game')).toBeVisible();
+  const shellStage=page.locator('.sp-cockpit-quick-stage');
+  const hostStage=page.locator('[data-host-game="rundenquiz"] .rq-utility > a[href^="#/stage"]');
+  await expect(hostStage).toHaveAttribute('href',await shellStage.getAttribute('href'));
+  await expect(hostStage).toBeVisible();
+  await expect(hostStage).toHaveAttribute('target','_blank');
+  await expect(hostStage).toHaveAttribute('rel',/noopener/);
+  if(width<=760){
+   await expect(shellStage).toBeVisible();
+   const size=await hostStage.evaluate(el=>el.getBoundingClientRect().height);
+   expect(size,'Original host projector link needs a mobile touch target').toBeGreaterThanOrEqual(44);
+   await expect(hostStage).toHaveCSS('background-color','rgb(238, 242, 249)');
+  }
+  if(width<=760){
+   await expect(page.locator('.u07-rail-guidance')).toBeHidden();
+   await expect(page.locator('.g14-progress')).toBeHidden();
+   await expect(page.locator('.u07-phase-steps>li')).toHaveCount(4);
+   const setupAction=await page.getByRole('button',{name:'Teams bestätigen'}).boundingBox();
+   const privateCard=await page.locator('.rq-question').boundingBox();
+   expect(setupAction).not.toBeNull();expect(privateCard).not.toBeNull();
+   expect(setupAction.y+setupAction.height,'First Rundenquiz action must precede its passive preview').toBeLessThan(privateCard.y);
+   const guide=await page.locator('[data-host-game="rundenquiz"] .g14-guide').boundingBox();
+   expect(guide).not.toBeNull();
+   expect(setupAction.y+setupAction.height).toBeLessThan(guide.y);
+   expect(setupAction.y+setupAction.height,'Rundenquiz start action belongs on first phone viewport').toBeLessThanOrEqual(844);
+   const gameAction=await page.locator('[data-host-game="rundenquiz"] [data-host-next]:not(:disabled)').first().boundingBox();
+   const progressRail=await page.locator('[data-host-game="rundenquiz"] .u07-phase-rail').boundingBox();
+   expect(gameAction).not.toBeNull();expect(progressRail).not.toBeNull();
+   expect(gameAction.y,'Mobile gameplay action must precede passive progress').toBeLessThan(progressRail.y);
+   const focus=page.locator('.g14-guide button.g14-focus');
+   await expect(focus).toBeVisible();
+   await focus.click();
+   await expect(page.locator('[data-host-game="rundenquiz"] [data-host-next]:not(:disabled)').first()).toBeFocused();
+  }
+  await snapshot(page,width,'host');
+  const identity=await page.evaluate(()=>globalThis.sessionStorage.getItem('ligoquiz.v2.g4.rundenquiz.host'));
+  expect(identity).toBeTruthy();
+  await page.reload();
+  await expect(page.locator('#sp-host-game')).toBeVisible();
+  expect(await page.evaluate(()=>globalThis.sessionStorage.getItem('ligoquiz.v2.g4.rundenquiz.host'))).toBe(identity);
+  await expect(page.locator('.sp-cockpit-quick-stage')).toHaveAttribute('target','_blank');
+  await snapshot(page,width,'resumed-host');
+  // Actual original Rundenquiz transition, with a connected public stage:
+  // private solutions remain guarded even after a live prompt and host reload.
+  const href=await page.locator('.sp-cockpit-quick-stage').getAttribute('href');
+  expect(href).toMatch(/^#.*stage.*event=[a-zA-Z0-9_-]+$/);
+  const stage=await page.context().newPage();
+  await stage.setViewportSize({width,height:844});
+  await stage.goto('/'+href);
+  await expect(page.locator('.rq-utility')).toContainText('1 Beamer verbunden');
+  await page.getByRole('button',{name:'Teams bestätigen'}).click();
+  await page.getByRole('button',{name:'Frage auf Beamer zeigen'}).click();
+  await expect(stage.locator('main')).toContainText('Wer führte Israel nach Mose');
+  await expect(stage.locator('main')).not.toContainText('Josua');
+  await snapshot(page,width,'rundenquiz-active');
+  await snapshot(stage,width,'rundenquiz-projector-active');
+  await page.reload();
+  await expect(page.getByRole('button',{name:'Spiel fortsetzen'})).toBeEnabled();
+  await expect(stage.locator('main')).not.toContainText('Josua');
+  await stage.close();
+  await snapshot(page,width,'rundenquiz-reload-paused');
+ });
+}
+
+// The mobile content page is exceptionally long. Jump navigation must remain
+// in the current hash route, return focus to the target and retain draft data.
+for(const width of viewports){
+ test(`UI stabilization: content section navigation at ${width}px`,async({page})=>{
+  await page.setViewportSize({width,height:844});
+  await page.goto('/#/inhalte');
+  const nav=page.getByRole('navigation',{name:'Bereiche im Inhaltsatelier'});
+  if(width>760){
+   await expect(nav).toBeHidden();
+   return;
+  }
+  const menu=nav.locator('details');
+  const summary=menu.locator('summary');
+  await expect(summary).toBeVisible();
+  await expect(menu).not.toHaveAttribute('open','');
+  await summary.click();
+  await menu.getByRole('button',{name:'Aufgabenbestand'}).click();
+  await expect(menu).not.toHaveAttribute('open','');
+  await expect(page.locator('#cx-jump-catalog')).toBeFocused();
+  await expect(page).toHaveURL(/#\/inhalte$/);
+  const catalogPosition=await page.locator('#cx-jump-catalog').boundingBox();
+  const navPosition=await nav.boundingBox();
+  expect(catalogPosition.y,'Target heading must not hide under sticky jump navigation')
+   .toBeGreaterThanOrEqual(navPosition.y+navPosition.height-4);
+  await summary.click();
+  await menu.getByRole('button',{name:'Neuer Inhalt'}).click();
+  await expect(page.locator('#cx-jump-create')).toBeFocused();
+  await page.getByRole('combobox',{name:'Neuer Inhalt'}).selectOption('rundenquiz');
+  await page.getByRole('button',{name:'Aufgabe anlegen'}).click();
+  await summary.click();
+  await menu.getByRole('button',{name:'Redaktionspult'}).click();
+  await expect(page.locator('#cx-jump-editor')).toBeFocused();
+  await expect(page.locator('#cx-jump-editor')).toContainText('Entwurf');
+  await expect(page).toHaveURL(/#\/inhalte$/);
+  await snapshot(page,width,'content-jump-editor');
+  await page.reload();
+  await expect(page.locator('.cx-item')).toHaveCount(1);
+  await expect(page.getByRole('navigation',{name:'Bereiche im Inhaltsatelier'})).toBeVisible();
+  await expect(page.locator('.cx-item')).toContainText(['Rundenquiz']);
+ });
+}
+
+// WCAG AA: source IDs and empty states are task-essential small text.
+// The former #819096 on a selected #f4f0e3 row had just ~2.89:1 contrast;
+// #708087 empty states on white were ~4.1:1. Test actual computed colors
+// across mobile and desktop, for both selected and unselected source rows.
+function textContrast(foreground,background){
+ const luminance=(color)=>{
+  const values=color.match(/\d+(?:\.\d+)?/g)?.slice(0,3).map(Number);
+  if(!values||values.length!==3)throw Error('Expected computed RGB color: '+color);
+  return values.map(value=>{
+   const channel=value/255;
+   return channel<=0.04045?channel/12.92:((channel+0.055)/1.055)**2.4;
+  }).reduce((total,value,index)=>total+value*[0.2126,0.7152,0.0722][index],0);
+ };
+ const light=luminance(foreground),dark=luminance(background);
+ return (Math.max(light,dark)+0.05)/(Math.min(light,dark)+0.05);
+}
+for(const width of viewports){
+ test(`UI stabilization: catalog text AA contrast and draft selection at ${width}px`,async({page})=>{
+  await page.setViewportSize({width,height:844});
+  await page.goto('/#/inhalte');
+  const assertContrast=async(selector,backgroundSelector,label)=>{
+   const colors=await page.locator(selector).first().evaluate((node,parentSelector)=>{
+    const ancestor=node.closest(parentSelector);
+    if(!ancestor)throw Error('Background owner not found');
+    return {fg:globalThis.getComputedStyle(node).color,bg:globalThis.getComputedStyle(ancestor).backgroundColor};
+   },backgroundSelector);
+   expect(textContrast(colors.fg,colors.bg),label+' '+JSON.stringify(colors))
+    .toBeGreaterThanOrEqual(4.5);
+  };
+  await expect(page.locator('.cx-empty')).toBeVisible();
+  await expect(page.locator('.cx-editor-empty')).toBeVisible();
+  await assertContrast('.cx-empty','.cx-main','Empty catalog guidance');
+  await assertContrast('.cx-editor-empty','.cx-main','Empty editor guidance');
+  await page.getByRole('button',{name:'Aufgabe anlegen'}).click();
+  await expect(page.locator('.cx-item.selected > small')).toHaveCount(1);
+  await assertContrast('.cx-item.selected > small','.cx-item','Selected source ID');
+  await page.getByRole('button',{name:'Aufgabe anlegen'}).click();
+  await expect(page.locator('.cx-item')).toHaveCount(2);
+  await assertContrast('.cx-item:not(.selected) > small','.cx-item','Unselected source ID');
+  await assertContrast('.cx-item.selected > small','.cx-item','Current source ID');
+  const size=await page.evaluate(()=>({viewport:globalThis.innerWidth,scroll:globalThis.document.documentElement.scrollWidth}));
+  expect(size.scroll,'Readability improvements must not cause horizontal overflow')
+   .toBeLessThanOrEqual(size.viewport+2);
+ });
+}
+
+const otherGames=[
+ {name:'Quiztafel',host:'.qt-host',first:'Quiztafel auf dem Beamer vorbereiten'},
+ {name:'Verbindungen',host:'.vb-host',first:'Aufgabenreihenfolge bestätigen'},
+ {name:'Logikleiter',host:'.ll-host',first:'Stufenfolge bestätigen'},
+ {name:'Umfrageduell',host:'.ud-host',first:'Aufgabenfolge bestätigen'},
+];
+
+for(const width of viewports){
+ for(const game of otherGames){
+  test(`UI stabilization: ${game.name} host, stage and reload at ${width}px`,async({page,context})=>{
+   await page.setViewportSize({width,height:844});
+   await page.goto('/#/setup');
+   await page.getByRole('button',{name:'Weiter'}).click();
+   await page.getByRole('button',{name:new RegExp(game.name)}).click();
+   await page.getByRole('button',{name:'Weiter'}).click();
+   await page.getByRole('checkbox').check();
+   await page.getByRole('button',{name:'Spielleitung öffnen'}).click();
+   await expect(page).toHaveURL(/#.*host$/);
+   const host=page.locator(game.host);
+   await expect(host).toBeVisible();
+   await expect(host.getByRole('button',{name:game.first})).toBeEnabled();
+   const shellStage=page.locator('.sp-cockpit-quick-stage');
+   const hostStage=host.locator(':is(.qt-host-toolbar,.vb-host-toolbar,.ll-toolbar,.ud-toolbar) > a[href^="#/stage"]');
+   await expect(hostStage).toHaveAttribute('href',await shellStage.getAttribute('href'));
+   await expect(hostStage).toBeVisible();
+   await expect(hostStage).toHaveAttribute('target','_blank');
+   await expect(hostStage).toHaveAttribute('rel',/noopener/);
+   if(width<=760){
+    await expect(shellStage).toBeVisible();
+    const size=await hostStage.evaluate(el=>el.getBoundingClientRect().height);
+    expect(size,'Original host projector link needs a mobile touch target').toBeGreaterThanOrEqual(44);
+    await expect(hostStage).toHaveCSS('background-color','rgb(238, 242, 249)');
+   }
+   if(width<=760){
+    await expect(host.locator('.u07-rail-guidance')).toBeHidden();
+    await expect(host.locator('.g14-progress')).toBeHidden();
+    await expect(host.locator('.u07-phase-steps>li')).toHaveCount(4);
+    // The real source-owned setup transition must be present in the first
+    // viewport for every game, not buried beneath decorative/status panels.
+    const firstAction=await host.getByRole('button',{name:game.first}).boundingBox();
+    const moderation=await host.locator('.g14-guide').boundingBox();
+    expect(firstAction).not.toBeNull();expect(moderation).not.toBeNull();
+    expect(firstAction.y+firstAction.height,game.name+' first action must precede guide').toBeLessThan(moderation.y);
+    expect(firstAction.y+firstAction.height,game.name+' first action must fit in phone viewport').toBeLessThanOrEqual(844);
+    if(game.name==='Quiztafel'){
+     const setupAction=await host.getByRole('button',{name:game.first}).boundingBox();
+     const gridPreview=await host.locator('.qt-grid').boundingBox();
+     expect(setupAction).not.toBeNull();expect(gridPreview).not.toBeNull();
+     expect(setupAction.y+setupAction.height,'Quiztafel preparation action precedes board preview').toBeLessThan(gridPreview.y);
+     const guide=await host.locator('.g14-guide').boundingBox();
+     expect(guide).not.toBeNull();
+     expect(setupAction.y+setupAction.height).toBeLessThan(guide.y);
+     expect(setupAction.y+setupAction.height,'Quiztafel start action belongs on first phone viewport').toBeLessThanOrEqual(844);
+    }
+    const gameAction=await host.locator('[data-host-next]:not(:disabled)').first().boundingBox();
+    const progressRail=await host.locator('.u07-phase-rail').boundingBox();
+    expect(gameAction).not.toBeNull();expect(progressRail).not.toBeNull();
+    expect(gameAction.y,'Mobile gameplay action must precede passive progress').toBeLessThan(progressRail.y);
+    const focus=host.locator('.g14-guide button.g14-focus');
+    await expect(focus).toBeVisible();
+    await focus.click();
+    await expect(host.locator('[data-host-next]:not(:disabled)').first()).toBeFocused();
+   }
+   await snapshot(page,width,game.name.toLowerCase()+'-host');
+   await host.getByRole('button',{name:game.first}).click();
+   await expect(host).toBeVisible();
+   if(width<=700&&game.name==='Quiztafel'){
+    const grid=host.locator('.qt-grid');
+    const measurement=await grid.evaluate(el=>({viewport:el.clientWidth,content:el.scrollWidth,
+      columns:Array.from(el.querySelectorAll('.qt-column')).map(col=>col.getBoundingClientRect().width),
+      whiteSpace:globalThis.getComputedStyle(el.querySelector('.qt-cell')).whiteSpace}));
+    expect(measurement.columns.length).toBeGreaterThanOrEqual(3);
+    expect(Math.min(...measurement.columns),'category names need readable width').toBeGreaterThanOrEqual(111);
+    expect(measurement.content,'board must scroll internally rather than crush categories').toBeGreaterThan(measurement.viewport+80);
+    expect(measurement.whiteSpace,'point values must never split into digits').toBe('nowrap');
+    await expect(host.locator('.qt-grid-scroll-hint')).toBeVisible();
+    await grid.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect.poll(()=>grid.evaluate(el=>el.scrollLeft)).toBeGreaterThan(0);
+   }
+   await snapshot(page,width,game.name.toLowerCase()+'-started');
+   const href=await page.locator('.sp-cockpit-quick-stage').getAttribute('href');
+   expect(href).toMatch(/^#.*stage.*event=[a-zA-Z0-9_-]+$/);
+   const stage=await context.newPage();
+   await stage.setViewportSize({width,height:844});
+   await stage.goto('/'+href);
+   await expect(stage.locator('.stage-preview')).toBeVisible();
+   await snapshot(stage,width,game.name.toLowerCase()+'-projector');
+   // Exercise the first actual game interaction on each device width. A private
+   // Quiztafel selection never publishes its solution; the other three engines
+   // may publish their prompt but must not reveal the guarded answer.
+   if(game.name==='Quiztafel'){
+    await host.locator('.qt-column').first().getByRole('button',{name:'100'}).click();
+    await expect(host).toHaveAttribute('data-host-phase','prepared');
+    await expect(stage.locator('.qt-stage-grid')).toBeVisible();
+    await expect(stage.locator('main')).not.toContainText('Noah');
+   }else{
+    await host.getByRole('button',{name:'Aufgabe veröffentlichen'}).click();
+    await expect(host).toHaveAttribute('data-host-phase',
+      game.name==='Verbindungen'?'clue-open':'open');
+    const privateAnswer=game.name==='Verbindungen'?'David':
+      game.name==='Umfrageduell'?'Notizblock':
+      'Alle Rosen sind Pflanzen, und keine Pflanze ist ein Metall.';
+    await expect(stage.locator('main')).not.toContainText(privateAnswer);
+    if(game.name==='Verbindungen')await expect(stage.locator('main')).toContainText('Bethlehem');
+    if(game.name==='Logikleiter')await expect(stage.locator('.ll-stage-ladder')).toContainText('Alle Rosen');
+    if(game.name==='Umfrageduell')await expect(stage.locator('.ud-stage')).toContainText('BEISPIELDATEN');
+   }
+   await snapshot(page,width,game.name.toLowerCase()+'-active');
+   await snapshot(stage,width,game.name.toLowerCase()+'-projector-active');
+   await page.reload();
+   await expect(page.locator(game.host)).toBeVisible();
+   await expect(page.locator('.sp-cockpit-quick-stage')).toHaveAttribute('href',href);
+   if(game.name!=='Quiztafel'){
+    await expect(host.getByRole('button',{name:/Spiel.*fortsetzen/})).toBeEnabled();
+    await expect(stage.locator('main')).toContainText('Pause');
+   }
+   await stage.close();
+   await snapshot(page,width,game.name.toLowerCase()+'-resumed');
+  });
+ }
+}

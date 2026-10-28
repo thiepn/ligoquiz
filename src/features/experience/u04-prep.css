@@ -18,7 +18,7 @@
 .sp-prep .sp-prep-steps>button.exp-current b{color:#111E42;background:#FFE45C;border-color:#FFE45C}
 .sp-prep .sp-prep-steps>button.exp-current small{color:#DFEAFF}
 .sp-prep .sp-prep-steps>button.sp-prep-done{background:#E6F8F3;color:#075E55}
-.sp-prep .sp-prep-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(235px,285px);gap:clamp(14px,2vw,27px);align-items:start}
+.sp-prep .sp-prep-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(14px,2vw,27px);align-items:start}
 .sp-prep .sp-prep-main{min-width:0}
 .sp-prep .sp-prep-panel{padding:clamp(20px,3vw,35px);margin:0;background:#fff;border:1px solid #D6DEEE}
 .sp-prep .sp-prep-kicker{display:block;color:#285BFF;font-size:11px;font-weight:950;letter-spacing:.14em;margin-bottom:13px}
@@ -128,7 +128,7 @@
   .sp-prep .sp-prep-game>b{white-space:normal;overflow-wrap:anywhere}
 }
 
-@media(max-width:1120px){.sp-prep .sp-prep-layout{grid-template-columns:minmax(0,1fr) 230px}.sp-prep .sp-prep-game-choices{grid-template-columns:1fr}}
+@media(max-width:1120px){.sp-prep .sp-prep-game-choices{grid-template-columns:1fr}}
 @media(max-width:800px){.sp-prep .sp-prep-layout{grid-template-columns:minmax(0,1fr)}.sp-prep .sp-prep-aside{position:static;grid-template-columns:1fr 1fr}.sp-prep .sp-prep-preview{min-height:230px}}
 @media(max-width:570px){.sp-prep .sp-prep-mast{padding:22px 17px;flex-direction:column}.sp-prep .sp-prep-steps>button{display:grid;gap:6px;padding:13px 8px;font-size:11px}.sp-prep .sp-prep-steps>button b{width:28px;height:28px}.sp-prep .sp-prep-steps>button small{font-size:9px}.sp-prep .sp-prep-roster{grid-template-columns:1fr}.sp-prep .sp-prep-aside{grid-template-columns:1fr}.sp-prep .sp-prep-game{grid-template-columns:56px minmax(0,1fr);padding:12px;gap:8px}.sp-prep .sp-prep-game.chosen{padding:11px}.sp-prep .sp-prep-game-art{width:56px;height:56px}.sp-prep .sp-prep-game-art .sp-motif{width:51px;height:51px}.sp-prep .sp-prep-actions{flex-wrap:wrap}.sp-prep .sp-prep-actions button{flex:1 1 100%}.sp-prep .sp-prep-mast h1{font-size:32px}}
 @media(prefers-reduced-motion:reduce){.sp-prep *,.sp-prep *::before,.sp-prep *::after{transition:none!important;animation:none!important}}

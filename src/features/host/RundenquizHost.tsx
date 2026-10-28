@@ -237,6 +237,7 @@ export function RundenquizHost(){
     <a href={stageUrl(identity.eventId)} target="_blank" rel="noopener noreferrer" className="g3-tech-link">Beamer öffnen ↗</a>
     <button onClick={newEvent}>Neuer Quizabend</button>
    </div>
+   {rq?.phase==='setup'&&!isPaused&&!event?.recoveryRequired&&<div className="rq-start-actions u07-start-actions"><button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'START'})}>Teams bestätigen</button></div>}
    {rq&&<HostGameplayRail game="rundenquiz" phase={rq.phase} paused={isPaused}
      recovery={Boolean(event?.recoveryRequired)} completed={rq.phase==='complete'?rq.questions.length:rq.index}
      total={rq.questions.length}/>}
@@ -290,7 +291,6 @@ export function RundenquizHost(){
     {isPaused&&<p className="u07-pause-note" role="status">Pausiert. Fortsetzung nur über „Fortsetzen“.</p>}
     {isPaused ? <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'RESUME'})}>Spiel fortsetzen</button>
     :<div className="rq-actions">
-      {rq.phase==='setup' && <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'START'})}>Teams bestätigen</button>}
       {rq.phase==='ready' && <button data-host-next className="g3-tech-primary" disabled={disabled} onClick={()=>void action({type:'PUBLISH'})}>Frage auf Beamer zeigen</button>}
       {rq.phase==='open' && <>
         {q?.round==='hinweise'&&<>

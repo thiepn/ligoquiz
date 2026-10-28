@@ -23,8 +23,8 @@ const material: Record<'bibel'|'natur'|'geschichte'|'geografie'|'allgemein',read
     ['In welchem Jahrhundert begann das Jahr 1900?','Im 19. Jahrhundert','Gregorianischer Kalender: 1801–1900'],
     ['In welchem Jahr fiel die Berliner Mauer?','1989','Bundeszentrale für politische Bildung: Mauerfall'],
     ['Wer war der erste Bundeskanzler der Bundesrepublik Deutschland?','Konrad Adenauer','Bundeskanzleramt — Bundeskanzler seit 1949'],
-    ['Welche Stadt wurde im Jahr 79 beim Ausbruch des Vesuvs verschüttet?','Pompeji','UNESCO: Archaeological Areas of Pompei'],
-    ['Welches antike Reich hatte Konstantinopel als Hauptstadt?','Das Byzantinische Reich','Encyclopaedia Britannica: Byzantine Empire'],
+    ['Welche beim Vesuvausbruch 79 n. Chr. verschüttete römische Stadt besaß ein Forum und ein Amphitheater?','Pompeji','UNESCO World Heritage Centre: Archaeological Areas of Pompei, Herculaneum and Torre Annunziata; https://whc.unesco.org/en/list/829/'],
+    ['Welches Reich der Spätantike und des Mittelalters hatte Konstantinopel als Hauptstadt und bestand bis 1453?','Das Byzantinische Reich','Library of Congress: Byzantine Empire — Introduction; https://guides.loc.gov/byzantine-empire/introduction'],
     ['Welcher Friedensschluss beendete 1648 den Dreißigjährigen Krieg?','Der Westfälische Friede','Deutsches Historisches Museum: Westfälischer Friede'],
   ],
   geografie:[

@@ -120,6 +120,7 @@ export function QuiztafelHost(){
       <a href="#/spielen">Zur Übersicht</a>
     </div>
     {!qt&&<p role="status">Quiztafel-Sitzung wird geprüft …</p>}
+    {qt?.phase==='setup'&&!event?.recoveryRequired&&<div className="qt-start-actions u07-start-actions"><button data-host-next className="g3-tech-primary" disabled={!ready||busy} onClick={()=>void send({type:'START'})}>Quiztafel auf dem Beamer vorbereiten</button></div>}
     {qt&&<>
       <HostGameplayRail game="quiztafel" phase={qt.phase} paused={qt.paused}
         recovery={Boolean(event?.recoveryRequired)} completed={qt.usedTileIds.length} total={qt.tiles.length}/>
@@ -152,7 +153,8 @@ export function QuiztafelHost(){
         <div className="qt-board-title"><h3>Spieltafel</h3>
           <p>{inPrivateSelection?'Feld nur für die Spielleitung ausgewählt – noch nicht veröffentlicht.':
             'Nur ein offenes Feld wählen. Vergebene Felder bleiben geschlossen.'}</p></div>
-        <div className="qt-grid u07-qt-grid" role="group" aria-label="Spieltafel mit wählbaren Kategorien" style={{gridTemplateColumns:'repeat('+qt.categories.length+',minmax(0,1fr))'}}>
+        <p id="qt-grid-scroll-hint" className="qt-grid-scroll-hint">Kategorien bei Bedarf seitlich scrollen.</p>
+        <div className="qt-grid u07-qt-grid" role="group" tabIndex={0} aria-label="Spieltafel mit wählbaren Kategorien" aria-describedby="qt-grid-scroll-hint" style={{gridTemplateColumns:'repeat('+qt.categories.length+',minmax(112px,1fr))'}}>
           {qt.categories.map(category=><div className="qt-column" key={category.id}>
             <h4>{category.name}</h4>
             {Array.from({length:DEPTH[qt.profile]},(_,index)=>{
@@ -167,8 +169,6 @@ export function QuiztafelHost(){
             })}
           </div>)}
         </div>
-        {qt.phase==='setup'&&<button data-host-next className="g3-tech-primary" disabled={!ready||busy}
-          onClick={()=>void send({type:'START'})}>Quiztafel auf dem Beamer vorbereiten</button>}
         {qt.phase==='prepared'&&<div className="qt-decision u07-qt-prepared">
           <div><span className="eyebrow">PRIVATE FELDAUSWAHL</span>
             <h3>{currentCategory?.name} / {tile?.value} Punkte</h3>
