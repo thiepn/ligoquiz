@@ -142,3 +142,26 @@
  font-size:13px;line-height:1.55;color:#52626b}
 .cx-source-item .cx-g41-risk{color:#78431f;font-weight:700}
 .cx-g41-original-risk{border-left-color:#a16d37;background:#fbf7ef}
+
+/* Compact section index for exceptionally long mobile editorial pages. Native
+   details/summary keeps the menu keyboard-operable and closed by default. */
+.cx-mobile-jump{display:none}
+.cx-jump-target:focus{outline:2px solid #8e6822;outline-offset:2px}
+@media(max-width:760px){
+ .cx-mobile-jump{display:block;position:sticky;top:0;z-index:22;margin:8px 0 14px;
+  border:1px solid #9ca8b4;background:#152c48;color:#fff;box-shadow:0 3px 10px #152c4826}
+ .cx-mobile-jump summary{list-style:none;cursor:pointer;display:flex;align-items:center;
+  justify-content:space-between;gap:10px;padding:11px 14px;min-height:48px;
+  font:800 14px/1.35 system-ui}
+ .cx-mobile-jump summary::after{content:'▾';font-size:16px;line-height:1}
+ .cx-mobile-jump details[open] summary::after{content:'▴'}
+ .cx-mobile-jump summary::-webkit-details-marker{display:none}
+ .cx-mobile-jump-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;
+  padding:8px;max-height:min(56dvh,350px);overflow-y:auto;border-top:1px solid #576b83}
+ .cx-studio .cx-mobile-jump-options button{min-width:0;min-height:46px;padding:8px;
+  border:1px solid #8193ab;background:#f7f9fc;color:#19334e;
+  font:750 13px/1.3 system-ui;text-align:left;overflow-wrap:break-word}
+ .cx-studio .cx-mobile-jump-options button:hover{background:#e6efff}
+ .cx-mobile-jump :is(summary,button):focus-visible{outline:3px solid #ffe45c;outline-offset:2px}
+ .cx-jump-target{scroll-margin-top:65px}
+}

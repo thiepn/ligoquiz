@@ -127,6 +127,48 @@ for(const width of viewports){
  });
 }
 
+// The mobile content page is exceptionally long. Jump navigation must remain
+// in the current hash route, return focus to the target and retain draft data.
+for(const width of viewports){
+ test(`UI stabilization: content section navigation at ${width}px`,async({page})=>{
+  await page.setViewportSize({width,height:844});
+  await page.goto('/#/inhalte');
+  const nav=page.getByRole('navigation',{name:'Bereiche im Inhaltsatelier'});
+  if(width>760){
+   await expect(nav).toBeHidden();
+   return;
+  }
+  const menu=nav.locator('details');
+  const summary=menu.locator('summary');
+  await expect(summary).toBeVisible();
+  await expect(menu).not.toHaveAttribute('open','');
+  await summary.click();
+  await menu.getByRole('button',{name:'Aufgabenbestand'}).click();
+  await expect(menu).not.toHaveAttribute('open','');
+  await expect(page.locator('#cx-jump-catalog')).toBeFocused();
+  await expect(page).toHaveURL(/#\\/inhalte$/);
+  const catalogPosition=await page.locator('#cx-jump-catalog').boundingBox();
+  const navPosition=await nav.boundingBox();
+  expect(catalogPosition.y,'Target heading must not hide under sticky jump navigation')
+   .toBeGreaterThanOrEqual(navPosition.y+navPosition.height-4);
+  await summary.click();
+  await menu.getByRole('button',{name:'Neuer Inhalt'}).click();
+  await expect(page.locator('#cx-jump-create')).toBeFocused();
+  await page.getByRole('combobox',{name:'Neuer Inhalt'}).selectOption('rundenquiz');
+  await page.getByRole('button',{name:'Aufgabe anlegen'}).click();
+  await summary.click();
+  await menu.getByRole('button',{name:'Redaktionspult'}).click();
+  await expect(page.locator('#cx-jump-editor')).toBeFocused();
+  await expect(page.locator('#cx-jump-editor')).toContainText('Entwurf');
+  await expect(page).toHaveURL(/#\\/inhalte$/);
+  await snapshot(page,width,'content-jump-editor');
+  await page.reload();
+  await expect(page.locator('.cx-item')).toHaveCount(1);
+  await expect(page.getByRole('navigation',{name:'Bereiche im Inhaltsatelier'})).toBeVisible();
+  await expect(page.locator('.cx-item')).toContainText(['Rundenquiz']);
+ });
+}
+
 const otherGames=[
  {name:'Quiztafel',host:'.qt-host',first:'Quiztafel auf dem Beamer vorbereiten'},
  {name:'Verbindungen',host:'.vb-host',first:'Aufgabenreihenfolge bestätigen'},

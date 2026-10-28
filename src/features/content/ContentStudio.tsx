@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState} from 'react';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import {GAME_TYPES,type GameType,type GameProfile} from '../../domain/game/contracts';
 import {ContentRepository,type Receipt,type StoredQuarantine} from '../../content/repository';
 import {createDraft,coverage,validatePayload,selectReviewedPack,findDuplicates,type ContentItem} from '../../content/contracts';
@@ -45,6 +45,14 @@ function statusText(status:ContentItem['status']){return {
  draft:'Entwurf',review:'In Prüfung',approved:'Freigegeben',quarantined:'Quarantäne',
 }[status];}
 export function ContentStudio(){
+ const jumpMenu=useRef<HTMLDetailsElement>(null);
+ function jumpToSection(id:string){
+  // An in-page navigation action, never a hash-route transition or content write.
+  if(jumpMenu.current)jumpMenu.current.open=false;
+  const section=document.getElementById(id);
+  section?.scrollIntoView({block:'start',behavior:'auto'});
+  section?.focus({preventScroll:true});
+ }
  const [repo]=useState(()=>new ContentRepository());
  const [items,setItems]=useState<ContentItem[]>([]);
  const [libraryLoaded,setLibraryLoaded]=useState(false);
@@ -337,9 +345,20 @@ export function ContentStudio(){
   <div className="exp-heading"><div>
    <h1>Inhaltsatelier</h1></div>
    <div className="cx-summary"><b>{items.length} Inhalte</b><span>{summary.approved} freigegeben</span><span>{summary.review} in Prüfung</span></div></div>
+  <nav className="cx-mobile-jump" aria-label="Bereiche im Inhaltsatelier">
+   <details ref={jumpMenu}>
+    <summary>Direkt zu Bereich</summary>
+    <div className="cx-mobile-jump-options">
+     {([['cx-jump-create','Neuer Inhalt'],['cx-jump-quality','Qualität & Rechte'],
+       ['cx-jump-program','Abendplanung'],['cx-jump-sources','Quellenprüfung'],
+       ['cx-jump-catalog','Aufgabenbestand'],['cx-jump-editor','Redaktionspult']] as const).map(([id,label])=>
+       <button key={id} type="button" onClick={()=>jumpToSection(id)}>{label}</button>)}
+    </div>
+   </details>
+  </nav>
   <div className="cx-warning" role="note"><strong>Getrennt von laufenden Spielabenden.</strong>
    {' '}Importiert wird nur in die v2-Inhaltsdatenbank. Bestehende v1-Spielstände, Browser-Schlüssel und veröffentlichte Spiele werden nicht geändert.</div>
-  <div className="cx-actions"><label>Neuer Inhalt <select value={templateGame} onChange={e=>setTemplateGame(e.target.value as GameType)}>
+  <div className="cx-actions cx-jump-target" id="cx-jump-create" tabIndex={-1}><label>Neuer Inhalt <select value={templateGame} onChange={e=>setTemplateGame(e.target.value as GameType)}>
     {GAME_TYPES.map(game=><option key={game} value={game}>{LABELS[game]}</option>)}</select></label>
    <button className="exp-primary" onClick={()=>void add()} disabled={busy}>Aufgabe anlegen</button>
    <button className="exp-secondary" onClick={()=>void prepareTrialDrafts()} disabled={busy}>Probeaufgaben als Entwürfe prüfen</button>
@@ -363,10 +382,14 @@ export function ContentStudio(){
        disabled={busy||!importConsent}>Vorschau ausdrücklich importieren</button>
      <button className="exp-secondary" onClick={()=>{setPreview(null);setImportConsent(false);}}>Abbrechen</button></div>
    </section>}
-  <EditorialAuditPanel items={items} preview={preview} onChoose={guardedChoose}/>
-  <LaunchInventoryPanel items={items} onChoose={guardedChoose}
-   loaded={libraryLoaded} latestItems={()=>repo.list()}/>
-  <section className="cx-source-queue" aria-label="Quellenprüfung">
+  <div id="cx-jump-quality" className="cx-jump-target" tabIndex={-1}>
+   <EditorialAuditPanel items={items} preview={preview} onChoose={guardedChoose}/>
+  </div>
+  <div id="cx-jump-program" className="cx-jump-target" tabIndex={-1}>
+   <LaunchInventoryPanel items={items} onChoose={guardedChoose}
+    loaded={libraryLoaded} latestItems={()=>repo.list()}/>
+  </div>
+  <section className="cx-source-queue cx-jump-target" id="cx-jump-sources" tabIndex={-1} aria-label="Quellenprüfung">
    <div className="cx-catalog-top">
     <h2>Quellenprüfung</h2>
     <label>Prüfgruppe <select aria-label="Prüfgruppe" value={reviewRoute}
@@ -519,7 +542,7 @@ export function ContentStudio(){
    </div>
   </section>
   <div className="cx-main">
-   <section className="cx-catalog" aria-label="Aufgabenbestand">
+   <section className="cx-catalog cx-jump-target" id="cx-jump-catalog" tabIndex={-1} aria-label="Aufgabenbestand">
     <div className="cx-catalog-top"><h2>Aufgabenbestand</h2><span>{chosen.length} Treffer</span></div>
     <div className="cx-filters"><input type="search" aria-label="Aufgaben durchsuchen" value={search}
       placeholder="Frage, Ziel oder Kennung suchen" onChange={e=>setSearch(e.target.value)}/>
@@ -541,7 +564,7 @@ export function ContentStudio(){
        </button>;
       })}</div>
    </section>
-   <section className="cx-editor" aria-label="Aufgabe bearbeiten">
+   <section className="cx-editor cx-jump-target" id="cx-jump-editor" tabIndex={-1} aria-label="Aufgabe bearbeiten">
     {!current?<div className="cx-editor-empty"><h2>Redaktionspult</h2>
       <p>Eine Aufgabe links auswählen. Ungeprüfte Inhalte können nicht automatisch in einen spielbaren Fragenpool gelangen.</p>
      </div>:<>
