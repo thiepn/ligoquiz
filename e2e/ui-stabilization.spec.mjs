@@ -79,8 +79,15 @@ for(const width of viewports){
   const shellStage=page.locator('.sp-cockpit-quick-stage');
   const hostStage=page.locator('[data-host-game="rundenquiz"] .rq-utility > a[href^="#/stage"]');
   await expect(hostStage).toHaveAttribute('href',await shellStage.getAttribute('href'));
-  if(width<=760){await expect(shellStage).toBeVisible();await expect(hostStage).toBeHidden();}
-  else await expect(hostStage).toBeVisible();
+  await expect(hostStage).toBeVisible();
+  await expect(hostStage).toHaveAttribute('target','_blank');
+  await expect(hostStage).toHaveAttribute('rel',/noopener/);
+  if(width<=760){
+   await expect(shellStage).toBeVisible();
+   const size=await hostStage.evaluate(el=>el.getBoundingClientRect().height);
+   expect(size,'Original host projector link needs a mobile touch target').toBeGreaterThanOrEqual(44);
+   await expect(hostStage).toHaveCSS('background-color','rgb(238, 242, 249)');
+  }
   if(width<=760){
    await expect(page.locator('.u07-rail-guidance')).toBeHidden();
    await expect(page.locator('.g14-progress')).toBeHidden();
@@ -198,8 +205,15 @@ for(const width of viewports){
    const shellStage=page.locator('.sp-cockpit-quick-stage');
    const hostStage=host.locator(':is(.qt-host-toolbar,.vb-host-toolbar,.ll-toolbar,.ud-toolbar) > a[href^="#/stage"]');
    await expect(hostStage).toHaveAttribute('href',await shellStage.getAttribute('href'));
-   if(width<=760){await expect(shellStage).toBeVisible();await expect(hostStage).toBeHidden();}
-   else await expect(hostStage).toBeVisible();
+   await expect(hostStage).toBeVisible();
+   await expect(hostStage).toHaveAttribute('target','_blank');
+   await expect(hostStage).toHaveAttribute('rel',/noopener/);
+   if(width<=760){
+    await expect(shellStage).toBeVisible();
+    const size=await hostStage.evaluate(el=>el.getBoundingClientRect().height);
+    expect(size,'Original host projector link needs a mobile touch target').toBeGreaterThanOrEqual(44);
+    await expect(hostStage).toHaveCSS('background-color','rgb(238, 242, 249)');
+   }
    if(width<=760){
     await expect(host.locator('.u07-rail-guidance')).toBeHidden();
     await expect(host.locator('.g14-progress')).toBeHidden();

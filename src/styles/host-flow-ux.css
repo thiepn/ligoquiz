@@ -115,10 +115,17 @@
  .sp-shell--spielleitung [data-host-game] .g14-guide{margin:7px 0 10px}
  .sp-shell--spielleitung [data-host-game] .u07-phase-rail{margin-bottom:6px}
 }
-/* Suppress only the duplicate mobile stage CTA, never the source-owned
-   projector URL or connection metadata, and only when shell stage exists. */
+/* The projector URL is source-owned and must remain accessible inside each
+   host even when the shell also exposes it. On mobile make the duplicate
+   visually secondary instead of hiding it from keyboard/assistive access. */
 @media(max-width:760px){
  .sp-shell--spielleitung:has(.sp-cockpit-quick-stage[href^="#/stage"])
- [data-host-game] :is(.rq-utility,.qt-host-toolbar,.vb-host-toolbar,.ll-toolbar,.ud-toolbar) > a[href^="#/stage"]{display:none}
+ [data-host-game] :is(.rq-utility,.qt-host-toolbar,.vb-host-toolbar,.ll-toolbar,.ud-toolbar) > a[href^="#/stage"]{
+  display:inline-flex!important;align-items:center;justify-content:center;
+  min-height:44px;padding:8px 12px!important;
+  background:#eef2f9!important;color:#1e3a64!important;
+  border:1px solid #a7b6cf!important;box-shadow:none!important;
+  font:750 12px/1.3 system-ui!important;text-decoration:underline;
+ }
 }
 @media(prefers-reduced-motion:reduce){[data-host-game] *{scroll-behavior:auto!important}}
